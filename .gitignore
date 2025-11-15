@@ -9,9 +9,9 @@ __pycache__/
 bots/*/data/*
 bots/*/chroma/*
 # But keep bot metadata & prompts
-!bots/*/config/
-!bots/*/meta.json
-!bots/*/config/prompt.txt
+#!bots/*/config/
+#!bots/*/meta.json
+#!bots/*/config/prompt.txt
 
 # Ollama model store
 ollama/
