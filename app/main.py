@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, Request, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import os
 import shutil
 import json
@@ -158,34 +158,85 @@ def validate_filename(filename: str) -> str:
     return filename
 
 
+def sanitize_relative_path(path_value: Optional[str]) -> Path:
+    """Return a safe relative path inside a bot's data directory."""
+
+    rel = PurePosixPath(path_value or ".")
+    if rel.is_absolute():
+        raise HTTPException(status_code=400, detail="Path must be relative")
+    if any(part == ".." for part in rel.parts):
+        raise HTTPException(status_code=400, detail="Invalid path traversal")
+
+    cleaned_parts = [p for p in rel.parts if p not in ("", ".")]
+    return Path(*cleaned_parts)
+
+
+def resolve_data_path(bot_id: str, relative: Optional[str]) -> Path:
+    base = bot_paths(bot_id)["data"].resolve()
+    rel_path = sanitize_relative_path(relative)
+    target = (base / rel_path).resolve()
+    if not target.is_relative_to(base):
+        raise HTTPException(status_code=400, detail="Path outside bot data directory")
+    return target
+
+
+def build_tree(base: Path, rel: Path = Path(".")) -> Dict:
+    current = base / rel
+    node = {
+        "name": current.name if rel != Path(".") else "root",
+        "path": rel.as_posix() if rel != Path(".") else "",
+        "type": "folder",
+        "folders": [],
+        "files": [],
+    }
+
+    if not current.exists():
+        return node
+
+    for item in sorted(current.iterdir(), key=lambda p: (p.is_file(), p.name.lower())):
+        if item.is_dir():
+            node["folders"].append(build_tree(base, rel / item.name))
+        elif item.is_file():
+            node["files"].append(
+                {
+                    "name": item.name,
+                    "path": (rel / item.name).as_posix() if rel != Path(".") else item.name,
+                    "type": "file",
+                }
+            )
+
+    return node
+
+
 def load_documents(bot_id: str):
     docs = []
 
     data_dir = bot_paths(bot_id)["data"]
 
-    for file in data_dir.glob("*"):
+    for file in data_dir.rglob("*"):
         if not file.is_file():
             continue
 
         ext = file.suffix.lower()
+        rel_name = file.relative_to(data_dir).as_posix()
 
         # PDF
         if ext == ".pdf":
             text = extract_text_from_pdf(file)
-            docs.append({"page_content": text, "metadata": {"source": file.name}})
+            docs.append({"page_content": text, "metadata": {"source": rel_name}})
 
         # Text variants
         elif ext in (".txt", ".md"):
             content = file.read_text(errors="ignore")
             if ext == ".md":
                 content = extract_text_from_markdown(content)
-            docs.append({"page_content": content, "metadata": {"source": file.name}})
+            docs.append({"page_content": content, "metadata": {"source": rel_name}})
 
         # HTML
         elif ext == ".html":
             html = file.read_text(errors="ignore")
             text = extract_text_from_html(html)
-            docs.append({"page_content": text, "metadata": {"source": file.name}})
+            docs.append({"page_content": text, "metadata": {"source": rel_name}})
 
     return docs
 
@@ -267,54 +318,128 @@ async def create_bot_endpoint(request: Request):
 def list_files(bot_id: str):
     ensure_bot_exists(bot_id)
     data_dir = bot_paths(bot_id)["data"]
-    return {"files": [f.name for f in data_dir.iterdir() if f.is_file()]}
+    tree = build_tree(data_dir)
+    return {"tree": tree}
 
 
-@app.delete("/bots/{bot_id}/file/{filename}")
-def delete_file(bot_id: str, filename: str):
+@app.delete("/bots/{bot_id}/file/{file_path:path}")
+def delete_file(bot_id: str, file_path: str):
     ensure_bot_exists(bot_id)
-    validate_filename(filename)
-    data_dir = bot_paths(bot_id)["data"]
-    target = data_dir / filename
+    target = resolve_data_path(bot_id, file_path)
+    data_dir = bot_paths(bot_id)["data"].resolve()
+    if target == data_dir:
+        raise HTTPException(status_code=400, detail="Cannot delete root directory")
     if target.exists() and target.is_file():
         target.unlink()
-        return {"status": "deleted", "file": filename}
-    return {"status": "not_found", "file": filename}
+        return {"status": "deleted", "file": target.relative_to(data_dir).as_posix()}
+    return {"status": "not_found", "file": file_path}
+
+
+async def store_upload(bot_id: str, file: UploadFile, folder: Optional[str] = None):
+    destination_dir = resolve_data_path(bot_id, folder)
+    destination_dir.mkdir(parents=True, exist_ok=True)
+    data_dir = bot_paths(bot_id)["data"].resolve()
+
+    filename = Path(file.filename or "").name
+
+    is_zip = filename.lower().endswith(".zip") or file.content_type == "application/zip"
+
+    if is_zip:
+        content = await file.read()
+        z = zipfile.ZipFile(BytesIO(content))
+        stored = []
+
+        for info in z.infolist():
+            member_path = PurePosixPath(info.filename)
+            if info.is_dir():
+                target_dir = destination_dir / sanitize_relative_path(member_path.as_posix())
+                target_dir.mkdir(parents=True, exist_ok=True)
+                continue
+
+            safe_member = sanitize_relative_path(member_path.as_posix())
+            if safe_member == Path("."):
+                continue
+
+            target = destination_dir / safe_member
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with open(target, "wb") as f:
+                f.write(z.read(info.filename))
+            stored.append(target.relative_to(data_dir).as_posix())
+
+        return {"status": "unzipped", "files": stored}
+
+    validate_filename(filename)
+    target = destination_dir / filename
+    with open(target, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    return {"status": "uploaded", "files": [target.relative_to(data_dir).as_posix()]}
 
 
 @app.post("/bots/{bot_id}/upload")
-async def upload(bot_id: str, file: UploadFile):
+async def upload(bot_id: str, file: UploadFile, path: Optional[str] = None):
     ensure_bot_exists(bot_id)
-    validate_filename(file.filename)
-    target = bot_paths(bot_id)["data"] / file.filename
-    with open(target, "wb") as f:
-        shutil.copyfileobj(file.file, f)
-    return {"status": "uploaded", "file": file.filename}
+    return await store_upload(bot_id, file, path)
 
 
 @app.post("/bots/{bot_id}/upload_zip")
-async def upload_zip(bot_id: str, file: UploadFile):
+async def upload_zip(bot_id: str, file: UploadFile, path: Optional[str] = None):
     ensure_bot_exists(bot_id)
-    content = await file.read()
-    z = zipfile.ZipFile(BytesIO(content))
+    return await store_upload(bot_id, file, path)
 
-    stored = []
-    data_dir = bot_paths(bot_id)["data"]
 
-    for name in z.namelist():
-        if name.endswith("/"):
-            continue
-        filename = Path(name).name
-        if not filename:
-            continue
-        validate_filename(filename)
-        data = z.read(name)
-        target = data_dir / filename
-        with open(target, "wb") as f:
-            f.write(data)
-        stored.append(filename)
+@app.post("/bots/{bot_id}/folders")
+async def create_folder(bot_id: str, request: Request):
+    ensure_bot_exists(bot_id)
+    body = await request.json()
+    path = body.get("path", "")
+    target = resolve_data_path(bot_id, path)
+    target.mkdir(parents=True, exist_ok=True)
+    rel = target.relative_to(bot_paths(bot_id)["data"].resolve()).as_posix()
+    return {"status": "created", "folder": rel}
 
-    return {"status": "unzipped", "files": stored}
+
+@app.delete("/bots/{bot_id}/folders")
+def delete_folder(bot_id: str, path: str):
+    ensure_bot_exists(bot_id)
+    if not path:
+        raise HTTPException(status_code=400, detail="Folder path is required")
+    target = resolve_data_path(bot_id, path)
+    data_dir = bot_paths(bot_id)["data"].resolve()
+    if target == data_dir:
+        raise HTTPException(status_code=400, detail="Cannot delete root folder")
+    if not target.exists():
+        return {"status": "not_found", "folder": path}
+    shutil.rmtree(target)
+    return {"status": "deleted", "folder": target.relative_to(data_dir).as_posix()}
+
+
+@app.post("/bots/{bot_id}/move_file")
+async def move_file(bot_id: str, request: Request):
+    ensure_bot_exists(bot_id)
+    body = await request.json()
+    source = body.get("source")
+    destination_folder = body.get("destination_folder", "")
+
+    if not source:
+        raise HTTPException(status_code=400, detail="Source file is required")
+
+    source_path = resolve_data_path(bot_id, source)
+    if not source_path.exists() or not source_path.is_file():
+        raise HTTPException(status_code=404, detail="Source file not found")
+
+    dest_dir = resolve_data_path(bot_id, destination_folder)
+    dest_dir.mkdir(parents=True, exist_ok=True)
+
+    dest_path = dest_dir / source_path.name
+
+    shutil.move(str(source_path), dest_path)
+
+    data_dir = bot_paths(bot_id)["data"].resolve()
+    return {
+        "status": "moved",
+        "from": source_path.relative_to(data_dir).as_posix(),
+        "to": dest_path.relative_to(data_dir).as_posix(),
+    }
 
 
 @app.post("/bots/{bot_id}/rebuild")

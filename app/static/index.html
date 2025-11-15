@@ -3,79 +3,239 @@
 <head>
 <meta charset="UTF-8">
 <title>Local RAG Chat</title>
-
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
 <style>
-body { font-family: system-ui, sans-serif; margin: 2em; }
-#botControls { margin-bottom: 1em; }
-#botControls select { margin: 0 0.5em; }
-#chat {
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    padding: 1em;
-    height: 500px;
-    overflow-y: scroll;
+:root {
+    --bg: #f5f7fb;
+    --panel: #ffffff;
+    --border: #dce2ec;
+    --primary: #2563eb;
+    --text-muted: #5f6b7a;
 }
-.user { color: blue; margin: .5em 0; }
-.bot { color: darkgreen; margin: .5em 0; }
-#q { width: 80%; padding: .5em; font-size: 1em; }
+
+* { box-sizing: border-box; }
+body {
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: #0f172a;
+}
+
+header {
+    padding: 1.5rem 2rem 0.5rem;
+}
+
+h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.8rem;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.main {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+    padding: 0 2rem 2rem;
+}
+
+.card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
+}
+
+.top-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+}
+
+select, button, input, textarea {
+    font: inherit;
+}
+
+select, input[type="file"], textarea {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+}
+
+button {
+    border: none;
+    background: var(--primary);
+    color: white;
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+}
+
+button.secondary {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.24); }
+button:active { transform: translateY(0); box-shadow: none; }
+
+#chat {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    height: 520px;
+    overflow-y: auto;
+    background: #f8fafc;
+}
+
+.message { margin-bottom: 0.8rem; }
+.message .label { display: inline-block; font-weight: 700; margin-bottom: 0.2rem; }
+.message.user .label { color: #0ea5e9; }
+.message.bot .label { color: #22c55e; }
+
+.input-area {
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+#q {
+    width: 100%;
+    min-height: 80px;
+    resize: vertical;
+}
+
+.hint { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
+
+.section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+#fileTree ul { list-style: none; padding-left: 1rem; margin: 0.25rem 0; }
+#fileTree li { margin: 0.15rem 0; }
+#fileTree .folder-name { font-weight: 600; }
+#fileTree .actions button { margin-left: 0.35rem; }
+
+.kb-actions { display: flex; flex-direction: column; gap: 0.5rem; }
+.inline-group { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.inline-group input, .inline-group select { flex: 1; }
+
+textarea#systemPrompt { width: 100%; min-height: 160px; resize: vertical; }
+
+.details-card summary { cursor: pointer; font-weight: 700; }
+.details-card summary::-webkit-details-marker { display: none; }
+.details-card summary::before { content: '\25bc'; display: inline-block; margin-right: 0.5rem; transition: transform 120ms ease; }
+.details-card[open] summary::before { transform: rotate(0deg); }
+.details-card:not([open]) summary::before { transform: rotate(-90deg); }
+
+@media (max-width: 980px) {
+    .main { grid-template-columns: 1fr; }
+}
 </style>
 </head>
-
 <body>
+    <header>
+        <h1>Local RAG Chat</h1>
+        <p class="subtitle">Talk to your knowledge bases, manage files and folders, and customize system prompts.</p>
+    </header>
 
-<h2>Local RAG Chat</h2>
+    <div class="main">
+        <section class="card">
+            <div class="top-controls">
+                <label for="botSelect"><strong>Active Bot:</strong></label>
+                <select id="botSelect"></select>
+                <button onclick="createBot()">Create Bot</button>
+                <button class="secondary" onclick="rebuild()">Rebuild Index</button>
+            </div>
 
-<div id="botControls">
-    <label for="botSelect"><strong>Active Bot:</strong></label>
-    <select id="botSelect"></select>
-    <button onclick="createBot()">Create Bot</button>
-</div>
+            <div id="chat"></div>
 
-<div id="chat"></div>
+            <div class="input-area">
+                <textarea id="q" placeholder="Ask something..."></textarea>
+                <div style="display:flex;flex-direction:column;gap:0.35rem;">
+                    <button onclick="sendMessage()">Send</button>
+                    <span class="hint">Press Ctrl + Enter to send</span>
+                </div>
+            </div>
+        </section>
 
-<input id="q" placeholder="Ask something..." />
+        <section class="card">
+            <details class="details-card" id="kbDetails">
+                <summary>Knowledge Base Files</summary>
+                <div class="kb-actions">
+                    <form id="uploadForm" class="inline-group">
+                        <input type="file" name="file" required />
+                        <select id="folderSelect"></select>
+                        <button type="submit">Upload</button>
+                    </form>
+                    <span class="hint">ZIP files will be extracted automatically.</span>
 
-<hr/>
+                    <div class="inline-group">
+                        <input id="newFolderInput" type="text" placeholder="New folder path (e.g. research/notes)" />
+                        <button type="button" onclick="createFolder()">Add Folder</button>
+                    </div>
 
-<h3>Upload File</h3>
-<form id="uploadForm">
-    <input type="file" name="file" />
-    <button type="submit">Upload</button>
-</form>
+                    <div class="inline-group">
+                        <select id="deleteFolderSelect"></select>
+                        <button type="button" class="secondary" onclick="deleteFolder()">Delete Folder</button>
+                    </div>
 
-<h3>Upload ZIP</h3>
-<form id="zipForm">
-    <input type="file" name="file" />
-    <button type="submit">Upload ZIP</button>
-</form>
+                    <div class="inline-group">
+                        <select id="moveFileSelect"></select>
+                        <select id="moveDestSelect"></select>
+                        <button type="button" onclick="moveFile()">Move File</button>
+                    </div>
 
-<button onclick="rebuild()">Rebuild Index</button>
+                    <div class="section-title">
+                        <strong>Files & Folders</strong>
+                        <button type="button" class="secondary" onclick="refreshFiles()">Refresh</button>
+                    </div>
+                    <div id="fileTree"></div>
+                </div>
+            </details>
 
-<hr/>
-
-<h3>Knowledge Base Files</h3>
-<ul id="fileList"></ul>
-<button onclick="refreshFiles()">Refresh List</button>
-
-<hr/>
-
-<h3>System Prompt</h3>
-<textarea id="systemPrompt" style="width:100%;height:150px;"></textarea>
-<button onclick="savePrompt()">Save</button>
-<button onclick="loadPrompt()">Reload</button>
+            <div style="margin-top:1rem;">
+                <div class="section-title">
+                    <strong>System Prompt</strong>
+                    <div>
+                        <button type="button" class="secondary" onclick="loadPrompt()">Reload</button>
+                        <button type="button" onclick="savePrompt()">Save</button>
+                    </div>
+                </div>
+                <textarea id="systemPrompt"></textarea>
+            </div>
+        </section>
+    </div>
 
 <script>
 const chat = document.getElementById("chat");
 const input = document.getElementById("q");
 const botSelect = document.getElementById("botSelect");
+const folderSelect = document.getElementById("folderSelect");
+const deleteFolderSelect = document.getElementById("deleteFolderSelect");
+const moveDestSelect = document.getElementById("moveDestSelect");
+const moveFileSelect = document.getElementById("moveFileSelect");
+const fileTree = document.getElementById("fileTree");
+
+const BOT_STORAGE_KEY = "selectedBotId";
 
 let history = [];
-let currentBotId = null;
+let currentBotId = localStorage.getItem(BOT_STORAGE_KEY);
 
 input.addEventListener("keydown", e => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && e.ctrlKey) {
         e.preventDefault();
         sendMessage();
     }
@@ -86,14 +246,17 @@ botSelect.addEventListener("change", async e => {
 });
 
 function appendUser(msg) {
-    chat.innerHTML += `<div class="user"><b>You:</b> ${msg}</div>`;
+    const wrapper = document.createElement("div");
+    wrapper.className = "message user";
+    wrapper.innerHTML = `<div class="label">You</div><div>${msg}</div>`;
+    chat.appendChild(wrapper);
     chat.scrollTop = chat.scrollHeight;
 }
 
 function appendTyping() {
     const el = document.createElement("div");
-    el.className = "bot";
-    el.innerHTML = "<i>Bot is typing…</i>";
+    el.className = "message bot";
+    el.innerHTML = "<div class=\"label\">Bot</div><i>Bot is typing…</i>";
     chat.appendChild(el);
     chat.scrollTop = chat.scrollHeight;
     return el;
@@ -101,8 +264,8 @@ function appendTyping() {
 
 function appendBotContainer() {
     const el = document.createElement("div");
-    el.className = "bot";
-    el.innerHTML = "<b>Bot:</b><br>";
+    el.className = "message bot";
+    el.innerHTML = "<div class=\"label\">Bot</div><div></div>";
     el.rawText = "";
     el.tokenCount = 0;
     chat.appendChild(el);
@@ -126,7 +289,7 @@ async function sendMessage() {
 
     history.push({ role: "user", content: q });
 
-    appendUser(q);
+    appendUser(q.replaceAll("\n", "<br>"));
     input.value = "";
 
     const typingEl = appendTyping();
@@ -141,9 +304,9 @@ async function sendMessage() {
         if (typingEl.parentNode) typingEl.remove();
         const text = await response.text();
         const errorEl = document.createElement("div");
-        errorEl.className = "bot";
+        errorEl.className = "message bot";
         const message = text || response.statusText || "Error communicating with the bot.";
-        errorEl.innerHTML = `<b>Bot:</b><br><i>${message}</i>`;
+        errorEl.innerHTML = `<div class="label">Bot</div><i>${message}</i>`;
         chat.appendChild(errorEl);
         chat.scrollTop = chat.scrollHeight;
         return;
@@ -175,18 +338,14 @@ async function sendMessage() {
                 botContainer.tokenCount++;
 
                 if (botContainer.tokenCount % 5 === 0) {
-                    botContainer.innerHTML =
-                        "<b>Bot:</b><br>" +
-                        marked.parse(botContainer.rawText);
+                    botContainer.children[1].innerHTML = marked.parse(botContainer.rawText);
                     chat.scrollTop = chat.scrollHeight;
                 }
             }
         }
     }
 
-    botContainer.innerHTML =
-        "<b>Bot:</b><br>" +
-        marked.parse(botContainer.rawText);
+    botContainer.children[1].innerHTML = marked.parse(botContainer.rawText);
     chat.scrollTop = chat.scrollHeight;
 
     history.push({ role: "assistant", content: botContainer.rawText });
@@ -196,17 +355,9 @@ document.getElementById("uploadForm").onsubmit = async e => {
     e.preventDefault();
     if (!ensureBotSelected()) return;
     const form = new FormData(e.target);
+    form.append("path", folderSelect.value || "");
     await fetch(`/bots/${currentBotId}/upload`, { method: "POST", body: form });
     alert("Uploaded");
-    refreshFiles();
-};
-
-document.getElementById("zipForm").onsubmit = async e => {
-    e.preventDefault();
-    if (!ensureBotSelected()) return;
-    const form = new FormData(e.target);
-    await fetch(`/bots/${currentBotId}/upload_zip`, { method: "POST", body: form });
-    alert("ZIP uploaded");
     refreshFiles();
 };
 
@@ -216,25 +367,111 @@ async function rebuild() {
     alert("Reindexed!");
 }
 
+function collectFolders(node, list = []) {
+    if (node.path !== undefined) {
+        list.push(node.path || "");
+    }
+    (node.folders || []).forEach(f => collectFolders(f, list));
+    return list;
+}
+
+function collectFiles(node, list = []) {
+    (node.files || []).forEach(f => list.push(f.path));
+    (node.folders || []).forEach(f => collectFiles(f, list));
+    return list;
+}
+
+function renderTree(node, container) {
+    container.innerHTML = "";
+    const list = document.createElement("ul");
+
+    const renderNode = (n) => {
+        const li = document.createElement("li");
+        if (n.type === "folder") {
+            const title = document.createElement("div");
+            title.className = "folder-name";
+            title.textContent = n.path ? n.name : "Root";
+            if (n.path) {
+                const delBtn = document.createElement("button");
+                delBtn.className = "secondary";
+                delBtn.textContent = "Delete";
+                delBtn.onclick = () => deleteFolder(n.path);
+                title.appendChild(delBtn);
+            }
+            li.appendChild(title);
+            if ((n.folders && n.folders.length) || (n.files && n.files.length)) {
+                const inner = document.createElement("ul");
+                (n.folders || []).forEach(child => inner.appendChild(renderNode(child)));
+                (n.files || []).forEach(file => {
+                    const fileLi = document.createElement("li");
+                    const nameSpan = document.createElement("span");
+                    nameSpan.textContent = file.name;
+                    const delBtn = document.createElement("button");
+                    delBtn.className = "secondary";
+                    delBtn.textContent = "Delete";
+                    delBtn.onclick = () => deleteFileKB(file.path);
+                    fileLi.appendChild(nameSpan);
+                    fileLi.appendChild(delBtn);
+                    inner.appendChild(fileLi);
+                });
+                li.appendChild(inner);
+            }
+        }
+        return li;
+    };
+
+    list.appendChild(renderNode(node));
+    container.appendChild(list);
+}
+
 async function refreshFiles() {
     if (!currentBotId) {
-        document.getElementById("fileList").innerHTML = "";
+        fileTree.innerHTML = "";
+        folderSelect.innerHTML = "";
+        deleteFolderSelect.innerHTML = "";
+        moveDestSelect.innerHTML = "";
+        moveFileSelect.innerHTML = "";
         return;
     }
 
     const r = await fetch(`/bots/${currentBotId}/files`);
     const data = await r.json();
-    const list = document.getElementById("fileList");
-    list.innerHTML = "";
+    const tree = data.tree;
+    renderTree(tree, fileTree);
 
-    data.files.forEach(f => {
-        const li = document.createElement("li");
-        li.textContent = f + " ";
-        const btn = document.createElement("button");
-        btn.textContent = "Delete";
-        btn.onclick = () => deleteFileKB(f);
-        li.appendChild(btn);
-        list.appendChild(li);
+    const folders = collectFolders(tree, []);
+
+    folderSelect.innerHTML = "";
+    folders.forEach(path => {
+        const option = document.createElement("option");
+        option.value = path;
+        option.textContent = path ? path : "Root (/ )";
+        folderSelect.appendChild(option);
+    });
+
+    deleteFolderSelect.innerHTML = "";
+    folders.filter(f => f).forEach(path => {
+        const option = document.createElement("option");
+        option.value = path;
+        option.textContent = path;
+        deleteFolderSelect.appendChild(option);
+    });
+
+    moveDestSelect.innerHTML = "";
+    folders.forEach(path => {
+        const option = document.createElement("option");
+        option.value = path;
+        option.textContent = path ? path : "Root (/ )";
+        moveDestSelect.appendChild(option);
+    });
+
+    const files = collectFiles(tree, []);
+    moveFileSelect.innerHTML = "";
+    files.forEach(path => {
+        const option = document.createElement("option");
+        option.value = path;
+        option.textContent = path;
+        moveFileSelect.appendChild(option);
     });
 }
 
@@ -242,6 +479,50 @@ async function deleteFileKB(name) {
     if (!ensureBotSelected()) return;
     await fetch(`/bots/${currentBotId}/file/${encodeURIComponent(name)}`, { method: "DELETE" });
     alert("Deleted " + name);
+    refreshFiles();
+}
+
+async function createFolder() {
+    if (!ensureBotSelected()) return;
+    const inputEl = document.getElementById("newFolderInput");
+    const path = (inputEl.value || "").trim();
+    if (!path) {
+        alert("Please enter a folder path.");
+        return;
+    }
+    await fetch(`/bots/${currentBotId}/folders`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ path })
+    });
+    inputEl.value = "";
+    refreshFiles();
+}
+
+async function deleteFolder(path) {
+    if (!ensureBotSelected()) return;
+    const folderPath = typeof path === "string" ? path : deleteFolderSelect.value;
+    if (!folderPath) {
+        alert("Select a folder to delete.");
+        return;
+    }
+    await fetch(`/bots/${currentBotId}/folders?path=${encodeURIComponent(folderPath)}`, { method: "DELETE" });
+    refreshFiles();
+}
+
+async function moveFile() {
+    if (!ensureBotSelected()) return;
+    const source = moveFileSelect.value;
+    const destination_folder = moveDestSelect.value;
+    if (!source) {
+        alert("Select a file to move.");
+        return;
+    }
+    await fetch(`/bots/${currentBotId}/move_file`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ source, destination_folder })
+    });
     refreshFiles();
 }
 
@@ -296,14 +577,14 @@ async function loadBots() {
 
 async function switchBot(id, { force = false } = {}) {
     const promptBox = document.getElementById("systemPrompt");
-    const fileList = document.getElementById("fileList");
 
     if (!id) {
         currentBotId = null;
+        localStorage.removeItem(BOT_STORAGE_KEY);
         history = [];
-        chat.innerHTML = "<div class=\"bot\"><i>No bots available. Create one to begin.</i></div>";
+        chat.innerHTML = "<div class=\"message bot\"><div class=\"label\">Bot</div><i>No bots available. Create one to begin.</i></div>";
         promptBox.value = "";
-        fileList.innerHTML = "";
+        fileTree.innerHTML = "";
         return;
     }
 
@@ -313,6 +594,7 @@ async function switchBot(id, { force = false } = {}) {
     }
 
     currentBotId = id;
+    localStorage.setItem(BOT_STORAGE_KEY, currentBotId);
     if (botSelect.value !== id) {
         botSelect.value = id;
     }
@@ -350,12 +632,12 @@ async function createBot() {
 
     const data = await res.json();
     currentBotId = data.bot.id;
+    localStorage.setItem(BOT_STORAGE_KEY, currentBotId);
     await loadBots();
     alert(`Created bot "${data.bot.name}"`);
 }
 
 loadBots();
 </script>
-
 </body>
 </html>
