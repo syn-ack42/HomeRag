@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : Video: How to manage shipment entry and file upload in cadis</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="Video-Tutorials_1369997389.html">Video Tutorials</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : Video: How to manage shipment entry and file upload in cadis
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Julian Beyer</span>, last modified on Oct 16, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <div class="confluence-information-macro confluence-information-macro-information"><span class="aui-icon aui-icon-small aui-iconfont-info confluence-information-macro-icon"></span><div class="confluence-information-macro-body"><p>This feature is available starting 2025.5 or on Free Trial systems.</p></div></div><p>This cadis tutorial explains how to enter shipment data into the system either manually via cadisSTUDIO or by importing from a structured Excel template. It covers essential steps like filling out shipment forms, using master data for addresses, adding goods and barcodes, and validating bulk uploads — ensuring your shipments are properly registered and ready for dispatch.</p><div class="confluence-information-macro confluence-information-macro-information"><span class="aui-icon aui-icon-small aui-iconfont-info confluence-information-macro-icon"></span><div class="confluence-information-macro-body"><p>Use this file: <span class="confluence-embedded-file-wrapper"><a class="confluence-embedded-file" href="attachments/1388380162/1390805002.xlsm" data-nice-type="null" data-file-src="/wiki/download/attachments/1388380162/CADIS_ImportData.xlsm?version=1&amp;modificationDate=1753864075185&amp;cacheVersion=1&amp;api=v2" data-linked-resource-id="1390805002" data-linked-resource-type="attachment" data-linked-resource-container-id="1388380162" data-linked-resource-default-alias="CADIS_ImportData.xlsm" data-mime-type="application/vnd.ms-excel.sheet.macroenabled.12" data-has-thumbnail="true" data-linked-resource-version="1" data-media-id="ef641eaf-cfe5-4a8b-bf9c-8c58a753aa8f" data-media-type="file"><img src="attachments/thumbnails/1388380162/1390805002" height="250"/></a></span> </p></div></div><a class="external-link" data-card-appearance="embed" data-layout="center" data-original-height="480.00" data-original-width="853.34" data-width="100.00" href="https://www.youtube.com/watch?v=dU78zq54-cw" rel="nofollow">https://www.youtube.com/watch?v=dU78zq54-cw</a><h1 id="Video:Howtomanageshipmententryandfileuploadincadis-Transcript">Transcript</h1><p>Hello, and welcome to our next video. So, you're probably wondering how you're ever goiang to collect and deliver shipments with cadis, if there’s no shipment data in cadis. That’s exactly what we’re going to cover today. </p><p>To get shipment data into cadis, I’ll show you two ways to do that. But first, log into cadisSTUDIO. Once you're in, head over to the Shipments tab. You’ll see a list of existing shipments. Right now, it’s empty. So let’s change that.</p><p>The first method is creating a shipment using the entry form. Click Create, and you'll get your basic shipment data form. Now you have to decide:</p><ul><li><p>Are you collecting from a customer and bringing goods back to the depot?</p></li><li><p>Are you delivering goods that are already at the depot?</p></li><li><p>Or is it a courier shipment that skips the depot and just goes from A to B?</p></li></ul><p>We’ll start with a regular collection. You’ll enter shipment numbers, weight, volume, payment method, transport product, everything.</p><p>Since this is a collection, the shipper is mandatory. It’s marked with a star. For deliveries, the consignee would be required instead.</p><p>There are two ways to enter addresses in cadis. The convenient way: use master data. For a consignor, you use the Customer master data. Just start typing into the search box, select the right entry, and it auto-fills all the fields. If the address isn’t in your records, click the pen icon to unlock manual entry. Mandatory fields are again marked with a star. Too lazy to type it all? Same. </p><p>So let’s use the master data search. For shipper and consignee, use Stop location master data. You’ll see that addresses and opening hours will auto-fill into the relevant fields.</p><p>You can adjust the collection and delivery dates. By default, cadis recommends the same day in the morning, and the next business day if it’s afternoon.</p><p>Let’s say we have a neutral consignor. We could enter it here.</p><p>Now onto the goods items—important stuff. We’ll collect, say, three Euro pallets. I’ll just call them “Goods” for now. Enter the weight, maybe 100 kg. You can also add dangerous goods if needed. Click Apply, and it’s added to the list.</p><p>You can add multiple goods items. Add handling instructions too, either from master data or free text.</p><p>For packages, or handling units, you can either:</p><ul><li><p>Manually enter barcodes received from the customer</p></li><li><p>Or let cadis generate them for you</p></li></ul><p>Just enter how many units there are, and cadis will create the barcodes.</p><p>When you are done with entering all the shipment data click Save and Next. cadis saves the shipment and opens a new entry form so you can continue entering the next shipment right away.</p><p>When we go back to the list, our new collection is now visible. Double-click to edit if needed.</p><p>Now for method two: Excel import. <span class="inline-comment-marker" data-ref="9245be20-b406-4e3f-a51a-05a7a1169762">There’s a sample Excel form linked below the video.</span></p><p>First tab equals shipment data. Columns mirror the web form: shipment number, order type, dates, barcodes, etc. Important: You must define your own shipment number. This will be your reference.</p><p>You can either: Enter barcodes directly or specify a number of packages and let cadis generate barcodes using a prefix and sequence counter.</p><p>There’s also a Packages tab, where you list barcodes per shipment. Just make sure the first column always has the shipment number for linkage.</p><p>Same applies to Goods items and Dangerous Goods. Each gets its own tab. Dangerous goods must link both to a shipment and a goods item.</p><p><span class="inline-comment-marker" data-ref="c1a26b0e-e73e-47a1-b185-3d4da577db0f">And you can prefill that data in the excel sheet.</span></p><p><span class="inline-comment-marker" data-ref="c1a26b0e-e73e-47a1-b185-3d4da577db0f">Obviously you have the addresses for consignor, shipper, consignee, you have a tracking number, you have the total weights and volumes, whether it has dangerous goods, handling instructions, different reference numbers.  </span></p><p><span class="inline-comment-marker" data-ref="c1a26b0e-e73e-47a1-b185-3d4da577db0f">The column titles are either self-explanatory or there is a remark on them. So you enter your shipment data in here, maybe export it from some other system </span></p><p>When your Excel is ready, click Import in cadis. Select your file, click Open, and cadis will prefetch and validate your data. </p><p>✅ Green check = everything is good </p><p>❌ Red cross = there’s a problem, and cadis will tell you what went wrong </p><p>You’ll see grouped goods items, barcodes (including auto-generated ones), and dangerous goods. Click Import, and cadis starts processing. In our case, it’s a huge file. Over 3,000 shipments. </p><p>Maybe a bit overkill, but hey, you get lots of examples!</p><p>Just like that, all shipment data is imported and ready to dispatch. </p><p>Thanks for watching!</p><p>Have a great day. And happy dispatching!</p><p>If moving goods is what you do, cadis software makes it smooth for you.</p>
+                    </div>
+
+                                        <div class="pageSection group">
+                        <div class="pageSectionHeader">
+                            <h2 id="attachments" class="pageSectionTitle">Attachments:</h2>
+                        </div>
+
+                        <div class="greybox" align="left">
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1388380162/1390805002.xlsm">CADIS_ImportData.xlsm</a> (application/vnd.ms-excel.sheet.macroenabled.12)
+                                <br/>
+                                                    </div>
+                    </div>
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:48</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

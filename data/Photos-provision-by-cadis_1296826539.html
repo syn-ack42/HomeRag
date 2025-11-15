@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : Photos provision by cadis</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="Technical-Resources_1262748336.html">Technical Resources</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="Technical-papers_1262748337.html">Technical papers</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : Photos provision by cadis
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Julian Beyer</span> on May 22, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <style type='text/css'>/*<![CDATA[*/
+div.rbtoc1763045579132 {padding: 0px;}
+div.rbtoc1763045579132 ul {list-style: none;margin-left: 0px;}
+div.rbtoc1763045579132 li {margin-left: 0px;padding-left: 0px;}
+
+/*]]>*/</style><div class='toc-macro rbtoc1763045579132'>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>1</span> <a href='#Photosprovisionbycadis-At(Un)Loadingstage'>At (Un)Loading stage</a></li>
+<li><span class='TOCOutline'>2</span> <a href='#Photosprovisionbycadis-AtDeliveryStage'>At Delivery Stage</a></li>
+<li><span class='TOCOutline'>3</span> <a href='#Photosprovisionbycadis-AtPackagelevel'>At Package level</a></li>
+<li><span class='TOCOutline'>4</span> <a href='#Photosprovisionbycadis-AtShipmentlevel'>At Shipment level</a></li>
+<li><span class='TOCOutline'>5</span> <a href='#Photosprovisionbycadis-PdfExport'>Pdf Export</a></li>
+<li><span class='TOCOutline'>6</span> <a href='#Photosprovisionbycadis-Howtoretrievethephotos'>How to retrieve the photos</a></li>
+</ul>
+</div><p>With cadisAPP, users can document by photos damaged packages at any stage (Loading, delivery, unloading…). The photos taken by users as visible in real time in cadis back office &amp; are also provided to your host system. This is especially important because depending on your wishes, data can be stored in cadis for 3 to 6 months only.</p><h1 id="Photosprovisionbycadis-At(Un)Loadingstage">At (Un)Loading stage</h1><p>After users have closed their (Un)loading list in cadis back office, cadisSERVER issues an xml file, the “<em>(Un)LoadingStatus</em>” which contains the photo ID. Example:</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-98.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-98.png" loading="lazy"></span><h1 id="Photosprovisionbycadis-AtDeliveryStage">At Delivery Stage</h1><p>After the driver has closed a delivery stop in cadisAPP, cadisSERVER issues an xml file, the “<em>OrderState</em>“. The photo can be taken at shipment level or package level, generating slightly different tags.</p><h1 id="Photosprovisionbycadis-AtPackagelevel">At Package level</h1><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-99.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-99.png" loading="lazy"></span><h1 id="Photosprovisionbycadis-AtShipmentlevel">At Shipment level</h1><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-100.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-100.png" loading="lazy"></span><h1 id="Photosprovisionbycadis-PdfExport">Pdf Export</h1><p>A pdf file containing all photos taken at package or shipment level can also be exported from cadis towards an endpoint. To do so, you must communicate to cadis a related URL/Token.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-101.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-101.png" loading="lazy"></span><h1 id="Photosprovisionbycadis-Howtoretrievethephotos">How to retrieve the photos</h1><ul><li><p>Manually via a URL (login to cadisSTUDIO required) : https://<em>YOURSERVER</em>/theblob/details/<em>PhotoID</em></p></li><li><p>Via an application: a Java Web Token (JWT) must be inserted in the HTTP header</p></li></ul><div class="confluence-information-macro confluence-information-macro-information"><span class="aui-icon aui-icon-small aui-iconfont-info confluence-information-macro-icon"></span><div class="confluence-information-macro-body"><p>You could also, instead of retrieving &amp; storing the photos, implement a link from your host, opening a web page displaying the photo. In that case, you would be submitted to the cadis data retention period mentioned above (90-180 days)</p></div></div>
+                    </div>
+
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:52</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

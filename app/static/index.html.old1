@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Local RAG Chat</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2em; }
+    #chat { border: 1px solid #ccc; border-radius: 10px; padding: 1em; height: 400px; overflow-y: scroll; }
+    .user { color: blue; margin: .5em 0; }
+    .bot { color: darkgreen; margin: .5em 0; }
+    #q { width: 80%; padding: .5em; }
+    #askbtn { padding: .5em 1em; }
+  </style>
+</head>
+<body>
+  <h2>Local RAG Chat</h2>
+  <div id="chat"></div>
+  <input id="q" placeholder="Ask something..." />
+  <button id="askbtn">Ask</button>
+  <hr/>
+  <form id="uploadForm">
+    <input type="file" name="file" />
+    <button type="submit">Upload & Rebuild</button>
+  </form>
+  <script>
+    const chat = document.getElementById("chat");
+    const askbtn = document.getElementById("askbtn");
+    const input = document.getElementById("q");
+
+    askbtn.onclick = async () => {
+      const q = input.value;
+      if (!q) return;
+      chat.innerHTML += `<div class="user"><b>You:</b> ${q}</div>`;
+      input.value = "";
+      const res = await fetch("/ask", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({q})
+      });
+      const data = await res.json();
+      chat.innerHTML += `<div class="bot"><b>Bot:</b> ${data.answer}</div>`;
+      chat.scrollTop = chat.scrollHeight;
+    };
+
+    document.getElementById("uploadForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      await fetch("/upload", { method: "POST", body: formData });
+      await fetch("/rebuild", { method: "POST" });
+      alert("File uploaded and index rebuilt!");
+    };
+  </script>
+</body>
+</html>

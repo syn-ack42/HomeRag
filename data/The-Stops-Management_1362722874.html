@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : The Stops Management</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="FAQ_1265467497.html">FAQ</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="1451753518.html">FAQ | Frequently Asked Questions</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : The Stops Management
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Julian Beyer</span>, last modified on Sep 08, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <style type='text/css'>/*<![CDATA[*/
+div.rbtoc1763045511136 {padding: 0px;}
+div.rbtoc1763045511136 ul {list-style: none;margin-left: 0px;}
+div.rbtoc1763045511136 li {margin-left: 0px;padding-left: 0px;}
+
+/*]]>*/</style><div class='toc-macro rbtoc1763045511136'>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>1</span> <a href='#TheStopsManagement-Theprocessformergingstops'>The process for merging stops</a></li>
+<li><span class='TOCOutline'>2</span> <a href='#TheStopsManagement-Whichcriteriaformatching?'>Which criteria for matching?</a>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>2.1</span> <a href='#TheStopsManagement-TheStopLocationID'>The StopLocationID</a>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>2.1.1</span> <a href='#TheStopsManagement-CreateorEdityourstopslocations'>Create or Edit your stops locations</a></li>
+<li><span class='TOCOutline'>2.1.2</span> <a href='#TheStopsManagement-Thestopslocationsproperties'>The stops locations properties</a></li>
+<li><span class='TOCOutline'>2.1.3</span> <a href='#TheStopsManagement-IntheEDIs'>In the EDIs</a></li>
+<li><span class='TOCOutline'>2.1.4</span> <a href='#TheStopsManagement-Checkthematch'>Check the match</a></li>
+<li><span class='TOCOutline'>2.1.5</span> <a href='#TheStopsManagement-Intherulesengine'>In the rules engine</a></li>
+</ul>
+</li>
+<li><span class='TOCOutline'>2.2</span> <a href='#TheStopsManagement-Thestopgroupingrequest'>The stop grouping request</a></li>
+<li><span class='TOCOutline'>2.3</span> <a href='#TheStopsManagement-IncadisAPP'>In cadisAPP</a></li>
+</ul>
+</li>
+</ul>
+</div><div class="confluence-information-macro confluence-information-macro-information"><span class="aui-icon aui-icon-small aui-iconfont-info confluence-information-macro-icon"></span><div class="confluence-information-macro-body"><p>Your shipments data, as sent by your shippers or consignees, may be erroneous with names or addresses wrongly written. As a result, collections &amp; deliveries belong to different stops. CADIS, based upon a set of criteria, can help you <strong>merge</strong> these stops.</p></div></div><h1 id="TheStopsManagement-Theprocessformergingstops">The process for merging stops</h1><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="400" src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-6.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-6.png" loading="lazy"></span><p>❶ <strong>Your host system</strong><br/>Before even your shipments reach cadis, you may adjust the shipments data in your host system. Names &amp; addresses would be sent to cadis aligned, thus producing a unique stop</p><p>❷ <strong>cadisSTUDIO</strong><br/>You can create a complete database of stops in the <strong>Master data</strong>. Shipments are merged by CADIS at import stage (see section 2.1). Or, On a daily basis, dispatchers <strong>geocode</strong> shipments to merge them. CADIS keeps in memory the geoposition of the consignee/shipper for later imports.</p><p>❸ <strong>cadisAPP</strong><br/>While on tour, drivers may find out some shipments belong to the same stop. They have the possibility to merge (or unmerge) them in cadisAPP.<br/>⚠️ CADIS does not keep in memory the actions of the driver for later imports.</p><h1 id="TheStopsManagement-Whichcriteriaformatching?">Which criteria for matching?</h1><p><strong>❶ The StopLocationID</strong><br/>Your <strong>stop locations master data</strong> must be created upstream. Then the StopLocationID must be in sent in<strong> daily imports</strong> from your host system to cadis (see next section). Thus, all shipments bearing the same StopLocationID will be merged to the stop location defined at master data level.</p><p><strong>❷ The MatchCode1</strong><br/>Both the <strong>Geo-coordinates</strong>, (<em>tolerance zone is configurable, by default approx. 3m, or 100m per Lat/Long</em>) &amp; the <strong>Full Normalized name </strong>of consignee (CADIS f<em>ilters for prefixes like “Mr”, “Mrs”, “Company”, “Dr”, or suffixes: “Co”,  etc</em>)</p><p><strong>❸ The MatchCode2</strong><br/>The string of the <strong>Normalized name</strong> &amp; <strong>Address</strong> (zip code &amp; street of the consignee – <em>only the <strong>first 5 characters</strong> each criteria are considered</em>)</p><p /><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-30.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-30.png" loading="lazy"></span><div class="confluence-information-macro confluence-information-macro-information"><span class="aui-icon aui-icon-small aui-iconfont-info confluence-information-macro-icon"></span><div class="confluence-information-macro-body"><p>The field “<strong>Name2</strong>” of your consignee or shipper can be used to separate delivery stops.</p></div></div><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-28.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-28.png" loading="lazy"></span><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-27-1024x151.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-27-1024x151.png" loading="lazy"></span><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-29.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-29.png" loading="lazy"></span><h2 id="TheStopsManagement-TheStopLocationID">The StopLocationID</h2><h3 id="TheStopsManagement-CreateorEdityourstopslocations">Create or Edit your stops locations</h3><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-22-1024x573.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-22-1024x573.png" loading="lazy"></span><p>First, in the <strong>master data</strong> menu of cadisSTUDIO (❶), open the Stop Locations (❷), click on Create (❸) or double click on an existing stop to edit it.</p><p>Enter a StopID (❹) as a free text, that will be used fro matching with your shipments. The customer’s data (name &amp; address) are mandatory fields.</p><p>(❺) CADIS automatically geolocates your stop. If not, it remains possible to geolocate manually at shipment level, in cadisCONTROL.</p><h3 id="TheStopsManagement-Thestopslocationsproperties">The stops locations properties</h3><p>You can define the properties of your stop in Delivery &amp; Collection tabs.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-23-1024x548.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-23-1024x548.png" loading="lazy"></span><p>❶ The “Collections properties” &amp; “Delivery properties” share the same layout</p><p>❷ Person in charge at the stop location for deliveries or collections</p><p>❸ The time necessary for the driver to deliver or collect goods are considered for the sequence optimization</p><p>❹ Special attributes vehicle will need to deliver or collect goods</p><p>❺ The Instructions are addressed to drivers or terminal workers. For more info, click <a class="external-link" href="https://docs.cadis.cloud/en/2024/08/08/the-handling-instructions/" rel="nofollow"><u>here</u></a></p><p>❻ Choose the opening hours for delivery or collection at this stop <em>(more detailed behaviour of cadis below)</em>. Also, the “closed” tick is reported in the schedule for collection template.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-53.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-53.png" loading="lazy"></span><h3 id="TheStopsManagement-IntheEDIs">In the EDIs</h3><p>Second, the StopID should be sent in the <strong>daily imports</strong> from your host to cadis:</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-19-1024x394.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-19-1024x394.png" loading="lazy"></span><h3 id="TheStopsManagement-Checkthematch">Check the match</h3><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-20-1024x585.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-20-1024x585.png" loading="lazy"></span><p>If the match between your Stop master data &amp; the shipments is realized, you can find the StopID in the <strong>shipments details</strong>, tab Addresses.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-26-1024x654.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-26-1024x654.png" loading="lazy"></span><p>In your trip details, open the Stops tab. The column Shipments will show you how many orders are grouped in one stop</p><h3 id="TheStopsManagement-Intherulesengine">In the rules engine</h3><p>You can select the criteria “ConsigneeID” or “ShipperID” which refer to the related StopID, to automatically dispatch your shipments:</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-47-1024x578.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-47-1024x578.png" loading="lazy"></span><h2 id="TheStopsManagement-Thestopgroupingrequest">The stop grouping request</h2><p>As a dispatcher, you can request for shipments to be grouped in one stop. See our detailed article about this feature <a href="https://cadissoftware.atlassian.net/wiki/x/KoA8UQ" rel="nofollow"><u>here</u></a>.</p><h2 id="TheStopsManagement-IncadisAPP">In cadisAPP</h2><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="250" src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-49.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-49.png" loading="lazy"></span><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="250" src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-50.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-50.png" loading="lazy"></span><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="250" src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-51.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/10/image-51.png" loading="lazy"></span><p />
+                    </div>
+
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:51</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

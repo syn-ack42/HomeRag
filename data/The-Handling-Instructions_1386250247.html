@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : The Handling Instructions</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="FAQ_1265467497.html">FAQ</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="1451753518.html">FAQ | Frequently Asked Questions</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : The Handling Instructions
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Mohamed.Shebl</span>, last modified by <span class='editor'> Julian Beyer</span> on Sep 08, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <div class="contentLayout2">
+<div class="columnLayout fixed-width" data-layout="fixed-width">
+<div class="cell normal" data-type="normal">
+<div class="innerCell">
+<p><em>You can define Handling Instructions in cadisSTUDIO &amp; have them displayed on cadisAPP at (Un)Loading, Delivery or simple scan. The instructions can apply at shipment, stop or list level.</em></p><h2 id="TheHandlingInstructions-CreateyourInstructionsMasterData">Create your Instructions Master Data</h2><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/08/image-17-1024x502.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/08/image-17-1024x502.png" loading="lazy"></span><p>❶ Click on « Create »</p><p>❷ If the case “Important” is ticked, a dialog screen will pop-up in CADIS APP at package scanning. If “Trip relevant” is ticked, the handling instruction will be displayed prominently on trip level (so the driver can easily see them when reviewing the trip).</p><p>❸ Save your work</p><h2 id="TheHandlingInstructions-TheInstructionsatshipmentlevel">The Instructions at shipment level</h2><p><em>After you have created your handling instructions master data, you can send them from your host system to cadis in the shipments EDI, create them manually, assign them automaticaly from your rules engine or define them in your recurring pick-up orders.</em></p><h3 id="TheHandlingInstructions-HowareInstructionstransferredbyEDI">How are Instructions transferred by EDI</h3><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/08/image-19-1024x448.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/08/image-19-1024x448.png" loading="lazy"></span><p>❶ In the shipments EDIs sent from your host system should be mentionned the handling instructions code. Their type decides at which logistic stage the instruction will be displayed in cadisAPP. You can also send an additional text.</p><p>❷ In cadisSTUDIO, while shipments planning, you can already read the instructions</p><p>❸ A dialog will pop-up in cadisAPP during operational processing if the instructions are set as Important</p><h3 id="TheHandlingInstructions-HowtomanuallycreateanInstructionordefineitinthecollectiontemplate">How to manually create an Instruction or define it in the collection template</h3><p><em>The instructions defined in the collection templates will apply to all collections created from that template. The process is similar to the manual creation.</em></p><p><strong>The manul creation</strong></p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/08/image-20-1024x505.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/08/image-20-1024x505.png" loading="lazy"></span><p><strong>In the Collection template</strong></p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/08/image-22-1024x494.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/08/image-22-1024x494.png" loading="lazy"></span><p>❶ Open the details of a shipment/collection template</p><p>❷ In the Instructions tab, click on “Create”</p><p>❸ Fill in the 3 mandatory fields as requested</p><p>❹ Apply your changes &amp; Save</p><h3 id="TheHandlingInstructions-Howtoconfigureyourrulesengine">How to configure your rules engine</h3><p><em>The instructions automatically assigned by your rules engine apply during delivery &amp; pick-up only, not intra-agency processes ((Un)Loading, Inventory…)</em></p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/08/image-21-1024x517.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/08/image-21-1024x517.png" loading="lazy"></span><p>❶ Open the rules engine dedicated to Handling Instructions</p><p>❷ Select from a drop down list your requirement</p><p>❸ Enter your criteria (free text)</p><p>❹ Select your instructions master data. The drop down list is feeded by your master data creation</p><p>❺ You can enter an additional text for your instruction. It’s a free text that is optional</p><h2 id="TheHandlingInstructions-TheInstructionsatstoplevel">The Instructions at stop level</h2><p><em>The instructions can be entered in your stops master data. They will apply to all orders matching with this stop</em></p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/08/image-23-1024x506.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/08/image-23-1024x506.png" loading="lazy"></span><p>❶ In the Stop locations master data, select a previously created stop &amp; open it’s details</p><p>❷ In the propertires (Delivery or Collection), fill in the requested fields. You can choose the Process in which your instruction should apply</p><p>❸ Save your work</p><h2 id="TheHandlingInstructions-TheInstructionsatlistlevel">The Instructions at list level</h2><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/08/image-24.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/08/image-24.png" loading="lazy"></span><p>In the Loading list details, open the tab “Dispatching Info”. The Planned storing position you will select &amp; Instructions you will enter apply apply to all the shipments scheduled in this loading list.</p><p>They will be displayed in cadisAPP at any <strong>other </strong>stage (unloading, inventory or Infoscan). Their objective should be to notify Terminal Workers that these shipments should be prepared for this specific loading.</p><p>When the loading list is closed, the dispatching info is deleted at shipment level</p><p>These instructions apply in agency only &amp; have a Max caracters = 500</p></div>
+</div>
+</div>
+<div class="columnLayout two-equal" data-layout="two-equal">
+<div class="cell normal" data-type="normal">
+<div class="innerCell">
+<span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-center" alt="image-20250728-052904.png" width="269" loading="lazy" src="attachments/1386250247/1386348546.png?width=269" data-image-src="attachments/1386250247/1386348546.png" data-height="480" data-width="269" data-unresolved-comment-count="0" data-linked-resource-id="1386348546" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image-20250728-052904.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1386250247" data-linked-resource-container-version="2" data-media-id="b7209790-5299-47ba-9099-116e6798d599" data-media-type="file"></span><p style="text-align: center;">A pop-up will appear in cadisAPP at 1st scan in a process different from loading</p></div>
+</div>
+<div class="cell normal" data-type="normal">
+<div class="innerCell">
+<span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-center" alt="image-20250728-052951.png" width="271" loading="lazy" src="attachments/1386250247/1386315781.png?width=271" data-image-src="attachments/1386250247/1386315781.png" data-height="479" data-width="271" data-unresolved-comment-count="0" data-linked-resource-id="1386315781" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image-20250728-052951.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1386250247" data-linked-resource-container-version="2" data-media-id="896e983d-20fd-4ef0-a63c-66d74e9ba35e" data-media-type="file"></span><p style="text-align: center;">The instruction &amp; the planned storing position remain displayed</p></div>
+</div>
+</div>
+</div>
+                    </div>
+
+                                        <div class="pageSection group">
+                        <div class="pageSectionHeader">
+                            <h2 id="attachments" class="pageSectionTitle">Attachments:</h2>
+                        </div>
+
+                        <div class="greybox" align="left">
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1386250247/1386348546.png">image-20250728-052904.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1386250247/1386315781.png">image-20250728-052951.png</a> (image/png)
+                                <br/>
+                                                    </div>
+                    </div>
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:51</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

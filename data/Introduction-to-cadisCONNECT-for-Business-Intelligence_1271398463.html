@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : Introduction to cadisCONNECT for Business Intelligence</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="Technical-Resources_1262748336.html">Technical Resources</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="Technical-papers_1262748337.html">Technical papers</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : Introduction to cadisCONNECT for Business Intelligence
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Julian Beyer</span>, last modified on Aug 26, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <style type='text/css'>/*<![CDATA[*/
+div.rbtoc1763045577481 {padding: 0px;}
+div.rbtoc1763045577481 ul {list-style: none;margin-left: 0px;}
+div.rbtoc1763045577481 li {margin-left: 0px;padding-left: 0px;}
+
+/*]]>*/</style><div class='toc-macro rbtoc1763045577481'>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>1</span> <a href='#IntroductiontocadisCONNECTforBusinessIntelligence-Overview'>Overview</a>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>1.1</span> <a href='#IntroductiontocadisCONNECTforBusinessIntelligence-WhatarecadisCONNECT“dataload”APIs?'>What are cadisCONNECT “data load” APIs?</a>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>1.1.1</span> <a href='#IntroductiontocadisCONNECTforBusinessIntelligence-“Dataload”APIsmaincharacteristics'>“Data load” APIs main characteristics</a></li>
+</ul>
+</li>
+<li><span class='TOCOutline'>1.2</span> <a href='#IntroductiontocadisCONNECTforBusinessIntelligence-Architecturalembedding'>Architectural embedding</a></li>
+</ul>
+</li>
+<li><span class='TOCOutline'>2</span> <a href='#IntroductiontocadisCONNECTforBusinessIntelligence-GettingStarted'>Getting Started</a>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>2.1</span> <a href='#IntroductiontocadisCONNECTforBusinessIntelligence-Prerequisites'>Prerequisites</a></li>
+<li><span class='TOCOutline'>2.2</span> <a href='#IntroductiontocadisCONNECTforBusinessIntelligence-LoadingData'>Loading Data</a></li>
+<li><span class='TOCOutline'>2.3</span> <a href='#IntroductiontocadisCONNECTforBusinessIntelligence-DealingwithRecordUpdates'>Dealing with Record Updates</a></li>
+<li><span class='TOCOutline'>2.4</span> <a href='#IntroductiontocadisCONNECTforBusinessIntelligence-Samplecode'>Sample code</a></li>
+</ul>
+</li>
+</ul>
+</div><h2 id="IntroductiontocadisCONNECTforBusinessIntelligence-Overview">Overview</h2><p class="media-group"><span class="confluence-embedded-file-wrapper"><a class="confluence-embedded-file" href="attachments/1271398463/1430454282.pptx" data-nice-type="Microsoft PowerPoint Presentation" data-file-src="/wiki/download/attachments/1271398463/cadisCONNECT_introduction_R4.18.pptx?version=2&amp;modificationDate=1756197094247&amp;cacheVersion=1&amp;api=v2" data-linked-resource-id="1430454282" data-linked-resource-type="attachment" data-linked-resource-container-id="1271398463" data-linked-resource-default-alias="cadisCONNECT_introduction_R4.18.pptx" data-mime-type="application/vnd.openxmlformats-officedocument.presentationml.presentation" data-has-thumbnail="true" data-linked-resource-version="2" data-media-id="ba86ccda-bf13-403d-9d23-2631f35fb621" data-media-type="file"><img src="attachments/thumbnails/1271398463/1430454282" height="250"/></a></span></p><h3 id="IntroductiontocadisCONNECTforBusinessIntelligence-WhatarecadisCONNECT“dataload”APIs?">What are cadisCONNECT “data load” APIs?</h3><p>cadisCONNECT provides two main classes of APIs. One is designed for “integration” and the other for “data load”. “Integration” APIs provide API level access to real time cadis data and operations to enable deeper integration with 3rd party systems. “Data load” are the subject of this article and they are specifically designed to facilitate retrieving operational data from cadis into data lakes, data warehouses or directly into BI solutions. “cadisCONNECT APIs “Data load” APIs are grouped in the “Analytics Data Load” sections of the module API definitions (please nota taht the legacy “Otms – cadisAnalytics API” has been discontinued as of R4 2024.1).</p><h4 id="IntroductiontocadisCONNECTforBusinessIntelligence-“Dataload”APIsmaincharacteristics">“Data load” APIs main characteristics</h4><ul><li><p>data load APIs are queried in times-slices with big result sets across depots. As such they all require a “fromTimestamp” as a query parameter and every record returned has a “lastModificationTimestamp”.</p></li><li><p>Results are returned in chunks up to a “limit” number of records. The consumer may have to iterate through time slices.</p></li><li><p>data may have a time delay or may be limited to business objects that have reached a stable status that make it suitable to analytics use cases</p></li><li><p>the result data types are predominantly flat, making them suitable for later joining in a BI system</p></li></ul><p>See the “Getting started” section to get a feel on how to use the APIs.</p><h3 id="IntroductiontocadisCONNECTforBusinessIntelligence-Architecturalembedding">Architectural embedding</h3><p>A business intelligence pipeline is commonly separated into the following phases and components:</p><ul><li><p>“Land” (or “ingest”): data is retrieved or received from the source system(s) (here: retrieved from cadis) and stored in the raw format in a “data lake” (e.g., “Azure Data Lake Gen 2” or “Data Lake on AWS (using S3 buckets)”. Data lakes provide economical long-term storage of mass data.</p></li><li><p>“Assemble” (or “process”): raw data is retrieved from the unstructured data lake, filtered, and transformed into the structured schema of a data warehouse. (can be a standard RDS or manages services like “<a class="external-link" href="https://learn.microsoft.com/en-us/azure/architecture/example-scenario/analytics/enterprise-bi-synapse" rel="nofollow"><u>Azure Synapse</u></a>” or “<a class="external-link" href="https://aws.amazon.com/redshift/?nc=sn&amp;loc=1" rel="nofollow"><u>aws Redshift</u></a>“)</p></li><li><p>“Analyze” (or “serve”): make the data available for the end user. Usually this takes the form of visual analytics (as in “Power BI”, “Qlik” or “Tableau”) or data may also be consumed by other business applications apps.</p></li></ul><p>Stages and components may be added to this pipeline (e.g., enriching data by machine learning or packaging data for sharing). In simpler scenarios steps are often skipped by e.g., loading data directly from the source into a data warehouse or ingesting the raw “data lake” data in a visual analytics application.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-left" alt="image-20250507-084819.png" width="800" loading="lazy" src="attachments/1271398463/1271398473.png?width=800" data-image-src="attachments/1271398463/1271398473.png" data-height="545" data-width="768" data-unresolved-comment-count="0" data-linked-resource-id="1271398473" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image-20250507-084819.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1271398463" data-linked-resource-container-version="4" data-media-id="7274be56-5e11-412b-ae7b-1164600b5038" data-media-type="file"></span><h2 id="IntroductiontocadisCONNECTforBusinessIntelligence-GettingStarted">Getting Started</h2><h3 id="IntroductiontocadisCONNECTforBusinessIntelligence-Prerequisites">Prerequisites</h3><p>You will need:</p><ul><li><p>The address (URL) of the cadis server you want to retrieve data from. In the following we will use “<a class="external-link" href="https://demo.cadis.cloud" rel="nofollow">https://demo.cadis.cloud</a>”, you need to replace this with your cadis system.</p></li><li><p>A user login on that server so you can view the API documentation under the “/cadis-rest-public-docs” path <a class="external-link" href="https://demo.cadis.cloud/cadis-rest-public-doc/" rel="nofollow"><u>https://demo.cadis.cloud/cadis-rest-public-doc/</u></a></p></li><li><p>This documentation URL and the cadisCONNECT API endpoints (/api/public/*) need to be accessible. As it is highly recommended to always use a reverse proxy in front of cadis and to use https for all connections these URLs need to be forwarded. If you are a cadis SaaS customer all this is already configured for you.</p></li><li><p>A cadis license with the cadisCONNECT API’s enabled installed on the cadis system</p></li><li><p>A jwt token with the permissions pertinent to the data you wish to retrieve (they will have the name “useCadisConnect…”). You can request an API token via the cadis service desk.</p></li><li><p>Your selected tooling for retrieving data from web services. In the following we will use Python code examples, but the process is the same with every language or tool</p></li></ul><h3 id="IntroductiontocadisCONNECTforBusinessIntelligence-LoadingData">Loading Data</h3><p>Data should be loaded from cadis incrementally and in regular intervals. The most common approach is a timer-based job running every approximately 15 minutes to 1h depending on your needs. On every incremental load you will only request the data that has been modified since the last request. This is done by setting the “fromTimestamp” parameter of you request accordingly. On the initial data load, you will have to set this timestamp to some sufficiently long-ago time as it is mandatory on every cadis data load API.</p><p>The process for loading data has the following steps:</p><ul><li><p>Determine the start of the time slice from where you need to start/resume loading. The best way to do this is to take the “lastModificationTimestamp” of the newest record in your data lake. Alternatively, you can remember the timestamp of you most recent request. If you do so, remember that clocks are never 100% synchronized so adjust the times a bit to artificially create some overlap.<br/>This is your initial “start timestamp”</p></li><li><p>Pull data from cadis</p><ul><li><p>While the new data is not exhausted</p><ul><li><p>GET the resource using the current “start timestamp” as the and a “limit” parameter (optional but recommended)</p></li><li><p>Check if the result is only a chunk of the full data because the “limit” of datasets has been exceeded. This can be done in the following ways</p><ul><li><p>If the number of records returned is &lt; “limit” or if the result list is empty, all data has been retrieved</p></li><li><p>All new APIs return a “hasMoreThanLimit” flag in the result. If it is true more data is available than could be returned</p></li></ul></li><li><p>add the chunk retrieved to the full result set</p></li><li><p>if all data has been retrieved this stage is finished</p></li><li><p>otherwise find the most recent “lastModificationTimestamp” in the most recent chunk. This is your new “start timestamp”, start at the top of the loop</p></li></ul></li></ul></li><li><p>The data retrieved in this manner will, by necessity have duplicates due to overlapping time slices. *) You can remove them immediately or do this when you load the data into the data warehouse. See “Handle Updated Records” for the criteria to identify records.</p></li><li><p>Store the data to your data lake</p></li></ul><p>*) You could avoid this by tuning the request timestamps, but it is not recommended. There is a minimal chance that you could lose records due to misaligned clocks or race conditions and you will have to process record updates later anyway.</p><h3 id="IntroductiontocadisCONNECTforBusinessIntelligence-DealingwithRecordUpdates">Dealing with Record Updates</h3><p>Many cadis business objects are mutable for a long time and are changed in the due course of business for days or even weeks. You will almost certainly want to process them much earlier for business intelligence use cases. This means dealing with updated records.</p><p>As the field name “lastModificationTimestamp” implies a record that is changed in cadis will receive a new timestamp and will consequently be retrieved again by the data load procedure.</p><p>Your pipeline will have to implement a procedure to update changed records in the business intelligence data warehouse and avoid duplicating them. (This could conceivably be handled differently for some use case, but we have never seen it.)</p><p>In order to enable this, cadis includes IDs for the business objects in the result data set. Most cadis features are highly branch-centric (also sometimes called “depot” or “orgUnit”) so the uniqueness criteria of a record are its “branchNumber” and an internal “cadisID”. Note that the “cadisID” alone may appear to be unique but there are some edge cases where it is only unique in a branch. For most APIs you should use the “branchNumber” and the “cadisID” to form a unique identifier for a business record. For some APIs this approach is not feasible, and these include a “uniqueIdentifier” element. Always use the “uniqueIdentifier” element if it is present (you will not find a “cadisID” filed in this case anyway)</p><h3 id="IntroductiontocadisCONNECTforBusinessIntelligence-Samplecode">Sample code</h3><p>The following code is a sample implementation written in Python.</p><p>It implements a highly simplified BI pipeline with a combined “data lake” and “data warehouse” consisting of JSON files. It is in no way suitable for production (if nothing else the JSON files will grow to unmanageable size) but it can be used for experimentation and data discovery.</p><p>The sample script will try to retrieve all data from the APIs configured in “DATA_SOURCES” and download them into individual JSON files in a file system folder. If there are already JSON files in that folder that correspond to the data types it will read these and only incrementally load the data starting from the newest time stamp (just as described above).</p><p>It will also update records in the previously retrieved data using the unique record criteria described above.</p><p>Depending on your license and installation not all APIs will work. If a data source does not work the script will simply log an error to the command line and continue with the next as it is for demonstration purposes only.</p><div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: py; gutter: false; theme: Confluence" data-theme="Confluence">import argparse
+import urllib
+from pathlib import Path
+import datetime
+import json
+
+import dateutil.parser
+import requests
+
+RECORD_GET_LIMIT = 1000
+
+# ----- configuration for currently available data load sources -----
+# &lt;key&gt;: the dictionary key will serve as the name of the data source
+# path: api path
+# data_root: optional. element in the returned data that contains the records.
+#            If None the data records form the root of th response
+# legacy_mode: some APIs are legacy and require specific handling
+# alt_unique_id_key: if given the data element with that key will be mapped to &#39;uniqueIdentifier&#39;.
+#                    Can be an array of element names. In that case the uniqueIdentifier is formed
+#                    from the values these fields combined.
+# alt_modtime_key: if given the data element with that key will be mapped to &#39;lastModificationTimestamp&#39;.
+DATA_SOURCES = {
+    &#39;orders&#39;: {&#39;path&#39;: &#39;/api/public/dpt-rest/dataload/tours/orders&#39;,
+               &#39;data_root&#39;: &#39;orderProcessed&#39;, &#39;legacy_mode&#39;: False, &#39;alt_unique_id_key&#39;: None,
+               &#39;alt_modtime_key&#39;: None},
+    &#39;order_packages&#39;: {&#39;path&#39;: &#39;/api/public/dpt-rest/dataload/tours/orderPackages&#39;,
+                       &#39;data_root&#39;: &#39;orderPackageProcessed&#39;, &#39;legacy_mode&#39;: False, &#39;alt_unique_id_key&#39;: None,
+                       &#39;alt_modtime_key&#39;: None},
+    &#39;items&#39;: {&#39;path&#39;: &#39;/api/public/dpt-rest/dataload/item/list&#39;,
+              &#39;data_root&#39;: &#39;items&#39;, &#39;legacy_mode&#39;: False, &#39;alt_unique_id_key&#39;: [&#39;branchNumber&#39;, &#39;cadisID&#39;],
+              &#39;alt_modtime_key&#39;: None},
+    &#39;loading_lists&#39;: {&#39;path&#39;: &#39;/api/public/dpt-rest/dataload/loadings/list&#39;,
+                      &#39;data_root&#39;: &#39;loadings&#39;, &#39;legacy_mode&#39;: False,
+                      &#39;alt_unique_id_key&#39;: [&#39;branchNumber&#39;, &#39;cadisID&#39;], &#39;alt_modtime_key&#39;: None},
+}
+
+
+class DataStore(object):
+    &quot;&quot;&quot;
+    DataStore is a very simple data storage provider that can hold data retrieved from cadis in a set of json files.
+    For production, it is highly recommended to use a proper database to hold retrieved data.
+    DataStore requires all records have a &#39;lastModificationTimestamp&#39; and a &#39;uniqueIdentifier&#39; field.
+    When adding data it will always overwrite records with the same &#39;uniqueIdentifier&#39; if the added record is newer
+    according to &#39;lastModificationTimestamp&#39;.
+    &quot;&quot;&quot;
+
+    def __init__(self, directory: str, name: str) -&gt; None:
+        &quot;&quot;&quot;
+        Initialize a data store json file in the directory. If the json file already exists it is read.
+        If not the file and file are created.
+        @param directory: The directory where the json files reside
+        @param name: The name of data source. The data will be stored in a file named &lt;name&gt;.json
+        &quot;&quot;&quot;
+        self.directory = directory
+        self.name = name
+        self.filename = Path(directory, f&#39;{name}.json&#39;).absolute()
+        self.data = []
+        self.newest_record_timestamp = None
+
+        self.__create_or_load()
+
+    def __create_or_load(self):
+        if Path(self.filename).is_file():
+            print(f&#39;Opening existing file {self.filename}&#39;)
+            try:
+                f = open(self.filename, &#39;r&#39;)
+                self.data = json.load(f)
+                f.close()
+                self.__deduplicate_data()
+                self.__build_metadata()
+                pass
+            except json.JSONDecodeError as e:
+                print(f&#39;{self.filename} is not a valid json file. {str(e)}&#39;)
+                exit(2)
+        else:  # create new filename
+            print(f&#39;Creating new data file at {self.filename}&#39;)
+            try:
+                Path(self.directory).mkdir(parents=True, exist_ok=True)
+                self.data = []
+                self.__store_data()
+            except Exception as e:
+                print(f&#39;Error creating mew data file at {self.filename}, {str(e)}&#39;)
+                exit(2)
+
+    def __build_metadata(self):
+        self.newest_record_timestamp = dateutil.parser.isoparse(&#39;1970-01-01T00:00:00.000000Z&#39;)
+        for i in range(0, len(self.data)):
+            self.newest_record_timestamp = max(self.newest_record_timestamp,
+                                               dateutil.parser.isoparse(self.data[i][&quot;lastModificationTimestamp&quot;]))
+
+    def __deduplicate_data(self):
+        &quot;&quot;&quot;
+        Run through all data records and remove entries with the same uniqueIdentifier.
+        The entry with the lager &#39;lastModificationTimestamp&#39; will be retained.
+        &quot;&quot;&quot;
+        uniq_recs = {}
+        for e in self.data:
+            pe = uniq_recs.get(e[&#39;uniqueIdentifier&#39;], None)
+            if pe and pe[&#39;lastModificationTimestamp&#39;] &gt;= e[&#39;lastModificationTimestamp&#39;]:
+                continue
+            uniq_recs[e[&#39;uniqueIdentifier&#39;]] = e
+        self.data = list(uniq_recs.values())
+
+    def __store_data(self):
+        print(f&#39;Saving {len(self.data)} records to {self.filename}&#39;)
+
+        f = open(self.filename, &#39;w&#39;)
+        json.dump(self.data, f)
+        f.close()
+
+    def add_data(self, new_data: list) -&gt; None:
+        &quot;&quot;&quot;
+        Add data records. Newer records will replace older ones if they have the same uniqueIdentifier
+        @param new_data: List of new data records to add.
+        &quot;&quot;&quot;
+
+        self.data += new_data
+        self.__deduplicate_data()
+        self.__build_metadata()
+        self.__store_data()
+
+
+def load_data(base_url: str, path: str, jwt: str, start_ts: datetime.datetime = None, data_root: str = None,
+              legacy_mode: bool = False, alt_unique_id_key: str | list = None,
+              alt_modtime_key: str = None) -&gt; list | None:
+    url = urllib.parse.urljoin(base_url, path)
+
+    # start time of incremental data load. e.g. lastModificationTimestamp of the newest record you already have,
+    # or a long past date for the initial load
+    from_ts = start_ts or dateutil.parser.isoparse(&#39;1970-01-01T00:00:00.000000Z&#39;)
+
+    # end time of the incremental load. Usually &quot;now&quot;. (Optional but setting it can avoid edge cases.)
+    to_ts = datetime.datetime.now()
+
+    records = []
+
+    # legacy interfaces require a different time format
+    dt_format = &quot;%Y-%m-%d %H:%M:%S&quot; if legacy_mode else &quot;%Y-%m-%dT%H:%M:%S.%fZ&quot;
+
+    while True:
+        print(f&#39;Getting records from {url} starting with timestamp {str(from_ts)} until {str(to_ts)}&#39;,
+              f&#39;with limit {RECORD_GET_LIMIT}&#39;)
+
+        h = {
+            &#39;accept&#39;: &#39;application/json&#39;,
+            &#39;Authorization&#39;: &#39;Bearer &#39; + jwt,
+            &#39;Content-Type&#39;: &#39;application/json&#39;,
+        }
+
+        r = requests.get(url, headers=h, params={&#39;fromTimestamp&#39;: from_ts.strftime(dt_format),
+                                                 &#39;untilTimestamp&#39;: to_ts.strftime(dt_format),
+                                                 &#39;limit&#39;: RECORD_GET_LIMIT})
+
+        if r.status_code == 204:  # no more records
+            break
+
+        if r.status_code != 200:
+            print(f&#39;ERROR: Failed to retrieve data from {url}, error code {r.status_code}: {r.reason} -- {r.text}&#39;)
+            return None
+
+        # some interfaces have a specific element containing all the data
+        if data_root:
+            d = r.json().get(data_root, [])
+        else:
+            d = r.json()
+
+        print(f&#39;{len(d)} records retrieved from {url}&#39;)
+
+        # some interfaces have an alternate lastModificationTimestamp field name or may have a different
+        # uniqueIdentifier fieLd. The latter could even require composition from multiple fields.
+        if alt_modtime_key or alt_unique_id_key:
+            for i in range(0, len(d)):
+                if alt_modtime_key:
+                    d[i][&#39;lastModificationTimestamp&#39;] = d[i][alt_modtime_key]
+                if alt_unique_id_key:
+                    # compose the uniqueIdentifier. If an array of filed identifiers is given the value is
+                    # composed of those fields
+                    if type(alt_unique_id_key) is str:
+                        alt_unique_id_key = [alt_unique_id_key]
+                    pks = [str(d[i][x]) for x in alt_unique_id_key]
+
+                    d[i][&#39;uniqueIdentifier&#39;] = &#39;_&#39;.join(pks)
+
+        cur_records = sorted(d, key=lambda x: x[&quot;lastModificationTimestamp&quot;])
+        records = records + cur_records
+
+        if len(cur_records) &lt; RECORD_GET_LIMIT:  # no more records
+            break
+
+        # set the &quot;from&quot; timestamp for the next request to the newest record of the slice
+        from_ts = dateutil.parser.isoparse(cur_records[-1][&#39;lastModificationTimestamp&#39;])
+
+    records.sort(key=lambda x: x[&quot;lastModificationTimestamp&quot;], reverse=True)
+    return records
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(&quot;--jwt&quot;, &quot;-j&quot;,
+                        help=&quot;json web token for cadis containing the appropriate useCadisConnect... permission.&quot;,
+                        required=True)
+    parser.add_argument(&quot;--base_url&quot;, &quot;-u&quot;, help=&quot;Base url of the cadis system, e.g. https://demo.cadis.cloud&quot;,
+                        required=True)
+    parser.add_argument(&quot;--data_dir&quot;, &quot;-d&quot;,
+                        help=&quot;Directory where the retrieved data will be stored. If it does not exist it will be &quot;
+                             &quot;created. Defaults to ./cadis_data&quot;,
+                        default=&quot;./cadis_data&quot;)
+    args = parser.parse_args()
+
+    return args
+
+
+def main():
+    args = parse_arguments()
+
+    # try to retrieve data from cadis rest apis for all data sources and store it to the data directory
+    for name, data_source in DATA_SOURCES.items():
+        # create a data store and load data hat has been retrieved and save previously
+        data_store = DataStore(args.data_dir, name)
+
+        # get data from thw web service starting at the timestamp of the newest record in the data store
+        records = load_data(base_url=args.base_url, jwt=args.jwt, start_ts=data_store.newest_record_timestamp,
+                            **data_source)
+        if records:
+            # add the data to the data store and save
+            data_store.add_data(records)
+
+
+if __name__ == &#39;__main__&#39;:
+    main()</pre>
+</div></div><p>Usage: python cadisConnect_data_load.py –base_url <a class="external-link" href="https://demo.cadis.cloud" rel="nofollow">https://demo.cadis.cloud</a> –data_dir ./cadis_dl –jwt abcbkh…YourJWT</p><p>Requires Python &gt;= 3.8 and requests library (python -m pip install requests)</p>
+                    </div>
+
+                                        <div class="pageSection group">
+                        <div class="pageSectionHeader">
+                            <h2 id="attachments" class="pageSectionTitle">Attachments:</h2>
+                        </div>
+
+                        <div class="greybox" align="left">
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1271398463/1271398473.png">image-20250507-084819.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1271398463/1430454288.pptx">cadisCONNECT_introduction_R4.18.pptx</a> (application/vnd.openxmlformats-officedocument.presentationml.presentation)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1271398463/1430454282.pptx">cadisCONNECT_introduction_R4.18.pptx</a> (application/vnd.openxmlformats-officedocument.presentationml.presentation)
+                                <br/>
+                                                    </div>
+                    </div>
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:52</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

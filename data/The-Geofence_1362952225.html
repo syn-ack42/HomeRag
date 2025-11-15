@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : The Geofence</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="FAQ_1265467497.html">FAQ</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="1451753518.html">FAQ | Frequently Asked Questions</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : The Geofence
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Julian Beyer</span>, last modified on Sep 08, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <style type='text/css'>/*<![CDATA[*/
+div.rbtoc1763045511061 {padding: 0px;}
+div.rbtoc1763045511061 ul {list-style: none;margin-left: 0px;}
+div.rbtoc1763045511061 li {margin-left: 0px;padding-left: 0px;}
+
+/*]]>*/</style><div class='toc-macro rbtoc1763045511061'>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>1</span> <a href='#TheGeofence-Prerequisite:License&amp;ConfigManager'>Prerequisite: License &amp; ConfigManager</a></li>
+<li><span class='TOCOutline'>2</span> <a href='#TheGeofence-Readingthedata'>Reading the data</a></li>
+<li><span class='TOCOutline'>3</span> <a href='#TheGeofence-Exportingthedata'>Exporting the data</a></li>
+</ul>
+</div><p>cadis back office reports the time stamps of the driver entering &amp; exiting the area surrounding the stop location. This area is called the Geofence. <em>The data is also exported to your host system.</em></p><h1 id="TheGeofence-Prerequisite:License&amp;ConfigManager">Prerequisite: License &amp; ConfigManager</h1><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-147.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-147.png" loading="lazy"></span><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-131.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-131.png" loading="lazy"></span><h1 id="TheGeofence-Readingthedata">Reading the data</h1><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-140.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-140.png" loading="lazy"></span><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-143-1024x658.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-143-1024x658.png" loading="lazy"></span><h1 id="TheGeofence-Exportingthedata">Exporting the data</h1><p>The events exported from cadis to your host system are:</p><div class="table-wrap"><table data-table-width="854" data-layout="align-start" data-local-id="6fac1372-4d50-45c9-b321-62a57583a10d" class="confluenceTable"><colgroup><col style="width: 77.0px;"/><col style="width: 126.0px;"/><col style="width: 649.0px;"/></colgroup><tbody><tr><td class="confluenceTd"><p><strong>Status</strong></p></td><td class="confluenceTd"><p><strong>Sub-status</strong></p></td><td class="confluenceTd"><p><strong>Definition</strong></p></td></tr><tr><td class="confluenceTd"><p>2600</p></td><td class="confluenceTd"><p>0</p></td><td class="confluenceTd"><p>Stop area reached <em>(the driver has entered the Geofence area)</em></p></td></tr><tr><td class="confluenceTd"><p>2601</p></td><td class="confluenceTd"><p>0</p></td><td class="confluenceTd"><p>Leave stop area <em>(the driver has left the Geofence area)</em></p></td></tr><tr><td class="confluenceTd"><p>2650</p></td><td class="confluenceTd"><p>0</p></td><td class="confluenceTd"><p>Stop in approach <em>(the driver is heading for the next stop*)</em></p></td></tr></tbody></table></div><p>* <em>This event will only be triggered if the driver respects the sequence of the trip because cadis must be aware of the next stop to be processed (i.e. if the driver processes “StopC” before “StopB”, the event will not be triggered for “StopB”). Also, note that this event will only be triggered for export after the stop is closed. This is to make sure the driver did not enter the geofence area just because he was passing by. </em></p><p><u>NOTE</u>: cadis also exports some events similar to the ones above, but they are not related to the Geofencing feature. Those events are:</p><div class="table-wrap"><table data-table-width="897" data-layout="align-start" data-local-id="70297062-5b0f-47f0-889a-e1b289bf05af" class="confluenceTable"><colgroup><col style="width: 98.0px;"/><col style="width: 118.0px;"/><col style="width: 678.0px;"/></colgroup><tbody><tr><td class="confluenceTd"><p><strong>Status</strong></p></td><td class="confluenceTd"><p><strong>Sub-status</strong></p></td><td class="confluenceTd"><p><strong>Definition</strong></p></td></tr><tr><td class="confluenceTd"><p>800</p></td><td class="confluenceTd"><p>0</p></td><td class="confluenceTd"><p>Arrival at delivery location <em>(the driver has opened the stop for processing on cadisAPP)</em></p></td></tr><tr><td class="confluenceTd"><p>800</p></td><td class="confluenceTd"><p>10</p></td><td class="confluenceTd"><p>Arrived at stop</p></td></tr><tr><td class="confluenceTd"><p>750</p></td><td class="confluenceTd"><p>0</p></td><td class="confluenceTd"><p>Approaching</p></td></tr><tr><td class="confluenceTd"><p>930</p></td><td class="confluenceTd"><p>10</p></td><td class="confluenceTd"><p>Departure from stop (for pick-ups)</p></td></tr></tbody></table></div>
+                    </div>
+
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:51</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

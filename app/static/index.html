@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Local RAG Chat</title>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<style>
+body { font-family: system-ui, sans-serif; margin: 2em; }
+#chat {
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 1em;
+    height: 500px;
+    overflow-y: scroll;
+}
+.user { color: blue; margin: .5em 0; }
+.bot { color: darkgreen; margin: .5em 0; }
+#q { width: 80%; padding: .5em; font-size: 1em; }
+</style>
+</head>
+
+<body>
+
+<h2>Local RAG Chat</h2>
+
+<div id="chat"></div>
+
+<input id="q" placeholder="Ask something..." />
+
+<hr/>
+
+<h3>Upload File</h3>
+<form id="uploadForm">
+    <input type="file" name="file" />
+    <button type="submit">Upload</button>
+</form>
+
+<h3>Upload ZIP</h3>
+<form id="zipForm">
+    <input type="file" name="file" />
+    <button type="submit">Upload ZIP</button>
+</form>
+
+<button onclick="rebuild()">Rebuild Index</button>
+
+<hr/>
+
+<h3>Knowledge Base Files</h3>
+<ul id="fileList"></ul>
+<button onclick="refreshFiles()">Refresh List</button>
+
+<hr/>
+
+<h3>System Prompt</h3>
+<textarea id="systemPrompt" style="width:100%;height:150px;"></textarea>
+<button onclick="savePrompt()">Save</button>
+<button onclick="loadPrompt()">Reload</button>
+
+<script>
+const chat = document.getElementById("chat");
+const input = document.getElementById("q");
+
+let history = [];
+
+input.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+function appendUser(msg) {
+    chat.innerHTML += `<div class="user"><b>You:</b> ${msg}</div>`;
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function appendTyping() {
+    const el = document.createElement("div");
+    el.className = "bot";
+    el.innerHTML = "<i>Bot is typing…</i>";
+    chat.appendChild(el);
+    chat.scrollTop = chat.scrollHeight;
+    return el;
+}
+
+function appendBotContainer() {
+    const el = document.createElement("div");
+    el.className = "bot";
+    el.innerHTML = "<b>Bot:</b><br>";
+    el.rawText = "";
+    el.tokenCount = 0;
+    chat.appendChild(el);
+    chat.scrollTop = chat.scrollHeight;
+    return el;
+}
+
+async function sendMessage() {
+    const q = input.value.trim();
+    if (!q) return;
+
+    history.push({ role: "user", content: q });
+
+    appendUser(q);
+    input.value = "";
+
+    const typingEl = appendTyping();
+
+    const response = await fetch("/ask_stream", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ q })
+    });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+
+    const botContainer = appendBotContainer();
+
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buf += decoder.decode(value, {stream:true});
+        const lines = buf.split("\n");
+        buf = lines.pop();
+
+        for (let ln of lines) {
+            if (!ln.trim()) continue;
+
+            const event = JSON.parse(ln);
+
+            if (typingEl.parentNode) typingEl.remove();
+
+            if (event.type === "token") {
+                botContainer.rawText += event.token;
+                botContainer.tokenCount++;
+
+                if (botContainer.tokenCount % 5 === 0) {
+                    botContainer.innerHTML =
+                        "<b>Bot:</b><br>" +
+                        marked.parse(botContainer.rawText);
+                    chat.scrollTop = chat.scrollHeight;
+                }
+            }
+        }
+    }
+
+    botContainer.innerHTML =
+        "<b>Bot:</b><br>" +
+        marked.parse(botContainer.rawText);
+    chat.scrollTop = chat.scrollHeight;
+
+    history.push({ role: "assistant", content: botContainer.rawText });
+}
+
+document.getElementById("uploadForm").onsubmit = async e => {
+    e.preventDefault();
+    const form = new FormData(e.target);
+    await fetch("/upload", { method: "POST", body: form });
+    alert("Uploaded");
+    refreshFiles();
+};
+
+document.getElementById("zipForm").onsubmit = async e => {
+    e.preventDefault();
+    const form = new FormData(e.target);
+    await fetch("/upload_zip", { method: "POST", body: form });
+    alert("ZIP uploaded");
+    refreshFiles();
+};
+
+async function rebuild() {
+    await fetch("/rebuild", { method: "POST" });
+    alert("Reindexed!");
+}
+
+async function refreshFiles() {
+    const r = await fetch("/files");
+    const data = await r.json();
+    const list = document.getElementById("fileList");
+    list.innerHTML = "";
+
+    data.files.forEach(f => {
+        const li = document.createElement("li");
+        li.innerHTML =
+            `${f} <button onclick="deleteFileKB('${f}')">Delete</button>`;
+        list.appendChild(li);
+    });
+}
+
+async function deleteFileKB(name) {
+    await fetch(`/file/${name}`, { method: "DELETE" });
+    alert("Deleted " + name);
+    refreshFiles();
+}
+
+async function loadPrompt() {
+    const r = await fetch("/prompt");
+    const data = await r.json();
+    document.getElementById("systemPrompt").value = data.prompt;
+}
+
+async function savePrompt() {
+    const txt = document.getElementById("systemPrompt").value;
+    await fetch("/prompt", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ prompt: txt })
+    });
+    alert("Saved");
+}
+
+refreshFiles();
+loadPrompt();
+</script>
+
+</body>
+</html>

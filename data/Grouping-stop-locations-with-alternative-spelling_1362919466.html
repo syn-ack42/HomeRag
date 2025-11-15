@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : Grouping stop locations with alternative spelling</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="FAQ_1265467497.html">FAQ</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="1451753518.html">FAQ | Frequently Asked Questions</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : Grouping stop locations with alternative spelling
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Julian Beyer</span>, last modified on Sep 08, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <style type='text/css'>/*<![CDATA[*/
+div.rbtoc1763045511160 {padding: 0px;}
+div.rbtoc1763045511160 ul {list-style: none;margin-left: 0px;}
+div.rbtoc1763045511160 li {margin-left: 0px;padding-left: 0px;}
+
+/*]]>*/</style><div class='toc-macro rbtoc1763045511160'>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>1</span> <a href='#Groupingstoplocationswithalternativespelling-Overview'>Overview</a></li>
+<li><span class='TOCOutline'>2</span> <a href='#Groupingstoplocationswithalternativespelling-Usecase1'>Use case 1</a></li>
+<li><span class='TOCOutline'>3</span> <a href='#Groupingstoplocationswithalternativespelling-Usecase2'>Use case 2</a></li>
+<li><span class='TOCOutline'>4</span> <a href='#Groupingstoplocationswithalternativespelling-Usecase3'>Use case 3</a></li>
+<li><span class='TOCOutline'>5</span> <a href='#Groupingstoplocationswithalternativespelling-Usecase4'>Use case 4</a></li>
+<li><span class='TOCOutline'>6</span> <a href='#Groupingstoplocationswithalternativespelling-Furtherinformation'>Further information</a></li>
+</ul>
+</div><h1 id="Groupingstoplocationswithalternativespelling-Overview">Overview</h1><p>Stops are created in cadis based on the geo-coordinate and the address. If shipments with addresses with different spellings are imported from the host system, this leads to several stops in one trip. Alternative spellings of the name can be maintained in the master data for the stop locations. If, for example, shipments are sent to different departments of a company, only one stop should be created, because the address of the company is always the same.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-12-1024x678.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-12-1024x678.png" loading="lazy"></span><p>An alternative name can be entered directly in the stop location details.</p><p>It is also possible, that the dispatcher does is out of context of a trip, where the different spelling became apparent.</p><p>In the Trip details (doub-click trip) several stops can be marked on the &quot;Stops&quot; tab, to get grouped. The <strong>geo-coordinates of the addresses must be the same </strong>within the limits of tolerance (3m). I the go-locations are too different the function will not be available.</p><p>Because a dispatcher is not necessarily authorized to change the stop location master data, a request for grouping is created first. The request for grouping can then be carried out with the appropriate authorization in the master data.</p><p>After the grouping has been confirmed in the stop location master data, it will be applied to all subsequent trips. If a trip has already been crated (including the one from which the &quot;grouping&quot; has been initiated!) the stop consolidation must be recalculated manually by using the &quot;Trip Details -&gt; Edit -&gt; Recalculate Stop Locations&quot; function.</p><p>Following use cases for the grouping of addresses are possible:</p><h1 id="Groupingstoplocationswithalternativespelling-Usecase1">Use case 1</h1><p>Several new addresses are imported (different spelling of the names, but same geo-coordinate). An own stop is created for each address within the trip. The user marks the stops and selects &quot;Create stop grouping request&quot; using the context menu.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-4.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-4.png" loading="lazy"></span><p>With existing authorization the user gets to the &quot;Stop location grouping&quot; dialog in cadisSTUDIO.</p><p>The user selects an address, for which a new stop location should be created in the master data.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-14-1024x679.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-14-1024x679.png" loading="lazy"></span><p>The user confirms with &quot;Create new stop location&quot;. The suggested stop location ID is confirmed with &quot;Apply&quot;.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="400" src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-17.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-17.png" loading="lazy"></span><p>The user now sees the new stop location in the master data. The alternative spellings of the name can be found in the stop location details.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-18-1024x678.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-18-1024x678.png" loading="lazy"></span><p>(The user generally has the possibility to cancel the request and to carry out at a later date or to delete it – than the request is no longer available and must be restarted if necessary.)</p><p>The stops have to be recalculated for the existing trip. Therefore the function &quot;Recalculate stop locations&quot; can be used.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-30.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-30.png" loading="lazy"></span><p>After refreshing, the stops that where selected before are grouped to one stop.</p><p>If this use case occurs again, cadis automatically creates only one stop.</p><h1 id="Groupingstoplocationswithalternativespelling-Usecase2">Use case 2</h1><p>There is one address among the imported new addresses, which geo-coordinates already exist as stop location in the master data. All stops are marked and &quot;Create stop grouping request&quot; is selected using the context menu, then the user has no choices in the &quot;Stop location grouping&quot; dialog. The user only can accept to add alternative spellings of the name. The alternative spellings of the name are added to the already existing stop location.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-23-1024x678.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-23-1024x678.png" loading="lazy"></span><h1 id="Groupingstoplocationswithalternativespelling-Usecase3">Use case 3</h1><p>The initial situation is the same as in use case 2, but not all stops are marked, only the new addresses for which there is no stop location in the master data.</p><p>Also the non selected (already existing) stop location is listed in the &quot;Stop location grouping&quot; dialog. The user has either the possibility to group the new addresses to a new stop location or to add the new addresses as alternative spellings to the existing one.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-24-1024x680.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-24-1024x680.png" loading="lazy"></span><h1 id="Groupingstoplocationswithalternativespelling-Usecase4">Use case 4</h1><p>Among the imported new addresses are at least two, which have its own stop location in the master data. The user only can take note of this and it is not possible to group anything in this case.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-27-1024x677.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-27-1024x677.png" loading="lazy"></span><h1 id="Groupingstoplocationswithalternativespelling-Furtherinformation">Further information</h1><p>In the stop location master data there is a button &quot;Grouping requests&quot;, which is only visible, if current requests exist.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-28.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/12/image-28.png" loading="lazy"></span><hr/><p>This page is also available in other languages: <a data-card-appearance="inline" href="https://cadissoftware.atlassian.net/wiki/spaces/kb/pages/1392672776/Zusammenf+hren+von+Stoppstellen+mit+alternativer+Schreibweise?atlOrigin=eyJpIjoiYmRhYTU5ZmEzMTVlNDg3OGIyOWVmNzNkYjFlMDQ0Y2EiLCJwIjoiYyJ9" rel="nofollow">https://cadissoftware.atlassian.net/wiki/spaces/kb/pages/1392672776/Zusammenf+hren+von+Stoppstellen+mit+alternativer+Schreibweise?atlOrigin=eyJpIjoiYmRhYTU5ZmEzMTVlNDg3OGIyOWVmNzNkYjFlMDQ0Y2EiLCJwIjoiYyJ9</a> </p>
+                    </div>
+
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:51</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : The statuses in cadis</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="FAQ_1265467497.html">FAQ</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="1451753518.html">FAQ | Frequently Asked Questions</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : The statuses in cadis
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Mohamed.Shebl</span>, last modified by <span class='editor'> Julian Beyer</span> on Sep 08, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <h2 id="Thestatusesincadis-AtListlevel">At List level</h2><h3 id="Thestatusesincadis-Theloadinglists-LocalTraffic">The loading lists - Local Traffic</h3><ol start="1"><li><p><strong>Created</strong>: the departure is created in cadis. You can cancel the departure if you like</p></li><li><p><strong>Released for loading</strong>: the departure data has been sent to cadisAPP. It will be visible by the driver of the trip &amp; the terminal workers. Shipments can still be Auto dispatched to the departure</p></li><li><p><strong>Loading in Progress</strong>: The 1st package of the trip has been processed (scanned for loading or declared missing)</p></li><li><p><strong>Waiting for Approval</strong>: the driver has finished the loading &amp; declared it Completed. He is now waiting for the dispatcher’s approval. This step is optional &amp; can be removed by the config</p></li><li><p><strong>Ready to depart</strong>: The dispatcher has approved the loading &amp; closed the list in cadis back-office. No (re)dispatching is accepted anymore&amp; the data is exported to your host system</p></li><li><p><strong>Ready for Trip start</strong>: the driver has accepted the list of stops in his device.</p></li><li><p><strong>On Tour</strong>: The driver has processed the 1st stop of his trip</p></li><li><p><strong>Trip Closed</strong>: The driver has finished all his stops &amp; closed the trip in his device</p></li></ol><h3 id="Thestatusesincadis-Theloadinglists-LineHaul">The loading lists - Line Haul</h3><ol start="1"><li><p><strong>Created</strong>: see above</p></li><li><p><strong>Released for loading</strong>: see above</p></li><li><p><strong>Loading in Progress</strong>: see above</p></li><li><p><strong>Finished</strong>: the terminal worker has finished the loading &amp; declared it Completed</p></li><li><p><strong>Closed</strong>: The dispatcher has closed the loading list in cadis back-office. All data is exported to your host system &amp;/or to the cadis destination agency. No change can be brought anymore.</p></li></ol><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-111.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-111.png" loading="lazy"></span><h2 id="Thestatusesincadis-AtShipmentlevel">At Shipment level</h2><h3 id="Thestatusesincadis-Thedispatchingstatus">The dispatching status</h3><ul><li><p><strong>To be dispatched</strong>: the shipment is not dispatched already &amp; no delivery status previously set forbids it’s dispatching to a new departure</p></li><li><p><strong>Partially dispatchable</strong>: part of the shipment’s package can be dispatched. The rest of the packages are not dispatchable because delivered already. You will need to set the shipment dispatchable or import it again from your host system to dispatch it again to a new departure. you could also use the feature “Partial shipments” of cadis</p></li><li><p><strong>Not dispatchable</strong>: The shipment cannot be dispatched because it is either dispatched already, disqualified</p></li></ul><h3 id="Thestatusesincadis-Thestatus“Atterminal”">The status “At terminal”</h3><ul><li><p><strong>At terminal</strong>: all packages of the shipment have been scanned on quay during unloading or inventory or Infoscan</p></li><li><p><strong>Partially at terminal</strong>: part of the shipment’s packages has been scanned. The rest of the packages have been already loaded or delivered or simply never been scanned</p></li><li><p><strong>Not at terminal</strong>: none of the packages have been scanned on quay</p></li></ul><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-109-1024x362.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-109-1024x362.png" loading="lazy"></span><h2 id="Thestatusesincadis-AtPackagelevel">At Package level</h2><p>The “<strong>Inbound status</strong>” refers to the last Unloading status of the packages. If a package as left the agency after at loading &amp; is expected on a new unloading list, this status will be reset from “<em>Unloaded</em>” (or “<em>Missing</em> “) to “<em>Expected</em> “. The Inbound timestamp, however, does not change to let users know the time of 1st scan in agency.</p><p>The “<strong>Outbound status</strong>” refers to the last Loading status of the packages.</p><p>The “<strong>Inventory status</strong>” tells you if the package was registered or not during an inventory process.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-110.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-110.png" loading="lazy"></span><hr/><p>This page is also available in other languages: <a data-card-appearance="inline" href="https://cadissoftware.atlassian.net/wiki/spaces/kb/pages/1442119712/La+configuration+des+statuts?atlOrigin=eyJpIjoiOTU4NWE0MzEyNGRjNGRmYmJhODNiMDljODU4ZDA0ODMiLCJwIjoiYyJ9" rel="nofollow">https://cadissoftware.atlassian.net/wiki/spaces/kb/pages/1442119712/La+configuration+des+statuts?atlOrigin=eyJpIjoiOTU4NWE0MzEyNGRjNGRmYmJhODNiMDljODU4ZDA0ODMiLCJwIjoiYyJ9</a></p><p />
+                    </div>
+
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:51</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

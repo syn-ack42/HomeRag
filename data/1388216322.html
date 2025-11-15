@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : The Master Pallets (MP)</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="FAQ_1265467497.html">FAQ</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="1451753518.html">FAQ | Frequently Asked Questions</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : The Master Pallets (MP)
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Mohamed.Shebl</span>, last modified by <span class='editor'> Julian Beyer</span> on Oct 07, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <p><em>The Master Pallet (MP) allows to combine multiple individual packages, potentially from different shipments, into one consolidated physical entity that can then be handled as one single package until a certain point in the transport chain.</em></p><h2 id="TheMasterPallets(MP)-Definition&amp;Businessprocess">Definition &amp; Business process</h2><p>In cadis, there are three types of MP:</p><ol start="1"><li><p><strong>The MP Destination Depot</strong>: is destined to be line hauled within your network of agencies before being ungrouped in distribution agency, for delivery of individual packages.</p></li><li><p><strong>The MP Consignee</strong>: is destined to be delivered as a single entity to one consignee. Therefore, it remains grouped towards the entire logistic process.</p></li><li><p><strong>The MP Last Mile</strong>: allows cadisAPP users to group individual packages for the purpose of loading only. See more details <a href="https://cadissoftware.atlassian.net/wiki/x/TwCoUg" rel="nofollow"><u>here</u></a></p></li></ol><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="700" src="https://docs.cadis.cloud/wp-content/uploads/2023/08/image-20-1024x354.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/08/image-20-1024x354.png" loading="lazy"></span><p>❶ The MP can be built on terminal after inbound scanning or sent from your host system at unloading list &amp; item level</p><p>❷ Time &amp; effort are saved at all stages (loading, delivery…) because scanning the MP only is enough to handle all the packages grouped in it</p><p>❸ The MP storing position can be changed at any time y simple scan</p><p>❹ It is possible to add &amp; remove packages from/to the MP at any time as long as the MP is “In agency”</p><p>❺ In the case of a MP Last Mile, it is split after loading list is closed so that individual packages can be distributed to different consignees</p><p>❻ In the case of a MP “Destination Depot”, the MP is split after linehaul unloading so that individual packages can be distributed to different consignees</p><p>❼ The MP “Consignee”: The MP is not split because it is delivered as is to one final consignee</p><h2 id="TheMasterPallets(MP)-HowtocreateyourMP">How to create your MP</h2><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="700" src="https://docs.cadis.cloud/wp-content/uploads/2023/08/image-21-1024x379.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/08/image-21-1024x379.png" loading="lazy"></span><p>❶ Open the menu “Master Pallets” of cadisAPP</p><p>❷ By default, the search screen is opened. Click on the icon « + » to create a new MP</p><p>❸ Scan your MP’s barcode. ❹ Select the type of MP you wish to build. Access to the different types of MP can be granted based on the users role.</p><p>❺ A MP “NoEDI” allows cadisAPP users to group packages for which no data was received yet in cadis</p><p>❻ You can select a storing position for your MP (Optional). The target Depot is a mandatory field only in the case of building a MP Destination Depot</p><p>❼ Your MP is created. Note that cadisAPP displays a different icon whether the MP is closed on still open</p><h2 id="TheMasterPallets(MP)-HowtobuildyourMP">How to build your MP</h2><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="700" src="https://docs.cadis.cloud/wp-content/uploads/2023/08/image-22-1024x385.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/08/image-22-1024x385.png" loading="lazy"></span><p>❶ After creating your MP, scan packages to be grouped. It is possible to add them manually, by opening the list of options</p><p>❷ In the MP overview, The outbound destination of the MP is defined by the first shipment scanned. It is the next agency that should process the MP, different from it’s final destination (❸ Target Depot)</p><p>❹ Some checks are performed by cadisAPP at building stage of the MP. In the case of any MP type, package added &amp; MP must share the same Outbound Destination. In the case of a MP Consignee, the stop ID of each package added must be the same.</p><p>❺ When you have finished the MP consolidation is complete, open the list of options at the MP level and close it</p><h2 id="TheMasterPallets(MP)-Howto(UN)LoadyourMP">How to (UN)Load your MP</h2><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="700" src="https://docs.cadis.cloud/wp-content/uploads/2023/08/image-23-1024x446.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/08/image-23-1024x446.png" loading="lazy"></span><p>❶ In the loading menu, scan the MP barcode. All the packages grouped in it share the status “Loaded”. You can also load the MP without scan, by opening the list of options</p><p>❷ If your MP is not closed in cadis, the app will show you this question. MP must be closed to be loaded</p><p>❸ At Unloading, when a MP reaches it’s destination depot, cadisAPP suggests to dissolve it at unloading scan so that individual packages can be distributed separatly. If the MP type is Consignee, it shoujld remain grouped</p><p>❹ If you scan a package barcode instead of you MP barcode, cadisAPP will suggest to unload the entire MP</p><h2 id="TheMasterPallets(MP)-DemoVideo">Demo Video</h2><span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><a href="attachments/1388216322/1388019716.mp4?width=760">MasterPallets.mp4</a></span><p />
+                    </div>
+
+                                        <div class="pageSection group">
+                        <div class="pageSectionHeader">
+                            <h2 id="attachments" class="pageSectionTitle">Attachments:</h2>
+                        </div>
+
+                        <div class="greybox" align="left">
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1388216322/1388019716.mp4">MasterPallets.mp4</a> (video/mp4)
+                                <br/>
+                                                    </div>
+                    </div>
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:51</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

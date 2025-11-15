@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11435:11434"
+    volumes:
+      - ./ollama:/root/.ollama
+    restart: unless-stopped
+
+  rag-app:
+    build: ./app
+    container_name: rag-app
+    depends_on:
+      - ollama
+    ports:
+      - "8090:8090"
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - MODEL=mistral
+      - DATA_PATH=/data
+      - DB_PATH=/chroma
+      - CONFIG_PATH=/config
+    volumes:
+      - ./data:/data
+      - ./chroma:/chroma
+      - ./config:/config
+    restart: unless-stopped

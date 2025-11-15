@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : Principles &amp; Configuration for the Loading Equipments</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="FAQ_1265467497.html">FAQ</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="1451753518.html">FAQ | Frequently Asked Questions</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : Principles &amp; Configuration for the Loading Equipments
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Mohamed.Shebl</span>, last modified by <span class='editor'> Julian Beyer</span> on Sep 08, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <div class="contentLayout2">
+<div class="columnLayout fixed-width" data-layout="fixed-width">
+<div class="cell normal" data-type="normal">
+<div class="innerCell">
+<p><em>Loading Equipments (LDM) refer to packaging types such as pallets, cartons, bags, etc. Cadis allows drivers to document the quantities of these equipments loaded, unloaded or exchanged with customers</em></p><p>You can check our page for detailed guide of the feature in cadisSTUDIO: <a data-card-appearance="inline" href="https://cadissoftware.atlassian.net/wiki/x/IoClUg" rel="nofollow">https://cadissoftware.atlassian.net/wiki/x/IoClUg</a> </p><h2 id="Principles&amp;ConfigurationfortheLoadingEquipments-Definition&amp;purpose"><strong>Definition &amp; purpose</strong></h2><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-112-1024x384.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-112-1024x384.png" loading="lazy"></span><p>❶ Your Host System sends to cadis a shipment including a pallet that is exchangeable (this is defined at master data level)</p><p>❷ At collection stop, the driver records the pallet exchange with the shipper using cadisAPP. When the stop is closed the pallets quantities are exported to your host system</p><p>❸ After a linehaul loading is closed, pallets actual quantities are transmitted with loaded shipments from departure to receiving agency</p><p>❹ Same as for collection, at delivery stop, the driver records the pallets exchange with the consignee using cadisAPP. When the stop is closed the pallets, quantities are exported to your host system</p><h2 id="Principles&amp;ConfigurationfortheLoadingEquipments-Configuration"><strong>Configuration</strong></h2><h3 id="Principles&amp;ConfigurationfortheLoadingEquipments-TerminalHandling">Terminal Handling</h3><p><em>At loading &amp;/or unloading, you can enable the pallets quantities registration by cadisAPP users or compel them to do so. cadis ConfigManager allows you to create Depot Groups so that the config can be different per depot</em></p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-113.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-113.png" loading="lazy"></span><p>In the Config Manager (❶), section “Terminal Handling” (❷), select the process of loading or unloading (❸), then Linehaul or Local Traffic (❹).</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="300" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-114.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-114.png" loading="lazy"></span><p>Choose to tick the boxes depending on your wishes</p><p><u>Note</u>: You can define an Approval barcode that drivers will be compelled to scan if they report a <a href="https://cadissoftware.atlassian.net/wiki/x/CwCgUg" rel="nofollow"><u>discrepancy</u></a> on exchangeable pallets</p><h3 id="Principles&amp;ConfigurationfortheLoadingEquipments-Pick-Up&amp;Delivery">Pick-Up &amp; Delivery</h3><p><em>At delivery &amp;/or collection, for each of your delivery statuses, you can make the pallet exchange mandatory or simply enable it. You can also require a signature from your customer to confirm the good exchange</em></p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-115-1024x593.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-115-1024x593.png" loading="lazy"></span><p>In the Config Manager (❶), section “Transport Execution”(❷), sub-section “select the process of loading or unloading “Mobile Workflow configuration”(❸). Select then delivery or collection workflow you wish to configure (❹).</p></div>
+</div>
+</div>
+<div class="columnLayout two-equal" data-layout="two-equal">
+<div class="cell normal" data-type="normal">
+<div class="innerCell">
+<span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-center" width="250" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-116.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-116.png" loading="lazy"></span></div>
+</div>
+<div class="cell normal" data-type="normal">
+<div class="innerCell">
+<span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-center" width="250" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-117.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-117.png" loading="lazy"></span></div>
+</div>
+</div>
+<div class="columnLayout fixed-width" data-layout="fixed-width">
+<div class="cell normal" data-type="normal">
+<div class="innerCell">
+<h2 id="Principles&amp;ConfigurationfortheLoadingEquipments-Thereportextraction"><strong>The report extraction</strong></h2><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="600" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-126.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-126.png" loading="lazy"></span></div>
+</div>
+</div>
+</div>
+                    </div>
+
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:51</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

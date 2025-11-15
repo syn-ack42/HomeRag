@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : Map (First &amp; Last mile)</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="User-Manual_1262780463.html">User Manual</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="User-Manual_1451589679.html">User Manual</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="1423311096.html">cadisSTUDIO | EN</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : Map (First &amp; Last mile)
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Sergov, Lena</span>, last modified by <span class='editor'> Julian Beyer</span> on Aug 21, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <style type='text/css'>/*<![CDATA[*/
+div.rbtoc1763045335354 {padding: 0px;}
+div.rbtoc1763045335354 ul {list-style: none;margin-left: 0px;}
+div.rbtoc1763045335354 li {margin-left: 0px;padding-left: 0px;}
+
+/*]]>*/</style><div class='toc-macro rbtoc1763045335354'>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>1</span> <a href='#Map(First&amp;Lastmile)-General'>General</a></li>
+<li><span class='TOCOutline'>2</span> <a href='#Map(First&amp;Lastmile)-Filters'>Filters</a>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>2.1</span> <a href='#Map(First&amp;Lastmile)-DataQueryFilters'>Data Query Filters</a></li>
+</ul>
+</li>
+<li><span class='TOCOutline'>3</span> <a href='#Map(First&amp;Lastmile)-MapArea'>Map Area</a>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>3.1</span> <a href='#Map(First&amp;Lastmile)-Map'>Map</a></li>
+<li><span class='TOCOutline'>3.2</span> <a href='#Map(First&amp;Lastmile)-MapOptions'>Map Options</a></li>
+<li><span class='TOCOutline'>3.3</span> <a href='#Map(First&amp;Lastmile)-AddressSearchFunction'>Address Search Function</a></li>
+</ul>
+</li>
+</ul>
+</div><h1 id="Map(First&amp;Lastmile)-General">General</h1><p>The map can be accessed via the &quot;First &amp; Last Mile&quot; tab &quot;Map&quot; on the cadisSTUDIO tile.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-left" alt="grafik-20250813-062315.png" width="974" loading="lazy" src="attachments/1411383297/1411448838.png?width=974" data-image-src="attachments/1411383297/1411448838.png" data-height="58" data-width="974" data-unresolved-comment-count="0" data-linked-resource-id="1411448838" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="grafik-20250813-062315.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1411383297" data-linked-resource-container-version="5" data-media-id="387b5ecd-94bf-4ce4-9815-496554c6f649" data-media-type="file"></span><p>The local transport vehicles of the depot are responsible for conducting local transport tours. To support the drivers, a mobile device is used as the central tool for digital order processing. Through this device, drivers receive real-time access to all relevant tour data, including individual delivery and pickup orders assigned to them for the respective tour. The processing and status of orders are documented directly on the device and reported back to the central system.</p><p>During the entire period between driver login and logout on the mobile device, GPS position data is transmitted to the cadisSERVER at regular intervals. This transmission enables current tracking of vehicle positions. The most recently transmitted position of each vehicle is visualized in the digital map view of the system, allowing dispatchers to track the current location of each vehicle at any time.</p><p>The individual orders assigned to a tour have geo coded address data. These geo positions are also displayed in the map view.</p><p>The map shows the current position of all depot vehicles for the current day. (<a data-card-appearance="inline" href="https://cadissoftware.atlassian.net/wiki/spaces/kb/pages/1403224102/Vehicles?atlOrigin=eyJpIjoiOWNkZjY0OTJlMGM2NDRmYWJjMTlhMzRhNThkNzY3MzAiLCJwIjoiYyJ9" rel="nofollow">https://cadissoftware.atlassian.net/wiki/spaces/kb/pages/1403224102/Vehicles?atlOrigin=eyJpIjoiOWNkZjY0OTJlMGM2NDRmYWJjMTlhMzRhNThkNzY3MzAiLCJwIjoiYyJ9</a> )</p><p>The system allows targeted selection of individual vehicles to view detailed information about that vehicle or perform specific actions.</p><p>Additionally, there is the option to optionally display the positions of vehicle stops - i.e., the addresses of pickup and delivery orders for any given day. See (<a data-card-appearance="inline" href="https://cadissoftware.atlassian.net/wiki/spaces/kb/pages/1395523585/Orders?atlOrigin=eyJpIjoiZTdmZjFlOTU3Y2RlNGE0MWE2N2MzYTFmYjI2YjM3ZjciLCJwIjoiYyJ9" rel="nofollow">https://cadissoftware.atlassian.net/wiki/spaces/kb/pages/1395523585/Orders?atlOrigin=eyJpIjoiZTdmZjFlOTU3Y2RlNGE0MWE2N2MzYTFmYjI2YjM3ZjciLCJwIjoiYyJ9</a>)</p><p>The map optionally provides traffic information. Any address can be marked on the map by placing a pin.</p><h1 id="Map(First&amp;Lastmile)-Filters">Filters</h1><h2 id="Map(First&amp;Lastmile)-DataQueryFilters">Data Query Filters</h2><p>In the left, basic filter area, there are various filter options to search for specific information.</p><p>Available filter options:</p><ul><li><p><strong>Vehicle Filters </strong>– With this filter, specific vehicles can be targeted, for example by date, vehicle type, vehicle name, or status. This maintains an overview of the entire vehicle fleet and relevant vehicles can be quickly found and analyzed.</p><p>The vehicle filter interface displays the current number of vehicles and provides multiple filter options:</p><ul><li><p><strong>Date Filter</strong> – Allows selection of a specific date to filter vehicles active on that date</p></li><li><p><strong>Vehicle Filter</strong> – Enables selection of individual vehicles from a drop down list</p></li><li><p><strong>Type of Vehicle Filter</strong> – Filters vehicles by their vehicle type category</p></li><li><p><strong>Vehicle Group Filter</strong> – Allows filtering by predefined vehicle groups</p></li><li><p><strong>Radio Status Filter</strong> – Filters vehicles based on their current radio/communication status</p></li></ul><p>Each filter field includes intuitive icons: calendar icon for date selection, drop down arrow for list selection, blue funnel icon indicating active filters, clear (X) icon to reset individual filter values, trash can icon to completely remove a filter.</p><p>The interface shows a &quot;Select filter to add&quot; option when no filters are active, allowing users to build complex filter combinations.</p></li><li><p><strong>Order Filters </strong>– This allows existing orders to be filtered by various criteria, such as order type (pickup, delivery), order status, or attributes (priority, dangerous goods, empty containers, time-critical, etc.). This enables quick identification of relevant orders.</p><p>The order filter interface displays the current number of orders and provides multiple filter options:</p><ul><li><p><strong>Orders Filter</strong> – Allows selection of specific orders from a drop down list</p></li><li><p><strong>Status Filter </strong>– Filters orders by their current status (e.g., pending, in progress, completed)</p></li><li><p><strong>Attribute Filter</strong> – Enables filtering by order attributes such as priority, dangerous goods, empty containers, or time-critical requirements</p></li></ul></li></ul><p>Multiple filters can be activated simultaneously to increase hit accuracy. Filter settings can be reset at any time to return to the complete data view. When filters are active, a visual indicator is displayed so you can always see which filters are currently effective.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-left" alt="grafik-20250813-063520.png" width="231" loading="lazy" src="attachments/1411383297/1411252237.png?width=231" data-image-src="attachments/1411383297/1411252237.png" data-height="714" data-width="231" data-unresolved-comment-count="0" data-linked-resource-id="1411252237" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="grafik-20250813-063520.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1411383297" data-linked-resource-container-version="5" data-media-id="4c7ed52c-58cc-4cbf-8350-c3ef3bc03dde" data-media-type="file"></span><h1 id="Map(First&amp;Lastmile)-MapArea">Map Area</h1><h2 id="Map(First&amp;Lastmile)-Map">Map</h2><p>The map shows all vehicles and associated orders according to the currently selected filter. The color coding of vehicle symbols on the map indicates the currency status of the last transmitted GPS position:</p><ul><li><p><strong>Yellow Icons</strong> – Indicate vehicles with current position data. These vehicles have successfully transmitted position data to the cadisSERVER within the configured time window (default 20 minutes).</p></li><li><p><strong>Gray Icons</strong> – Represent vehicles with outdated position data. The last position transmission is outside the defined currency time window (default: &gt;20 minutes). This may indicate connection problems with the mobile device or system failures.</p></li><li><p><strong>Black Icons</strong> – Mark the currently selected vehicle in the user interface, regardless of the age of the last position transmission.</p></li></ul><p>The map display is limited exclusively to position data of the current business day, whereby historical positions are automatically hidden and a current daily overview is ensured.</p><p>Orders can be hidden in the map view by activating the &quot;Hide Orders&quot; checkbox. In this mode, only vehicles are displayed on the map.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-left" alt="grafik-20250813-063723.png" width="471" loading="lazy" src="attachments/1411383297/1411514377.png?width=471" data-image-src="attachments/1411383297/1411514377.png" data-height="462" data-width="471" data-unresolved-comment-count="0" data-linked-resource-id="1411514377" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="grafik-20250813-063723.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1411383297" data-linked-resource-container-version="5" data-media-id="979e323a-e408-49fc-b796-cd9036bd22cf" data-media-type="file"></span><p>After selecting a specific vehicle, a quick view with the most important vehicle details appears on the right side.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-left" alt="grafik-20250813-063911.png" width="311" loading="lazy" src="attachments/1411383297/1411448853.png?width=311" data-image-src="attachments/1411383297/1411448853.png" data-height="623" data-width="311" data-unresolved-comment-count="0" data-linked-resource-id="1411448853" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="grafik-20250813-063911.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1411383297" data-linked-resource-container-version="5" data-media-id="55188c7f-83a8-4288-98c7-a8c2b5c680a2" data-media-type="file"></span><p>To display the orders for the corresponding vehicle, the filter must be adjusted. To do this, the desired vehicle must be selected and the checkbox for &quot;Hide Orders&quot; must be removed. The number of corresponding orders is displayed in the overview. This order quantity can be further restricted by applying filters based on specific order properties.</p><p>The map automatically groups orders when they are too close together at the current zoom level. A group is displayed as a circle with a number - the number shows how many orders are in the group.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-left" alt="grafik-20250813-064050.png" width="247" loading="lazy" src="attachments/1411383297/1411416085.png?width=247" data-image-src="attachments/1411383297/1411416085.png" data-height="169" data-width="247" data-unresolved-comment-count="0" data-linked-resource-id="1411416085" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="grafik-20250813-064050.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1411383297" data-linked-resource-container-version="5" data-media-id="3d62eec1-8643-43ab-a8a8-33828c18cb9d" data-media-type="file"></span><p>When clicking on a group, the individual orders are displayed separately. The map section and zoom level may change slightly.</p><p>Orders at exactly the same address are arranged in a star shape around the actual position when clicked. This allows all orders to be selected individually, even if they are at the same location.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-left" alt="grafik-20250813-064132.png" width="324" loading="lazy" src="attachments/1411383297/1411317770.png?width=324" data-image-src="attachments/1411383297/1411317770.png" data-height="232" data-width="324" data-unresolved-comment-count="0" data-linked-resource-id="1411317770" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="grafik-20250813-064132.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1411383297" data-linked-resource-container-version="5" data-media-id="35460cf6-f778-44ea-9158-1f81735337a2" data-media-type="file"></span><p>This function ensures that the map remains clear when many orders are present. Individual orders can still be viewed precisely at any time.</p><p>A click on an order opens the quick view in the right area, which displays the relevant order properties and available actions for the selected order.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-left" alt="grafik-20250813-064253.png" width="336" loading="lazy" src="attachments/1411383297/1411022922.png?width=336" data-image-src="attachments/1411383297/1411022922.png" data-height="430" data-width="336" data-unresolved-comment-count="0" data-linked-resource-id="1411022922" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="grafik-20250813-064253.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1411383297" data-linked-resource-container-version="5" data-media-id="c40a3705-811a-43da-9083-e1e73f5659f9" data-media-type="file"></span><p>The selected symbol of an order is highlighted in the map view by black coloring.</p><h2 id="Map(First&amp;Lastmile)-MapOptions">Map Options</h2><p>In the upper right of the map view is the settings menu for map display.</p><ul><li><p><strong>Show Details</strong> – Extended map display with additional information elements: detailed business and address designations.</p></li><li><p><strong>Display track</strong> – Visualizes the planned routes of local transport vehicles on the map. By activating this function, the calculated routes between individual order positions are displayed as line courses.</p></li><li><p><strong>Traffic incidents </strong>– Various traffic incidents symbols. The positioning of the symbols corresponds to the exact geographic coordinates of the reported incidents. The variety of symbols enables differentiated representation of various incidents types and severity levels. Traffic incidents are updated in real-time and influence the route planning of local transport vehicles.</p></li></ul><p style="margin-left: 30.0px;">The traffic incidents symbols on the map offer extended information options by directly clicking on the corresponding warning symbols. When a incident symbol is activated, a detail window opens with specific information about the respective traffic impairment. The detail information for traffic incidents is provided exclusively in English.</p><p style="margin-left: 30.0px;">Available detail information:</p><ul><li><p>Type of traffic incident (traffic jam, construction site, accident, closure)</p></li></ul><ul><li><p>Affected road sections or intersections</p></li><li><p>Estimated duration of the impairment</p></li><li><p>Recommended alternative routes</p></li><li><p>Currency status of the disruption report</p></li><li><p><strong>Hide Orders</strong> – Enables selective deactivation of order positions in the map display. This option temporarily removes the geocoded delivery and pickup orders from the map visualization.</p></li><li><p><strong>Auto Zoom for All</strong> – Dynamically adjusts the map view to display all active vehicles and orders simultaneously in the visible map area.</p></li><li><p><strong>Search Address</strong> - Opens a specialized search mask for geographic localization of addresses.</p></li></ul><h2 id="Map(First&amp;Lastmile)-AddressSearchFunction">Address Search Function</h2><p>The address search is activated via the dialog in the upper right map area. After opening the address input mask, complete addresses or address fragments can be entered in the search fields.</p><span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-center" alt="grafik-20250813-071037.png" width="1257" loading="lazy" src="attachments/1411383297/1411416100.png?width=1257" data-image-src="attachments/1411383297/1411416100.png" data-height="757" data-width="1669" data-unresolved-comment-count="0" data-linked-resource-id="1411416100" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="grafik-20250813-071037.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1411383297" data-linked-resource-container-version="5" data-media-id="966faa37-b917-4891-b93e-118d360254d6" data-media-type="file"></span><p>During input, the system automatically generates a hit list based on the geo database. The found addresses are displayed in tabular form with complete address information.</p><p>After selecting an address from the hit list and adopting the search result, the corresponding geographic position is visualized by a pin marking on the map. The map automatically centers on the chosen address position.</p><p>The pin marking can be removed by directly clicking on it, whereby the map returns to the original view. </p>
+                    </div>
+
+                                        <div class="pageSection group">
+                        <div class="pageSectionHeader">
+                            <h2 id="attachments" class="pageSectionTitle">Attachments:</h2>
+                        </div>
+
+                        <div class="greybox" align="left">
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1411383297/1411383310.png">image-20250807-174113.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1411383297/1411383313.png">image-20250807-171942.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1411383297/1411383316.png">image-20250807-171634.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1411383297/1411383319.png">image-20250509-150226.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1411383297/1411383322.png">image-20250509-150208.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1411383297/1411448838.png">grafik-20250813-062315.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1411383297/1411252237.png">grafik-20250813-063520.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1411383297/1411514371.png">grafik-20250813-063656.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1411383297/1411514377.png">grafik-20250813-063723.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1411383297/1411448853.png">grafik-20250813-063911.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1411383297/1411416085.png">grafik-20250813-064050.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1411383297/1411317770.png">grafik-20250813-064132.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1411383297/1411022922.png">grafik-20250813-064253.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1411383297/1411416100.png">grafik-20250813-071037.png</a> (image/png)
+                                <br/>
+                                                    </div>
+                    </div>
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:48</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

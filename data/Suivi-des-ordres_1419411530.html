@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : Suivi des ordres</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="User-Manual_1262780463.html">User Manual</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="1451982895.html">Manuel d’utilisation</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="1423376512.html">cadisCONTROL | FR</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : Suivi des ordres
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Julian Beyer</span> on Aug 19, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <p>Vous accédez à la fenêtre « Suivi des ordres » en cliquant sur le symbole :AuftragUebersicht: dans la barre des tâches <em>cadis</em>.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-left" alt="image-20250819-132622.png" width="800" loading="lazy" src="attachments/1419411530/1419378715.png?width=800" data-image-src="attachments/1419411530/1419378715.png" data-height="400" data-width="768" data-unresolved-comment-count="0" data-linked-resource-id="1419378715" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image-20250819-132622.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1419411530" data-linked-resource-container-version="1" data-media-id="5efe1100-1005-4faa-8829-3c5d73d24fbc" data-media-type="file"></span><p>La fenêtre « Suivi des ordres » affiche sous forme de liste tous les enlèvements et livraisons affectés à une ou plusieurs tournées.<br/>Une fois affectés à une tournée, les expéditions/livraisons et les enlèvements deviennent des ordres de livraison et d’enlèvement à traiter sur cette tournée. Par exemple, une livraison qui n’a pas pu être réalisée lors de la première tentative (première tentative de livraison / première présentation au destinataire) peut être effectuée lors de la prochaine tentative de livraison (deuxième tentative de livraison).</p><p><strong>Important</strong>: Les enlèvements et les livraisons pour une tournée ne sont visibles que si le chargement est clôturé et la tournée autorisée.</p><p>En cas de suppression ou de report d’une réaffectation, les enlèvements initiaux restent inchangés, mais reçoivent le statut « Annulé »</p><h3 id="Suividesordres-Barred’icônes">Barre d’icônes</h3><p>:refresh:: En cliquant sur ce bouton, une mise à jour des données s’effectue et les nouvelles données s’affichent dans la fenêtre ; par défaut, la liste est mise à jour automatiquement toutes les 30 secondes.</p><p>:kopieren:: En cliquant sur ce bouton, cadis copie les données sélectionnées dans le tableau dans le presse-papiers pour réutilisation.</p><h3 id="Suividesordres-Onglets">Onglets</h3><p>En sélectionnant un onglet, vous pouvez choisir les ordres qui vont être affichés dans le tableau : les enlèvements, les livraisons ou les deux (enlèvements et livraisons)</p><h3 id="Suividesordres-Filtres">Filtres</h3><p>Vous pouvez faire apparaitre ou disparaitre la zone comprenant les filtres en utilisant les flèches :FilterUp: et :FilterDown:.</p><p>Vous pouvez filtrer les expéditions en fonction des critères suivants :</p><ul><li><p>Groupes véh. : utilise un groupe défini dans les référentiels véhicules.</p></li><li><p>Véhicule : permet de sélectionner un véhicule parmi ceux disponibles dans les référentiels.</p></li><li><p>Tournée : permet de sélectionner les ordres selon leur destination suivante (agence suivante).</p></li><li><p>Statut : permet de sélectionner les ordres par statut de l’ordre.</p></li><li><p>Caractéristique : permet de filtrer selon les caractéristiques de l‘ordre (matière dangereuse, Partiel, etc…).</p></li><li><p>Date : permet de filtrer par date</p></li></ul><h3 id="Suividesordres-Tableau">Tableau</h3><p>Les textes et symboles affichés dans les entêtes des colonnes précisent le contenu de ces colonnes ; des info-bulles plus détaillées apparaissent lorsque vous survolez ces entêtes avec votre souris.</p><p>Certaines colonnes affichent les totaux (sommes) des valeurs qu’elles contiennent, le résultat de ces sommes est indiqué au bas de l’écran en bas de chaque</p><h3 id="Suividesordres-Menucontextuel:"><strong>Menu contextuel :</strong></h3><ul><li><p>Détails<br/>Vous ouvrez la fenêtre « Détails de l’ordre » qui affiche les données présentes dans l’ordre.</p></li><li><p>Modifier le statut<br/>Vous ouvrez la fenêtre « Modifier le statut ». Vous définissez ou modifiez le statut de l’ordre si le terminal mobile a transmis un statut incorrect ou n’a pas mis à jour le statut du tout.</p></li><li><p>Modifier le statut de retour de tournée<br/>Vous pouvez définir ici un statut de traitement et son texte associé pour un traitement qui a lieu en dehors de <em>cadis</em> (statut + texte).<br/>Ce statut est affiché dans la liste dans la colonne <em>Contrôle</em>.</p><span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-center" alt="image-20250819-132720.png" width="400" loading="lazy" src="attachments/1419411530/1419542535.png?width=400" data-image-src="attachments/1419411530/1419542535.png" data-height="503" data-width="635" data-unresolved-comment-count="0" data-linked-resource-id="1419542535" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image-20250819-132720.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1419411530" data-linked-resource-container-version="1" data-media-id="a4091dab-6931-4b17-8aa9-7f9de3af8be7" data-media-type="file"></span></li></ul><ul><li><p>Acquitter les ordres critiques<br/>Vous confirmez qu’un ordre est critique en termes de délai. Cet ordre n’apparaît plus lorsque vous activez le critère <em>Critiques</em> (<em>non acquittés</em>).</p></li><li><p>Afficher sur la carte<br/>Vous ouvrez la fenêtre « Géolocalisation » en centrant sur le lieu d’enlèvement ou de livraison de l’ordre</p></li></ul>
+                    </div>
+
+                                        <div class="pageSection group">
+                        <div class="pageSectionHeader">
+                            <h2 id="attachments" class="pageSectionTitle">Attachments:</h2>
+                        </div>
+
+                        <div class="greybox" align="left">
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1419411530/1419411539.png">image-20250509-134729.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1419411530/1419378715.png">image-20250819-132622.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1419411530/1419542535.png">image-20250819-132720.png</a> (image/png)
+                                <br/>
+                                                    </div>
+                    </div>
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:51</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

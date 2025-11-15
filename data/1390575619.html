@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : Warum sind manche Adressen nicht (automatisch) geokodiert?</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="FAQ_1265467497.html">FAQ</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="1452015697.html">FAQ | Fragen und Antworten</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : Warum sind manche Adressen nicht (automatisch) geokodiert?
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Mohamed.Shebl</span>, last modified by <span class='editor'> Julian Beyer</span> on Sep 08, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <p>Beim Import von Sendungsdaten versucht cadis automatisch die Geokoordinaten der Abhol- bzw. Zustelladresse (je nachdem ob die Sendung im jeweiligen Depot abgeholt oder zugestellt werden soll).</p><p>Manchmal aber schlägt die automatische Geokodierung fehl und muss manuell über die Benutzeroberfläche durchgeführt werden. In sehr seltenen Fällen kann eine automatische Geokodierung auch falsch sein und auf eine falsche Position verweisen. Dies ist von den Einstellungen der Software abhängig – und als Faustregel gilt: stellt man cadis so ein, dass möglichst viele Sendungen automatisch geokodiert werde, dann erhöht man die Wahrscheinlichkeit von falschen Ergebnissen – und umgekehrt. Je besser die Adressqualität desto erfolgreicher ist am Ende die Geokodierung.</p><p>Um die Einstellungsmöglichkeiten in cadis besser zu verstehen, muss man kurz den Hintergrund der Geokodierung erklären. Vom GIS-Server (Geo-Informations-System, i.d.R. ptv) wird auf eine Adressabfrage nahezu immer ein eine Liste von möglichen Geokodierungsergebnissen zurück geliefert. Diesen Ergebnissen jeweils beigefügt sind Metriken wie &quot;gut&quot; das jeweilige potentielle Ergebnis ist. Welches Ergebnis und ob überhaupt eines der Ergebnisse akzeptiert wird durch eine Konfiguration in cadis gesteuert.</p><p>Das GIS liefert dabei (etwas vereinfacht) eine Information zur Detaillierungs-Qualität der Geokodierung und eine Information zur &quot;Matching Qualität&quot; </p><p>Die Detaillierungs-Qualität sagt aus welchen Detailgrad die Kartendaten zu der Adresse haben. &quot;House number&quot; bedeutet z.B.: &quot;ich kenne die exakte Hausnummer&quot;, &quot;Postal Code&quot; würde bedeuten: &quot;ich kenne nur das Zentrum des Postleitzahlengebietes&quot;.</p><p>&quot;House number interpolated&quot; ist die Standardeinstellung für akzeptable Resultate und bedeutet: &quot;das GIS kennt die genaue Hausnummer nicht, sondern nur zwei Hausnummer zwischen denen sie liegt&quot;. z.B.: Sie suchen die Hausnummer 22. im Kartenwerk bekannt ist aber nur die exakte Position von Hausnr. &quot;20&quot; und &quot;30&quot;. Die zurückgegeben Position liegt dann &quot;interpoliert&quot; bei 1/5 des Weges von 20 nach 30 (1/5 wegen der Straßenseite). </p><p>In dieser Standardeinstellung würde cadis bei automatischer Geokodierung im Hintergrund nur Adressen akzeptiert die mindestens auf &quot;interpolierte Hausnummer&quot; genau sind.</p><p>Die zweite Qualitäts-Information zur &quot;Matching-Qualität&quot; bedeutet wie &quot;sicher&quot; ist sich das GIS, dass es die richtige Adresse aus den Kartendaten geholt hat. Es gibt z.B. immer unterschiedliche Schreibweisen oder es kann sein, dass schon in der Anfrage der Ortsname oder die PLZ fehlt. Solche Ungewissheiten wirken sich negativ auf die &quot;Matching Quality&quot; aus.</p><p>In cadis ist &quot;Mindestens HIGH&quot; (in ptv 1) oder &quot;Mindestens 85% für jeweils Stadt, Strasse und Postleitzahl&quot; (in ptv 2, dort können diese 3 Kriterien einzeln konfiguriert werden) die Standard-Einstellung, je nach Region und Qualität der Adressdaten in den Sendungen kann hier justiert werden um einen guten Kompromiss zwischen erforderlicher händischer Nachgeokodierung und Risiko von falschen automatischen Geokodierungen zu erreichen.</p><p>Damit das Ergebnis einer Geokodierung von cadis akzeptiert wird müssen beide Werte den Minimalkriterien entsprechen. Für die automatische Geokodierung wählen wir standardmäßig restriktive Grundeinstellungen, weil ungenaue Geopositionen und fälschlich gewählte Orte für unsere Anwendungsfälle in cadis i.d.R. nutzlos sind.</p><hr/><p>Diese Seite ist auch in anderen Sprachen verfügbar: <a data-card-appearance="inline" href="https://cadissoftware.atlassian.net/wiki/spaces/kb/pages/1386578111/Why+are+some+addresses+not+automatically+geocoded?atlOrigin=eyJpIjoiOWRkNDljMWY2NDg0NDkxZjkwYjU4YWQ0NWFiNmM5ZWIiLCJwIjoiYyJ9" rel="nofollow">https://cadissoftware.atlassian.net/wiki/spaces/kb/pages/1386578111/Why+are+some+addresses+not+automatically+geocoded?atlOrigin=eyJpIjoiOWRkNDljMWY2NDg0NDkxZjkwYjU4YWQ0NWFiNmM5ZWIiLCJwIjoiYyJ9</a></p>
+                    </div>
+
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:52</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

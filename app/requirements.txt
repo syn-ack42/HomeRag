@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+chromadb
+sentence-transformers
+requests
+langchain
+langchain-core
+langchain-community
+langchain-text-splitters
+pypdf
+jinja2
+python-multipart
+markdown
+beautifulsoup4

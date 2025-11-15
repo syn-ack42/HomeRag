@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : The Location tracking in cadis back-office</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="FAQ_1265467497.html">FAQ</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="1451753518.html">FAQ | Frequently Asked Questions</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : The Location tracking in cadis back-office
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Julian Beyer</span>, last modified on Sep 08, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <style type='text/css'>/*<![CDATA[*/
+div.rbtoc1763045511198 {padding: 0px;}
+div.rbtoc1763045511198 ul {list-style: none;margin-left: 0px;}
+div.rbtoc1763045511198 li {margin-left: 0px;padding-left: 0px;}
+
+/*]]>*/</style><div class='toc-macro rbtoc1763045511198'>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>1</span> <a href='#TheLocationtrackingincadisback-office-Inthetripmonitor'>In the trip monitor</a></li>
+<li><span class='TOCOutline'>2</span> <a href='#TheLocationtrackingincadisback-office-Atorderlevel'>At order level</a></li>
+<li><span class='TOCOutline'>3</span> <a href='#TheLocationtrackingincadisback-office-ETAvsPTA'>ETA vs PTA</a></li>
+</ul>
+</div><div class="confluence-information-macro confluence-information-macro-information"><span class="aui-icon aui-icon-small aui-iconfont-info confluence-information-macro-icon"></span><div class="confluence-information-macro-body"><p>You can locate your drivers position, read his Estimated Time Arrivals (ETA) &amp; follow up his entering &amp; exiting a geofence area surrounding the delivery stops.</p></div></div><h1 id="TheLocationtrackingincadisback-office-Inthetripmonitor">In the trip monitor</h1><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-141-1024x579.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-141-1024x579.png" loading="lazy"></span><p>❶ Select a trip</p><p>❷ The Estimated Time of Arrival (ETA) is calculated evey 5 minutes based to the driver’s GPS position. If the driver’s device loses internet connection, an refresh icon 🔁 will appear to notify this to you</p><p>❸ Tick those boxes to see on the map the path driven (based on GPS signal) &amp; the the remaining route</p><p><u>Notes:</u></p><ul><li><p>The ETA calculation can be accurate only if the driver respects the trip’s stops sequence. Indeed, as long as a stop is not processed, it will be used for ETA calcuation</p></li><li><p>If multiple trips are active at the same time on a vehicle each of those trips will show the full km driven from its individual start and end timestamp (so be careful to not double count distances).</p></li><li><p>The path driven is interrupted if the driver closes his trips</p></li></ul><h1 id="TheLocationtrackingincadisback-office-Atorderlevel">At order level</h1><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-142-1024x578.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2024/07/image-142-1024x578.png" loading="lazy"></span><p>❶ In the tab “Map”</p><p>❷ You can see when &amp; where the driver opened a stop to process it</p><p>❸ The delivery address (as geocoded in cadis back-office) is displayed</p><h1 id="TheLocationtrackingincadisback-office-ETAvsPTA">ETA vs PTA</h1><ul><li><p>PTA (Planned Arrival Time) = calculated <strong>by the server</strong> after sequence optimization which considers the time windows.</p></li><li><p>ETA (Estimated Time Arrival) = transmitted <strong>by the mobile device</strong> every 5min if connection is OK. If not, you’ll see an icon “refresh”:</p></li></ul><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-left" alt="image-20250807-152432.png" width="230" loading="lazy" src="attachments/1362722931/1403453468.png?width=230" data-image-src="attachments/1362722931/1403453468.png" data-height="80" data-width="230" data-unresolved-comment-count="0" data-linked-resource-id="1403453468" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image-20250807-152432.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1362722931" data-linked-resource-container-version="3" data-media-id="d23bebc2-2e7c-4475-87d3-581efc8e8091" data-media-type="file"></span><p>This means that the ETA will always be more accurate (closer to reality) than the PTA. You can observe this by comparing columns “ETA” vs “begin/end of Stop”</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-left" alt="image-20250807-152516.png" width="407" loading="lazy" src="attachments/1362722931/1403748376.png?width=407" data-image-src="attachments/1362722931/1403748376.png" data-height="252" data-width="407" data-unresolved-comment-count="0" data-linked-resource-id="1403748376" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image-20250807-152516.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1362722931" data-linked-resource-container-version="3" data-media-id="ee3d119c-39d4-4fd4-a0dd-1a7608e48398" data-media-type="file"></span><p>You may find the difference between ETA vs PTA increases with time. This is a sign your optimization settings can be improved to stick better to reality. You can try adjusting the <u>handling time at stop level</u>. In cadis, it is configured by default to 5 min).</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-left" alt="image-20250807-154947.png" width="956" loading="lazy" src="attachments/1362722931/1403453477.png?width=956" data-image-src="attachments/1362722931/1403453477.png" data-height="483" data-width="956" data-unresolved-comment-count="0" data-linked-resource-id="1403453477" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image-20250807-154947.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1362722931" data-linked-resource-container-version="3" data-media-id="eae01e54-c41e-4f12-b85c-3bdc3898a41b" data-media-type="file"></span><p>Another setting that could be changed would be the <u>vehicle speed</u>. A task performed by cadis team, &amp; which would affect all your agencies . It therefore requires coordination.</p><p /><p />
+                    </div>
+
+                                        <div class="pageSection group">
+                        <div class="pageSectionHeader">
+                            <h2 id="attachments" class="pageSectionTitle">Attachments:</h2>
+                        </div>
+
+                        <div class="greybox" align="left">
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1362722931/1403453468.png">image-20250807-152432.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1362722931/1403748376.png">image-20250807-152516.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1362722931/1403453477.png">image-20250807-154947.png</a> (image/png)
+                                <br/>
+                                                    </div>
+                    </div>
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:51</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

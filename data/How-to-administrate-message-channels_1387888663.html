@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : How to administrate message channels</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="FAQ_1265467497.html">FAQ</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="1451753518.html">FAQ | Frequently Asked Questions</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : How to administrate message channels
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Mohamed.Shebl</span>, last modified by <span class='editor'> Julian Beyer</span> on Sep 08, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <p>Message channels are available from R4.18 if licensed.</p><p>License: <em><strong>Messaging, LPP-MSG</strong></em></p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="250" src="https://docs.cadis.cloud/wp-content/uploads/2023/10/image-12.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/10/image-12.png" loading="lazy"></span><p>If licensed, two permissions grant access to the “Terminal” channel and all “User” channels (below “Users”). “Supervisors” is a group channel for the logged in users to communicate with their supervisors.</p><p>“Vehicle” and “Vehicle group” have been available in cadis since day one. There is no change in their functionality and their respective user permissions.</p><h2 id="Howtoadministratemessagechannels-“UsertoSupervisors”Channel">“User to Supervisors” Channel</h2><p>Each user who is logged in via user account has access to his supervisors channel (named <em>Supervisors</em>), without any permission necessary. Only the user and the group of supervisors have access to a named user channel. A user will see their individual “User to Supervisor” channel labeled as “Supervisors”.</p><p>The supervisors will see the corresponding channel labeled with the users Name. A supervisor can access “User to Supervisor” channels for all users.</p><p>Note: a supervisor is also a user. So they, too, will see a “Supervisor” channel via which they can write to the “Supervisors” group.</p><p><img class="emoticon emoticon-blue-star" data-emoji-id="1f4cc" data-emoji-shortname=":pushpin:" data-emoji-fallback="📌" src="images/icons/emoticons/72/1f4cc.png" width="16" height="16" data-emoticon-name="blue-star" alt="(blue star)"/><strong> Define supervisors by assigning one of their user roles the permission useAllChannels.</strong></p><p><img class="emoticon emoticon-blue-star" data-emoji-id="1f4cc" data-emoji-shortname=":pushpin:" data-emoji-fallback="📌" src="images/icons/emoticons/72/1f4cc.png" width="16" height="16" data-emoticon-name="blue-star" alt="(blue star)"/><strong> If a supervisor logs in on cadisAPP, they won’t see the user channels in the embedded “Message channels” functionality. If a supervisor needs to use a mobile device to communicate to another user in their supervisory role they can use cadisSTUDIO in the browser.</strong></p><h2 id="Howtoadministratemessagechannels-“Terminal”Channel">“Terminal” Channel</h2><p>Permission <em>useTerminalChannel </em>grants access to the terminal channel. Not only to future messages there, but to all existing messages.</p><p>The “Terminal” channel is intended for depot-wide concerns.</p><p><img class="emoticon emoticon-blue-star" data-emoji-id="1f4cc" data-emoji-shortname=":pushpin:" data-emoji-fallback="📌" src="images/icons/emoticons/72/1f4cc.png" width="16" height="16" data-emoticon-name="blue-star" alt="(blue star)"/><strong> Assign permission useTerminalChannel to the user roles that shall have access to the terminal channel.</strong></p><p>Users being granted access will see all messages in the terminal channel including past messages.</p><ul><li><p>All users logged into cadisSTUDIO or cadisAPP via user account have access if thier role has the permission <em>useTerminalChannel </em>assigned.</p></li><li><p>All user logged into cadisAPP via barcode or pin have access if the role of the mobile access has the permission useTerminalChannel assigned.</p></li></ul><h2 id="Howtoadministratemessagechannels-Vehicle">Vehicle</h2><p>Vehicle channels remain unchanged from the long-established cadis functionality.</p><p><img class="emoticon emoticon-blue-star" data-emoji-id="1f4cc" data-emoji-shortname=":pushpin:" data-emoji-fallback="📌" src="images/icons/emoticons/72/1f4cc.png" width="16" height="16" data-emoticon-name="blue-star" alt="(blue star)"/><strong> The established permissions readMessages or changeMessages are still necessary to give to access the vehicle channels in cadisSTUDIO. They do not require the license LPP-MSG.</strong></p><p><img class="emoticon emoticon-blue-star" data-emoji-id="1f4cc" data-emoji-shortname=":pushpin:" data-emoji-fallback="📌" src="images/icons/emoticons/72/1f4cc.png" width="16" height="16" data-emoticon-name="blue-star" alt="(blue star)"/><strong> In cadisAPP users still need the established permission useMDEpickupdeliverymessages to access their vehicle messages.</strong></p><p />
+                    </div>
+
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:51</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : R4 2025.3 Release Notes (DE)</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="Product-Info_1262485575.html">Product Info</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="Release-Notes_1263009804.html">Release Notes</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="R4-2025.3-Release-Notes_1347944494.html">R4 2025.3 Release Notes</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : R4 2025.3 Release Notes (DE)
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Julian Beyer</span> on Aug 08, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <style type='text/css'>/*<![CDATA[*/
+div.rbtoc1763045551014 {padding: 0px;}
+div.rbtoc1763045551014 ul {list-style: none;margin-left: 0px;}
+div.rbtoc1763045551014 li {margin-left: 0px;padding-left: 0px;}
+
+/*]]>*/</style><div class='toc-macro rbtoc1763045551014'>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>1</span> <a href='#R42025.3ReleaseNotes(DE)-Einleitung'>Einleitung</a></li>
+<li><span class='TOCOutline'>2</span> <a href='#R42025.3ReleaseNotes(DE)-Highlights'>Highlights</a>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>2.1</span> <a href='#R42025.3ReleaseNotes(DE)-FahrerauswahlinTourvorlage(RD-3330,cadisSTUDIO)'>Fahrerauswahl in Tourvorlage (RD-3330, cadisSTUDIO)</a></li>
+<li><span class='TOCOutline'>2.2</span> <a href='#R42025.3ReleaseNotes(DE)-FahrerauswahlinTourdetails(RD-1980,cadisCONTROL)'>Fahrerauswahl in Tourdetails (RD-1980, cadisCONTROL)</a></li>
+<li><span class='TOCOutline'>2.3</span> <a href='#R42025.3ReleaseNotes(DE)-cadisCONNECTfürEntladung(RD-874,cadisCONNECT)'>cadisCONNECT für Entladung (RD-874, cadisCONNECT)</a></li>
+<li><span class='TOCOutline'>2.4</span> <a href='#R42025.3ReleaseNotes(DE)-Rule-Engine:Name2fürVersender&amp;Empfängerhinzufügen(RD-2749)'>Rule-Engine: Name2 für Versender &amp; Empfänger hinzufügen (RD-2749)</a></li>
+<li><span class='TOCOutline'>2.5</span> <a href='#R42025.3ReleaseNotes(DE)-“Driver”-Pairing:Fahrer-IDbeiAnmeldunginFahrtdetailsaktualisieren(RD-3199)'>“Driver”-Pairing: Fahrer-ID bei Anmeldung in Fahrtdetails aktualisieren (RD-3199)</a></li>
+<li><span class='TOCOutline'>2.6</span> <a href='#R42025.3ReleaseNotes(DE)-WeitereSequenz-ArteninLoadingStatusItemsfürcTLoadingStatus-Exportshinzugefügt(RD-2832)'>Weitere Sequenz-Arten in LoadingStatusItems für cTLoadingStatus-Exports hinzugefügt (RD-2832)</a></li>
+</ul>
+</li>
+<li><span class='TOCOutline'>3</span> <a href='#R42025.3ReleaseNotes(DE)-PickUpandDelivery(PUD)undTerminal-Handling(TH)'>Pick Up and Delivery (PUD) und Terminal-Handling (TH)</a>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>3.1</span> <a href='#R42025.3ReleaseNotes(DE)-NeueFunktionen'>Neue Funktionen</a></li>
+<li><span class='TOCOutline'>3.2</span> <a href='#R42025.3ReleaseNotes(DE)-Verbesserungen'>Verbesserungen</a></li>
+<li><span class='TOCOutline'>3.3</span> <a href='#R42025.3ReleaseNotes(DE)-Fehlerbehebungen'>Fehlerbehebungen</a></li>
+</ul>
+</li>
+<li><span class='TOCOutline'>4</span> <a href='#R42025.3ReleaseNotes(DE)-YardManager'>Yard Manager</a>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>4.1</span> <a href='#R42025.3ReleaseNotes(DE)-Verbesserungen.1'>Verbesserungen</a></li>
+</ul>
+</li>
+</ul>
+</div><h1 id="R42025.3ReleaseNotes(DE)-Einleitung">Einleitung</h1><p>Diese Release Note basiert auf <strong>cadis R4 2025.3.0</strong></p><p>Bitte sehen Sie sich auch die <a href="R4-2025.3-Change-history_1356726278.html" data-linked-resource-id="1356726278" data-linked-resource-version="6" data-linked-resource-type="page">R4 2025.3 Change history</a> an, welche die vollständige Liste der Änderungen enthält.</p><p>Viele der hier aufgeführten Funktionen sind in allen Basis-Service-Cut-Levels verfügbar. Einige erfordern jedoch eine zusätzliche Lizenz, während andere je nach Service-Cut-Beschränkung und Ihrer spezifischen Nutzung von cadis unterschiedlich zugänglich oder nutzbar sein können. In einigen Fällen hängt die Verfügbarkeit von Informationen und/oder Funktionen innerhalb einer Funktion ebenfalls vom Service-Cut-Level und anderen lizenzierten Optionen ab.</p><h1 id="R42025.3ReleaseNotes(DE)-Highlights">Highlights</h1><h2 id="R42025.3ReleaseNotes(DE)-FahrerauswahlinTourvorlage(RD-3330,cadisSTUDIO)">Fahrerauswahl in Tourvorlage (RD-3330, cadisSTUDIO)</h2><p>Wir haben die Möglichkeit hinzugefügt, einen Fahrer direkt im Dialog der Tourvorlage (Nahverkehr) auszuwählen. So können Disponenten den Standardfahrer aus den Fahrzeugstammdaten überschreiben und vor der Tourerstellung eine bestimmte Person zuweisen.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-left" alt="image-20250626-163634.png" width="600" loading="lazy" src="attachments/1405648897/1405648922.png?width=600" data-image-src="attachments/1405648897/1405648922.png" data-height="799" data-width="1091" data-unresolved-comment-count="0" data-linked-resource-id="1405648922" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image-20250626-163634.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1405648897" data-linked-resource-container-version="1" data-media-id="a09c04ee-3d97-4e1f-811c-c332f531af69" data-media-type="file"></span><h2 id="R42025.3ReleaseNotes(DE)-FahrerauswahlinTourdetails(RD-1980,cadisCONTROL)">Fahrerauswahl in Tourdetails (RD-1980, cadisCONTROL)</h2><p>Ein neues Fahrerfeld wurde in die Tourdetails für Nah- und Fernverkehr eingeführt. Disponenten können jetzt einen Fahrer aus den Stammdaten explizit zuweisen, unabhängig vom Fahrzeug. Dies verbessert die Übersicht für Planung, Ausdrucke und mobilen Zugriff. Wenn im Fahrzeug ein Standardfahrer hinterlegt ist, wird dieser vorausgefüllt, kann aber manuell überschrieben werden. Der ausgewählte Fahrer ist auch in CTLoadingStatus-Exports mit der Rolle „Driver1“ enthalten.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-left" alt="image-20250626-164513.png" width="400" loading="lazy" src="attachments/1405648897/1405648919.png?width=400" data-image-src="attachments/1405648897/1405648919.png" data-height="517" data-width="407" data-unresolved-comment-count="0" data-linked-resource-id="1405648919" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image-20250626-164513.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1405648897" data-linked-resource-container-version="1" data-media-id="754720d8-8f92-42ba-84c1-5cdbb6fcc5b9" data-media-type="file"></span><h2 id="R42025.3ReleaseNotes(DE)-cadisCONNECTfürEntladung(RD-874,cadisCONNECT)">cadisCONNECT für Entladung (RD-874, cadisCONNECT)</h2><p>Zwei neue Endpunkte — <code>/list</code> und <code>/details</code> — bieten strukturierten Zugriff auf Entladedaten, analog zu bestehenden Lade-APIs. Drittsysteme, Analysetools oder Partner können Entlade-Workflows jetzt genauso einfach abfragen und so für mehr Transparenz, Prüfungen und systemübergreifende Automatisierung sorgen.</p><h2 id="R42025.3ReleaseNotes(DE)-Rule-Engine:Name2fürVersender&amp;Empfängerhinzufügen(RD-2749)">Rule-Engine: Name2 für Versender &amp; Empfänger hinzufügen (RD-2749)</h2><p>Die Definitionen von Regeln und Parametern wurden erweitert, um <code>Name2</code> (und andere sekundäre Felder) für Versender, Empfänger, Abhol- und Lieferadressen einzuschließen. Das erhöht die Flexibilität beim Erstellen von Regeln in Branchen, in denen sekundäre Namensfelder üblich sind (Franchise, Pharma-Ketten). Intelligentere, detailliertere Logik bedeutet weniger manuelle Ausnahmen und präzisere automatische Disposition.</p><h2 id="R42025.3ReleaseNotes(DE)-“Driver”-Pairing:Fahrer-IDbeiAnmeldunginFahrtdetailsaktualisieren(RD-3199)">“Driver”-Pairing: Fahrer-ID bei Anmeldung in Fahrtdetails aktualisieren (RD-3199)</h2><p>Erweiterte Logik für fahrergebundene mobile Zugriffe (“Driver” Freigaben): Wenn sich ein Fahrer anmeldet und eine Tour abonniert, wird das Fahrerfeld der Tour automatisch befüllt. Das verbessert Nachverfolgbarkeit und Planungstransparenz bei flexiblen Fahrer-Fahrzeug-Zuweisungen.</p><h2 id="R42025.3ReleaseNotes(DE)-WeitereSequenz-ArteninLoadingStatusItemsfürcTLoadingStatus-Exportshinzugefügt(RD-2832)">Weitere Sequenz-Arten in LoadingStatusItems für cTLoadingStatus-Exports hinzugefügt (RD-2832)</h2><p>Der cTLoadingStatus-Export enthält nun optional drei neue Felder pro Eintrag:</p><ul><li><p><strong>PlannedLoadingSequence</strong> – zeigt die geplante Beladungsreihenfolge wie in der cadisAPP-Oberfläche</p></li><li><p><strong>ActualLoadingSequence</strong> – zeigt die Reihenfolge, in der Packstücke gescannt wurden (erster Scan des ersten Packstücks)</p></li><li><p><strong>PlannedStopSequence</strong> – zeigt die geplante Stoppreihenfolge in der Tour</p></li><li><p>Diese Werte helfen nachgelagerten Systemen, verschiedene Sequenzen zu identifizieren. Die neuen Felder werden über die Konfiguration aktiviert.</p></li></ul><p>Das bestehende Feld „Sequence“ bleibt unverändert.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-left" alt="image-20250627-083145.png" width="600" loading="lazy" src="attachments/1405648897/1405648907.png?width=600" data-image-src="attachments/1405648897/1405648907.png" data-height="639" data-width="923" data-unresolved-comment-count="0" data-linked-resource-id="1405648907" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image-20250627-083145.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1405648897" data-linked-resource-container-version="1" data-media-id="10e0d49e-cb9b-4392-8cfe-b61e244083b0" data-media-type="file"></span><h1 id="R42025.3ReleaseNotes(DE)-PickUpandDelivery(PUD)undTerminal-Handling(TH)">Pick Up and Delivery (PUD) und Terminal-Handling (TH)</h1><h2 id="R42025.3ReleaseNotes(DE)-NeueFunktionen">Neue Funktionen</h2><ul><li><p><strong>RD-3330</strong> – (siehe oben)</p></li><li><p><strong>RD-1980</strong> – (siehe oben)</p></li><li><p><strong>RD-874</strong> – (siehe oben)</p></li><li><p><strong>RD-2749 </strong>- (siehe oben)</p></li><li><p><strong>RD-2832 </strong>- (siehe oben)</p></li></ul><h2 id="R42025.3ReleaseNotes(DE)-Verbesserungen">Verbesserungen</h2><ul><li><p><strong>RD-3647</strong> – Dem Workflow „Alle nicht-geocodierten Sendungen geokodieren“ in cadisCONTROL wurde eine „Überspringen“-Schaltfläche hinzugefügt. Nutzer können so einzelne Einträge ohne zu Geokodieren überspringen.</p></li><li><p><strong>RD-3803</strong> – Eine funktionslose Aktion „Entladeliste erzeugen“ wurde in cadisCONTROL für Fernverkehr entfernt (diese Funktion gibt es nur für Nahverkehr).</p></li><li><p><strong>RD-3722</strong> – Neue Konfigurationsoption hinzugefügt, um Entladelisten für den Fernverkehr automatisch freizugeben. So werden Host-Integrationen nahtlos unterstützt und manuelle Eingriffe vermieden.</p></li><li><p><strong>RD-3654</strong> – Neue Spalte „Fahrer“ in der Übersicht der Tourvorlagen für Nahverkehr und Fernverkehr hinzugefügt.</p></li><li><p><strong>RD-3651</strong> – Optimierter <code>/unloadings/details</code>-cadisCONNECT-Endpunkt: Jetzt mit Koordinaten in Adressfeldern und ohne die (funktionslose) Master-Paletten-Referenzen auf Positionsebene.</p></li><li><p><strong>RD-3648</strong> – Anzeigeeinheit für Paketmaße in der Fahrer-App geändert: von gerundeten Metern zu Zentimetern mit einer Nachkommastelle. So werden Ladeentscheidungen präziser und Frust durch Rundungsfehler vermieden.</p></li><li><p><strong>RD-3546</strong> – Nutzer können jetzt zusätzliche mobile Logdateien anfordern, auch wenn bereits eine Anforderung offen ist. Ein Bestätigungsdialog verbessert den Support und verhindert Blockaden in Ausnahmefällen.</p></li><li><p><strong>RD-3531</strong> – Geocoding-Status-Icons in cadisCONTROL standardisiert, um mit cadisSTUDIO übereinzustimmen. Das System zeigt jetzt klar Auto-Geocoding, manuelles Geocoding, Fehlgeschlagen und In Bearbeitung an – mit einheitlichen Symbolen und Tooltips.</p><span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-center" alt="image-20250626-171325.png" width="213" loading="lazy" src="attachments/1405648897/1405648913.png?width=213" data-image-src="attachments/1405648897/1405648913.png" data-height="53" data-width="311" data-unresolved-comment-count="0" data-linked-resource-id="1405648913" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image-20250626-171325.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1405648897" data-linked-resource-container-version="1" data-media-id="5c03510c-266b-4e14-a48c-54406367364e" data-media-type="file"></span><p>Geocoding: Fehlgeschlagen – OK/Automatisch – OK/Manuell – In Bearbeitung</p></li><li><p><strong>RD-3427</strong> – Neue Push-basiertes Temperaturdatenschnittstelle für NIC-Place implementiert.</p></li><li><p><strong>RD-3199</strong> – Performance-Absicherung in Sendungstabellen eingeführt. Eine konfigurierbare Obergrenze verhindert zu große Abfragen und fordert die Nutzer auf, Filter zu verfeinern.</p></li><li><p><strong>RD-3946</strong> – Zusätzlich zum “Standardfahrer” (dem in den Fahrzeugstammdaten hinterlegten Standardfahrer; Type  “Default Driver”) exportiert cadis nun auch den tatsächlich in der Tour ausgewählten Fahrer (siehe “Fahrerauswahl in Tourdetail”, RD-1980).<br/>Der tatsächliche Fahrer wird in der Struktur “InvolvedPersons” als ein “InvolvedPerson” mit “InvolvedPerson”=”Driver1” exportiert. </p></li></ul><h2 id="R42025.3ReleaseNotes(DE)-Fehlerbehebungen">Fehlerbehebungen</h2><ul><li><p><strong>RD-3421</strong> – Die Fahrzeugtabelle verwendet jetzt standardmäßig das lokale Datum der OrgUnit anstelle von UTC für Tagesfilter.</p></li><li><p><strong>RD-3503</strong> – Die Spalte „Abfahrten“ zeigt jetzt die Werte in der Fahrzeugtabelle korrekt an.</p></li><li><p><strong>RD-2639</strong> – Stopps werden jetzt weiterhin in MyTrips angezeigt, auch wenn der Auftragsstatus in cadisCONTROL manuell gesetzt wird. Damit werden Inkonsistenzen behoben, bei denen Stopps zu früh verschwanden.</p></li><li><p><strong>RD-3789</strong> – Fehler behoben, bei dem Tourstopp-Sequenzen bei Massen-Updates und Drag-and-Drop-Zuweisungen im Tourmonitor beeinträchtigt werden konnten, wenn ungültige Geopositionen vorlagen.</p></li><li><p><strong>RD-3777</strong> – Fehler behoben, bei dem Ankunftszeitstempel nach Neustarts von cadisAPP falsch waren.</p></li><li><p><strong>RD-3683</strong> – Sortierungsprobleme in der Fahrtvorlagenansicht (Fahrzeug, Erstellt, Zuletzt geändert) behoben.</p></li><li><p><strong>RD-3680</strong> – Behebung eines Problems, bei dem cadis-generierte Entladelisten nicht erstellt wurden, wenn mehrere Teilsendungen zu einer Hauptsendung gehörten. Die Importlogik führt solche Einträge jetzt korrekt zusammen.</p></li><li><p><strong>RD-3655</strong> – Das Feld „Fahrer“ in den Nahverkehr-Fahrtdetails wird nicht mehr mit „Standardfahrer“ vorausgefüllt, wenn kein Standardfahrer existiert, um Verwirrung bei Planern zu vermeiden.</p></li><li><p><strong>RD-3651</strong> – <code>/unloadings/details</code>-cadisCONNECT-Endpunkt optimiert, um fehlgeschlagenen Requests zu vermeiden, wenn sehr viele Entlade-IDs gleichzeitig abgefragt werden.</p></li><li><p><strong>RD-3642</strong> – Behebung eines Bugs, bei dem Fahrten im UI storniert werden konnten, obwohl noch „Zu entladen“-Sendungen vorhanden waren. Das System verhindert jetzt eine Stornierung und stellt konsistentes Tourhandling sicher.</p></li><li><p><strong>RD-3483</strong> – Behebung eines Bugs, bei dem das Ablehnen einer Tour eine irreführende Fehlermeldung auslöste. Die App wechselt nun korrekt zur Stoppübersicht ohne Fehlalarme oder wiederholte Abfragen.</p></li><li><p><strong>RD-3305</strong> – Korrektes Verhalten der Entladeliste für Abholungen. Wenn eine bereits gescannte Abholung als „Nicht abgeholt“ markiert und dann wieder als „Abgeholt OK“ korrigiert wird, ist sie wieder in der Entladeliste enthalten.</p></li><li><p><strong>RD-2702</strong> – Behebung eines Problems, bei dem beim späteren Zusammenführen unbekannter Pakete mit bekannten Sendungen zuvor dokumentierte tatsächliche Ladehilfsmitteldaten nicht erhalten blieben.</p></li><li><p><strong>RD-3399</strong>, <strong>RD-3477</strong>, <strong>RD-3480</strong>, <strong>RD-3482</strong> – cadisAPP: Seltene Abstürze und Synchronisierungsprobleme behoben.</p></li></ul><h1 id="R42025.3ReleaseNotes(DE)-YardManager">Yard Manager</h1><h2 id="R42025.3ReleaseNotes(DE)-Verbesserungen.1">Verbesserungen</h2><ul><li><p><strong>RD-3670</strong> – Verbesserte Eingabevalidierung für YM-Eingabefelder für Ladeeinheitsinhalte (technisches Limit von 50 Zeichen gewährleistet).</p></li><li><p><strong>RD-2876</strong> – Abgekündigte Lecacy-Variante des „Gate Manager“ vollständig entfernt.</p></li></ul>
+                    </div>
+
+                                        <div class="pageSection group">
+                        <div class="pageSectionHeader">
+                            <h2 id="attachments" class="pageSectionTitle">Attachments:</h2>
+                        </div>
+
+                        <div class="greybox" align="left">
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1405648897/1405648907.png">image-20250627-083145.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1405648897/1405648910.png">image-20250627-083016.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1405648897/1405648913.png">image-20250626-171325.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1405648897/1405648916.png">image-20250417-070110.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1405648897/1405648919.png">image-20250626-164513.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1405648897/1405648922.png">image-20250626-163634.png</a> (image/png)
+                                <br/>
+                                                    </div>
+                    </div>
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:52</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

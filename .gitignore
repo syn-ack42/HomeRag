@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+
+# Docker
+*.log
+
+# Local RAG bot data
+bots/*/data/*
+bots/*/chroma/*
+# But keep bot metadata & prompts
+!bots/*/config/
+!bots/*/meta.json
+!bots/*/config/prompt.txt
+
+# Ollama model store
+ollama/
+
+# VS Code / editors
+.vscode/
+.idea/
+
+# Python venv
+venv/
+.env
+
+# MacOS junk
+.DS_Store
+
+# Node/npm junk (if frontend expands)
+node_modules/
+
+# Build artifacts
+dist/
+build/

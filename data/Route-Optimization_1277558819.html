@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : Route Optimization</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="User-Manual_1262780463.html">User Manual</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="User-Manual_1451589679.html">User Manual</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="1423245491.html">cadisCONTROL | EN</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : Route Optimization
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Julian Beyer</span>, last modified on Aug 20, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <style type='text/css'>/*<![CDATA[*/
+div.rbtoc1763045356836 {padding: 0px;}
+div.rbtoc1763045356836 ul {list-style: none;margin-left: 0px;}
+div.rbtoc1763045356836 li {margin-left: 0px;padding-left: 0px;}
+
+/*]]>*/</style><div class='toc-macro rbtoc1763045356836'>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>1</span> <a href='#RouteOptimization-Startingtheoptimization'>Starting the optimization</a></li>
+<li><span class='TOCOutline'>2</span> <a href='#RouteOptimization-Overviewofoptimizationruns'>Overview of optimization runs</a></li>
+<li><span class='TOCOutline'>3</span> <a href='#RouteOptimization-Resultofrouteoptimization'>Result of route optimization</a>
+<ul class='toc-indentation'>
+<li><span class='TOCOutline'>3.1</span> <a href='#RouteOptimization-Tourtable(topleft)'>Tour table (top left)</a></li>
+<li><span class='TOCOutline'>3.2</span> <a href='#RouteOptimization-ResultTab'>Result Tab</a></li>
+<li><span class='TOCOutline'>3.3</span> <a href='#RouteOptimization-StopsTab'>Stops Tab</a></li>
+<li><span class='TOCOutline'>3.4</span> <a href='#RouteOptimization-Map'>Map</a></li>
+<li><span class='TOCOutline'>3.5</span> <a href='#RouteOptimization-Applyoptimizationroute'>Apply optimization route</a></li>
+</ul>
+</li>
+</ul>
+</div><h1 id="RouteOptimization-Startingtheoptimization">Starting the optimization</h1><p>Open the Route optimization screen</p><ul><li><p>if you want to schedule all shipments and collections using the Route optimization using the :Tourenoptimierung: symbol in the cadis control panel</p></li><li><p>if you want to plan a selection of shipments and collections using route optimization by selecting the shipments to be planned in the shipment overview and calling the <em>Start free route optimization with selection </em>function from the context menu.</p></li></ul><p>The route optimization plans shipments and collections on routes.</p><p>Set the parameters for the optimization in the <em>Route optimization</em> screen.</p><p>At maximum capacity it is recommended to specify less than 100% depending on the accuracy of the shipment data and the shipment structure.</p><p>For fleet use, you can choose whether as few routes as possible should be created or whether all routes should be created for all vehicles</p><p>In the <em>Vehicle fleet </em>area, enter the vehicles you want to use for this optimization. You have 2 options:</p><ol start="1"><li><p>Select from the list of vehicles and enter the individual vehicles. In this case, a vehicle is immediately assigned to the routes created by the optimization.</p></li></ol><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2023/03/Pasted-35.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/03/Pasted-35.png" loading="lazy"></span><ol start="2"><li><p>Enter the number of vehicles for each vehicle type. In this case, you then assign the vehicles to the routes manually.</p></li></ol><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2023/03/Pasted-36.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/03/Pasted-36.png" loading="lazy"></span><p>In the table, the :nbo: column shows the total number of vehicles with the same characteristics used for the optimization: payload, pallet storing locations, dangerous goods equipment and tail lift.</p><p>The number of available vehicles is displayed in the :verfügbareFahrzeuge: column (marked as available in the master data).</p><p>You can edit the :verwendenFahrezeug: column and enter the number of vehicles you want to use for this optimization.</p><p>After the optimization, the <em>Used</em> column shows you how many vehicles were actually used.</p><p>Start the optimization process by clicking the <em>Start the optimization </em>button. The optimization takes a few minutes depending on the number of shipments and runs in the background. You can start another optimization run during this time.</p><p>The optimization result is initially only displayed. Only when you are satisfied with the result you apply it and only then the concrete routes are created.</p><p>In this way you can, for example, have various scenarios calculated and then adopt the best result.</p><h1 id="RouteOptimization-Overviewofoptimizationruns">Overview of optimization runs</h1><p>You can see the current and completed optimizations in the <em>Route optimizations</em> screen.</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2023/03/Pasted-37.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/03/Pasted-37.png" loading="lazy"></span><p>For each optimization, you see the start time, the duration of the optimization in minutes, the status (Calculation, Finished, Applied) and the result (number of routes, total driving time, and total distance).</p><p>You can <em>open</em> or <em>delete</em> the optimization using the context menu.</p><p>The <em>Finished</em> status means that the optimization run is done. By double clicking on a line you can view the result in detail.</p><h1 id="RouteOptimization-Resultofrouteoptimization">Result of route optimization</h1><p>Displays the result of the optimization in the Route optimization screen</p><span class="confluence-embedded-file-wrapper image-left-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-external-resource image-left" width="800" src="https://docs.cadis.cloud/wp-content/uploads/2023/03/Pasted-38.png" data-image-src="https://docs.cadis.cloud/wp-content/uploads/2023/03/Pasted-38.png" loading="lazy"></span><h2 id="RouteOptimization-Tourtable(topleft)">Tour table (top left)</h2><p>This shows a summary of the data for the routes created with a display of the capacity utilization for collections and deliveries.</p><h2 id="RouteOptimization-ResultTab">Result Tab</h2><p>The optimization parameters used are displayed here along with the vehicles actually used in the vehicle table.</p><p>The Orders section shows the scheduled and unscheduled collections and deliveries</p><p>The Routes section shows statistics on the routes created with minimum, maximum, average and total values.</p><h2 id="RouteOptimization-StopsTab">Stops Tab</h2><p>Shows the stops for the selected routes</p><h2 id="RouteOptimization-Map">Map</h2><p>The itinerary of the selected routes are shown as a line on the map,</p><h2 id="RouteOptimization-Applyoptimizationroute">Apply optimization route</h2><p>This modelling is not applied to your data until you click on the <em>Apply optimization results</em> button. At which point, the routes will be created and the shipments and collections assigned to them. You can then see the tours in the <em>Loading of secondary distribution</em> screen and in the <em>List of routes</em> screen.</p>
+                    </div>
+
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:49</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>

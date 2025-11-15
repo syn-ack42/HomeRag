@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CADIS Knowledge Base : R4 2025.4 Release Notes (EN)</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="CADIS-Knowledge-Base_1262748272.html">CADIS Knowledge Base</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="Product-Info_1262485575.html">Product Info</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="Release-Notes_1263009804.html">Release Notes</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            CADIS Knowledge Base : R4 2025.4 Release Notes (EN)
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                            
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Franz Renger</span>, last modified on Oct 13, 2025
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <style type='text/css'>/*<![CDATA[*/
+div.rbtoc1763045546958 {padding: 0px;}
+div.rbtoc1763045546958 ul {list-style: none;margin-left: 0px;}
+div.rbtoc1763045546958 li {margin-left: 0px;padding-left: 0px;}
+
+/*]]>*/</style><div class='toc-macro rbtoc1763045546958'>
+<ul class='toc-indentation'>
+<li><a href='#R42025.4ReleaseNotes(EN)-Introduction'>Introduction</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-HighlightedEnhancements'>Highlighted Enhancements</a>
+<ul class='toc-indentation'>
+<li><a href='#R42025.4ReleaseNotes(EN)-StreamlinedLoadingWorkflowsincadisAPP(RD-2021)'>Streamlined Loading Workflows in cadisAPP (RD-2021)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-EnhancementstoePOTReports(RD-3812)'>Enhancements to ePOT Reports (RD-3812)</a></li>
+</ul>
+</li>
+<li><a href='#R42025.4ReleaseNotes(EN)-General'>General</a>
+<ul class='toc-indentation'>
+<li><a href='#R42025.4ReleaseNotes(EN)-Iconsstandardisationacrossplatforms(RD-3160)'>Icons standardisation across platforms (RD-3160)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-cadisAPP:RestrictdefaultlanguagestoDE/EN/FR(RD-2377)'>cadisAPP: Restrict default languages to DE/EN/FR (RD-2377)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-RulesEngine:Disallownegativepriorityvalues(RD-3853)'>Rules Engine: Disallow negative priority values (RD-3853)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-cadisSTUDIO:fixdisplayofrolesforexternalusers(RD-2087)'>cadisSTUDIO: fix display of roles for external users (RD-2087)</a></li>
+</ul>
+</li>
+<li><a href='#R42025.4ReleaseNotes(EN)-PickUpandDelivery(PUD)&amp;TerminalHandling(TH)'>Pick Up and Delivery (PUD) &amp; Terminal Handling (TH)</a>
+<ul class='toc-indentation'>
+<li><a href='#R42025.4ReleaseNotes(EN)-Partialshipmentconfirmationdialogueremoved(configurable)(RD-2021)'>Partial shipment confirmation dialogue removed (configurable) (RD-2021)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-cadisSTUDIO:&quot;EditTrip&quot;,Changingvehicles(RD-3902,RD-2002)'>cadisSTUDIO: &quot;Edit Trip&quot;, Changing vehicles (RD-3902, RD-2002)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-Improvederrorhandlingduringshipmentimport(RD-4041)'>Improved error handling during shipment import (RD-4041)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-cadisCONTROLDeliveryNoteReport:IncludeDepartureName(Tour)(RD-3724)'>cadisCONTROL Delivery Note Report: Include Departure Name (Tour) (RD-3724)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-Write“OK”insteadof“Loaded”or“Unloaded”fordisqualified/redispatchedshipments(RD-3862)'>Write “OK” instead of “Loaded” or “Unloaded” for disqualified/redispatched shipments (RD-3862)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-Prioritycalculationforfutureshipments(RD-3878)'>Priority calculation for future shipments (RD-3878)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-Collectiontemplate/StopLocationIDvalidation(RD-2967)'>Collection template / Stop Location ID validation (RD-2967)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-Correctedmissingmasterpalletpackageassignmentvalidation(RD-3884)'>Corrected missing master pallet package assignment validation (RD-3884)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-Photoinloadingmissing(RD-3817)'>Photo in loading missing (RD-3817)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-Fixdeliverystatuswithwrongdate&amp;time(RD-4077)'>Fix delivery status with wrong date &amp; time (RD-4077)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-cadisCONTROLlistofshipments:correctedconfusingresultlimitdisplay(RD-4039)'>cadisCONTROL list of shipments: corrected confusing result limit display (RD-4039)</a></li>
+</ul>
+</li>
+<li><a href='#R42025.4ReleaseNotes(EN)-TemperatureControl(TCL)'>Temperature Control (TCL)</a>
+<ul class='toc-indentation'>
+<li><a href='#R42025.4ReleaseNotes(EN)-TCLePOTimprovements:(RD-3812)'>TCL ePOT improvements: (RD-3812)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-TCLePOT:badx-axislabellingwhenperiodtoolong(RD-2482)'>TCL ePOT: bad x-axis labelling when period too long (RD-2482)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-TCLePOT:preventreportissuesifdataloggernameismissing(RD-3987)'>TCL ePOT: prevent report issues if data logger name is missing (RD-3987)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-Temperaturesensorclean-up(RD-2257)'>Temperature sensor clean-up (RD-2257)</a></li>
+<li><a href='#R42025.4ReleaseNotes(EN)-Terminalcompartments:addinfomessagewhennoteditable(RD-2710)'>Terminal compartments: add info message when not editable (RD-2710)</a></li>
+</ul>
+</li>
+</ul>
+</div><h1 id="R42025.4ReleaseNotes(EN)-Introduction">Introduction</h1><p>This release note is based on cadis R4 2025.4.0</p><p>Please take a look at the <a href="R4-2025.4-Change-history_1393590273.html" data-linked-resource-id="1393590273" data-linked-resource-version="7" data-linked-resource-type="page">R4 2025.4 Change history</a>, which contains the full list of changes.</p><p>Many of the features listed here are available across all basic service cut levels. However, some may require an additional licence, while others may have varying accessibility or utility depending on service cut limitations and your specific use of cadis. In some cases, the availability of information and/or functionality within a feature may also depend on the service cut level and other licenced options. </p><h1 id="R42025.4ReleaseNotes(EN)-HighlightedEnhancements">Highlighted Enhancements</h1><h2 id="R42025.4ReleaseNotes(EN)-StreamlinedLoadingWorkflowsincadisAPP(RD-2021)">Streamlined Loading Workflows in cadisAPP (RD-2021)</h2><p>You can now configure cadisAPP to automatically create partial shipments without prompting the user during loading. It speeds up terminal operations, especially in high-volume hubs, by eliminating unnecessary confirmation dialogues. The setting is configurable per traffic type (Line Haul or Local Traffic).</p><h2 id="R42025.4ReleaseNotes(EN)-EnhancementstoePOTReports(RD-3812)">Enhancements to ePOT Reports (RD-3812)</h2><p>The Electronic Proof of Temperature (ePOT) report has been updated for clarity and usability. It now includes depot names, data logger names, monitoring details (with timestamps and durations), and improved layout elements. These updates ensure more readable, traceable, and audit-proof reports, even when spanning long monitoring periods.</p><hr/><h1 id="R42025.4ReleaseNotes(EN)-General">General</h1><h2 id="R42025.4ReleaseNotes(EN)-Iconsstandardisationacrossplatforms(RD-3160)">Icons standardisation across platforms (RD-3160)</h2><p>Unifies icons for key attributes like “Driver Arrival Notification” and “Top Product” across cadisCONTROL, cadisSTUDIO, and cadisAPP.</p><div class="table-wrap"><table data-table-width="760" data-layout="default" data-local-id="1be585a0-7fe4-43ea-9dce-02f486a60855" class="confluenceTable"><tbody><tr><th class="confluenceTh"><p /></th><th class="confluenceTh"><p>Old icon</p></th><th class="confluenceTh"><p>New icon</p></th></tr><tr><td class="confluenceTd"><p>Driver Arrival Notification</p></td><td class="confluenceTd"><span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-center" alt="image-20250730-172943.png" width="24" loading="lazy" src="attachments/1391263761/1391656983.png?width=24" data-image-src="attachments/1391263761/1391656983.png" data-height="12" data-width="12" data-unresolved-comment-count="0" data-linked-resource-id="1391656983" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image-20250730-172943.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1391263761" data-linked-resource-container-version="14" data-media-id="533e5061-ea66-4cbe-bcc8-f4a30d3a94ff" data-media-type="file"></span></td><td class="confluenceTd"><span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-center" alt="image-20250730-172957.png" width="24" loading="lazy" src="attachments/1391263761/1391919117.png?width=24" data-image-src="attachments/1391263761/1391919117.png" data-height="12" data-width="12" data-unresolved-comment-count="0" data-linked-resource-id="1391919117" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image-20250730-172957.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1391263761" data-linked-resource-container-version="14" data-media-id="54ee25e0-9e53-45fc-a1b9-4ea45e810e40" data-media-type="file"></span></td></tr><tr><td class="confluenceTd"><p>Top  product</p></td><td class="confluenceTd"><span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-center" alt="image-20250730-173006.png" width="24" loading="lazy" src="attachments/1391263761/1391362065.png?width=24" data-image-src="attachments/1391263761/1391362065.png" data-height="12" data-width="12" data-unresolved-comment-count="0" data-linked-resource-id="1391362065" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image-20250730-173006.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1391263761" data-linked-resource-container-version="14" data-media-id="3f615538-7436-494b-acf0-7fe75274a13d" data-media-type="file"></span></td><td class="confluenceTd"><span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image image-center" alt="hinweis-topprodukt_16x16_16bit_192dpi.png" width="24" loading="lazy" src="attachments/1391263761/1391656977.png?width=24" data-image-src="attachments/1391263761/1391656977.png" data-height="12" data-width="12" data-unresolved-comment-count="0" data-linked-resource-id="1391656977" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="hinweis-topprodukt_16x16_16bit_192dpi.png" data-base-url="https://cadissoftware.atlassian.net/wiki" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1391263761" data-linked-resource-container-version="14" data-media-id="54d2ba72-19b4-4b5c-9ff1-ef17998f2234" data-media-type="file"></span></td></tr></tbody></table></div><h2 id="R42025.4ReleaseNotes(EN)-cadisAPP:RestrictdefaultlanguagestoDE/EN/FR(RD-2377)">cadisAPP: Restrict default languages to DE/EN/FR (RD-2377)</h2><p>cadisAPP now only includes German, English, and French by default. Other languages are available via server-side configuration, ensuring consistency and reducing confusion due to incomplete translations.</p><h2 id="R42025.4ReleaseNotes(EN)-RulesEngine:Disallownegativepriorityvalues(RD-3853)">Rules Engine: Disallow negative priority values (RD-3853)</h2><p>The priority rule editor now prevents negative values, aligning with internal semantics and external optimisation constraints (e.g. xTour integration).</p><h2 id="R42025.4ReleaseNotes(EN)-cadisSTUDIO:fixdisplayofrolesforexternalusers(RD-2087)">cadisSTUDIO: fix display of roles for external users (RD-2087)</h2><p>External users' roles are now displayed correctly in cadisSTUDIO, without confusing angle brackets suggesting a missing reference.</p><h1 id="R42025.4ReleaseNotes(EN)-PickUpandDelivery(PUD)&amp;TerminalHandling(TH)">Pick Up and Delivery (PUD) &amp; Terminal Handling (TH)</h1><h2 id="R42025.4ReleaseNotes(EN)-Partialshipmentconfirmationdialogueremoved(configurable)(RD-2021)">Partial shipment confirmation dialogue removed (configurable) (RD-2021)</h2><p>See highlights. Adds a configuration option to suppress the confirmation prompt when cadisAPP needs to create a partial shipment. This improves scanning speed during loading or master pallet creation.</p><h2 id="R42025.4ReleaseNotes(EN)-cadisSTUDIO:&quot;EditTrip&quot;,Changingvehicles(RD-3902,RD-2002)">cadisSTUDIO: &quot;Edit Trip&quot;, Changing vehicles (RD-3902, RD-2002)</h2><p>In cadisSTUDIO, vehicle assignment was previously blocked for tours once they reached the &quot;Loading released&quot; status. This has now been corrected: users can assign or modify the vehicle for trips that are still in loading phases (e.g., LOADING_RELEASED, LOADING_ACTIVE, etc.). This ensures dispatchers can complete necessary configurations even after initial release.</p><h2 id="R42025.4ReleaseNotes(EN)-Improvederrorhandlingduringshipmentimport(RD-4041)">Improved error handling during shipment import (RD-4041)</h2><p>Improved error handling during shipment import from FTP. Files with unresolved shipment references no longer fail silently and are now processed correctly or rejected with meaningful feedback.</p><h2 id="R42025.4ReleaseNotes(EN)-cadisCONTROLDeliveryNoteReport:IncludeDepartureName(Tour)(RD-3724)">cadisCONTROL Delivery Note Report: Include Departure Name (Tour) (RD-3724)</h2><p>Optionally adds the departure name to printed delivery notes. This can be toggled via cadisSTUDIO Config Manager.</p><h2 id="R42025.4ReleaseNotes(EN)-Write“OK”insteadof“Loaded”or“Unloaded”fordisqualified/redispatchedshipments(RD-3862)">Write “OK” instead of “Loaded” or “Unloaded” for disqualified/redispatched shipments (RD-3862)</h2><p>The status text shown in shipment events has been corrected to &quot;OK&quot; for disqualified or redispatched shipments, reducing confusion for users analysing shipment histories.</p><h2 id="R42025.4ReleaseNotes(EN)-Prioritycalculationforfutureshipments(RD-3878)">Priority calculation for future shipments (RD-3878)</h2><p>The priority recalculation process has been adjusted to include future-dated shipments and avoid incorrect exclusions based on outdated filtering logic.</p><h2 id="R42025.4ReleaseNotes(EN)-Collectiontemplate/StopLocationIDvalidation(RD-2967)">Collection template / Stop Location ID validation (RD-2967)</h2><p>When saving a collection template, the system now checks whether referenced stop locations and customers actually exist. Invalid or dangling references (e.g., deleted stops) will trigger a clear validation message, and saving is prevented until corrections are made. This prevents silent data corruption and improves robustness of planning templates.</p><h2 id="R42025.4ReleaseNotes(EN)-Correctedmissingmasterpalletpackageassignmentvalidation(RD-3884)">Corrected missing master pallet package assignment validation (RD-3884)</h2><p>Fixed an issue that failed to prevent the assigning of packages from the same shipment to master pallets that are dispatched to different departures which caused incidents and inconsistent states.</p><h2 id="R42025.4ReleaseNotes(EN)-Photoinloadingmissing(RD-3817)">Photo in loading missing (RD-3817)</h2><p>Fixed an issue where photos taken during loading or unloading could be lost if server communication failed. The app now retries the upload and provides appropriate error messages.</p><h2 id="R42025.4ReleaseNotes(EN)-Fixdeliverystatuswithwrongdate&amp;time(RD-4077)">Fix delivery status with wrong date &amp; time (RD-4077)</h2><p>Resolved an issue in cadisAPP where device time resets caused shipment events to be recorded with incorrect timestamps. This led to delivery statuses appearing in the past and affected host system exports.</p><h2 id="R42025.4ReleaseNotes(EN)-cadisCONTROLlistofshipments:correctedconfusingresultlimitdisplay(RD-4039)">cadisCONTROL list of shipments: corrected confusing result limit display (RD-4039)</h2><p>Fixed incorrect result limit display in the cadisCONTROL shipment list view when filtering by transport type.</p><h1 id="R42025.4ReleaseNotes(EN)-TemperatureControl(TCL)">Temperature Control (TCL)</h1><h2 id="R42025.4ReleaseNotes(EN)-TCLePOTimprovements:(RD-3812)">TCL ePOT improvements: (RD-3812)</h2><p>See highlights. TCL ePOT: layout clarified, depot name and data logger name added, unified formatting for unloading sections, and detailed monitoring information (start/end time, duration). This significantly improves usability, transparency, and regulatory compliance for temperature-sensitive shipments.</p><h2 id="R42025.4ReleaseNotes(EN)-TCLePOT:badx-axislabellingwhenperiodtoolong(RD-2482)">TCL ePOT: bad x-axis labelling when period too long (RD-2482)</h2><p>Improved x-axis rendering in long-duration ePOT reports to avoid overlapping timestamps. Date labels are now placed more clearly and legibly across extended time frames.</p><h2 id="R42025.4ReleaseNotes(EN)-TCLePOT:preventreportissuesifdataloggernameismissing(RD-3987)">TCL ePOT: prevent report issues if data logger name is missing (RD-3987)</h2><p>Introduced a fallback mechanism that ensures reports still generate correctly even if the expected data logger name is missing.</p><h2 id="R42025.4ReleaseNotes(EN)-Temperaturesensorclean-up(RD-2257)">Temperature sensor clean-up (RD-2257)</h2><p>Introduced an automated clean-up job to remove inactive temperature sensors after a configurable retention period. This reduces database bloat and improves performance.</p><h2 id="R42025.4ReleaseNotes(EN)-Terminalcompartments:addinfomessagewhennoteditable(RD-2710)">Terminal compartments: add info message when not editable (RD-2710)</h2><p>Users now see a helpful message explaining why terminal compartments can’t be edited when they belong to another depot.</p>
+                    </div>
+
+                                        <div class="pageSection group">
+                        <div class="pageSectionHeader">
+                            <h2 id="attachments" class="pageSectionTitle">Attachments:</h2>
+                        </div>
+
+                        <div class="greybox" align="left">
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1391263761/1391460359.png">image-20250730-172704.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1391263761/1391656977.png">hinweis-topprodukt_16x16_16bit_192dpi.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1391263761/1391656983.png">image-20250730-172943.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1391263761/1391919117.png">image-20250730-172957.png</a> (image/png)
+                                <br/>
+                                                            <img src="images/icons/bullet_blue.gif" height="8" width="8" alt=""/>
+                                <a href="attachments/1391263761/1391362065.png">image-20250730-173006.png</a> (image/png)
+                                <br/>
+                                                    </div>
+                    </div>
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Nov 13, 2025 09:52</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>
