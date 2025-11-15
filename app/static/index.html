@@ -38,7 +38,7 @@ h1 {
 
 .main {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: minmax(0, 70%) minmax(320px, 30%);
     gap: 1rem;
     padding: 0 2rem 2rem;
 }
@@ -134,6 +134,17 @@ button:active { transform: translateY(0); box-shadow: none; }
 
 textarea#systemPrompt { width: 100%; min-height: 160px; resize: vertical; }
 
+.password-controls {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.password-controls input {
+    flex: 1;
+}
+
 .details-card summary { cursor: pointer; font-weight: 700; }
 .details-card summary::-webkit-details-marker { display: none; }
 .details-card summary::before { content: '\25bc'; display: inline-block; margin-right: 0.5rem; transition: transform 120ms ease; }
@@ -157,7 +168,7 @@ textarea#systemPrompt { width: 100%; min-height: 160px; resize: vertical; }
                 <label for="botSelect"><strong>Active Bot:</strong></label>
                 <select id="botSelect"></select>
                 <button onclick="createBot()">Create Bot</button>
-                <button class="secondary" onclick="rebuild()">Rebuild Index</button>
+                <button class="secondary" onclick="clearChat()">Clear Chat</button>
             </div>
 
             <div id="chat"></div>
@@ -172,6 +183,17 @@ textarea#systemPrompt { width: 100%; min-height: 160px; resize: vertical; }
         </section>
 
         <section class="card">
+            <div class="section-title">
+                <strong>Bot Controls</strong>
+                <button type="button" class="secondary" onclick="rebuild()">Rebuild Index</button>
+            </div>
+            <div class="password-controls">
+                <input id="passwordInput" type="password" placeholder="Set or change password" />
+                <button type="button" onclick="updatePassword()">Save Password</button>
+                <button type="button" class="secondary" onclick="removePassword()">Remove Password</button>
+            </div>
+            <span class="hint">You must unlock a private bot before changing or removing its password.</span>
+
             <details class="details-card" id="kbDetails">
                 <summary>Knowledge Base Files</summary>
                 <div class="kb-actions">
@@ -230,9 +252,13 @@ const moveFileSelect = document.getElementById("moveFileSelect");
 const fileTree = document.getElementById("fileTree");
 
 const BOT_STORAGE_KEY = "selectedBotId";
+const HISTORY_KEY_PREFIX = "chatHistory:";
+const PASSWORD_KEY_PREFIX = "botPassword:";
+const PASSWORD_HEADER = "X-Bot-Password";
 
 let history = [];
 let currentBotId = localStorage.getItem(BOT_STORAGE_KEY);
+let botsMeta = [];
 
 input.addEventListener("keydown", e => {
     if (e.key === "Enter" && e.ctrlKey) {
@@ -245,10 +271,107 @@ botSelect.addEventListener("change", async e => {
     await switchBot(e.target.value, { force: true });
 });
 
+function historyKey(botId) {
+    return `${HISTORY_KEY_PREFIX}${botId}`;
+}
+
+function passwordKey(botId) {
+    return `${PASSWORD_KEY_PREFIX}${botId}`;
+}
+
+function getBotPassword(botId) {
+    return sessionStorage.getItem(passwordKey(botId)) || "";
+}
+
+function setBotPassword(botId, password) {
+    if (!botId) return;
+    if (password) {
+        sessionStorage.setItem(passwordKey(botId), password);
+    } else {
+        sessionStorage.removeItem(passwordKey(botId));
+    }
+}
+
+function loadStoredHistory(botId) {
+    if (!botId) return [];
+    try {
+        return JSON.parse(localStorage.getItem(historyKey(botId))) || [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function persistHistory() {
+    if (!currentBotId) return;
+    localStorage.setItem(historyKey(currentBotId), JSON.stringify(history));
+}
+
+function buildAuthHeaders() {
+    const headers = {};
+    const password = getBotPassword(currentBotId);
+    if (password) {
+        headers[PASSWORD_HEADER] = password;
+    }
+    return headers;
+}
+
+async function authedFetch(url, options = {}, retry = true) {
+    const headers = { ...(options.headers || {}), ...buildAuthHeaders() };
+    const res = await fetch(url, { ...options, headers });
+    if (res.status === 403 && retry && await requestPasswordForCurrentBot()) {
+        return authedFetch(url, options, false);
+    }
+    return res;
+}
+
+function findBotMeta(id) {
+    return botsMeta.find(b => b.id === id);
+}
+
+async function verifyBotPassword(botId, password) {
+    const res = await fetch(`/bots/${botId}/access`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(password ? { [PASSWORD_HEADER]: password } : {}) },
+        body: JSON.stringify({ password })
+    });
+    return res.ok;
+}
+
+async function requestPasswordForCurrentBot() {
+    if (!currentBotId) return false;
+    const meta = findBotMeta(currentBotId);
+    if (!meta || !meta.protected) return true;
+
+    let existing = getBotPassword(currentBotId);
+    if (existing && await verifyBotPassword(currentBotId, existing)) {
+        return true;
+    }
+
+    while (true) {
+        const entered = prompt("This bot is private. Enter the password to continue:");
+        if (entered === null) {
+            return false;
+        }
+        if (await verifyBotPassword(currentBotId, entered)) {
+            setBotPassword(currentBotId, entered);
+            return true;
+        }
+        alert("Incorrect password. Please try again.");
+    }
+}
+
 function appendUser(msg) {
     const wrapper = document.createElement("div");
     wrapper.className = "message user";
     wrapper.innerHTML = `<div class="label">You</div><div>${msg}</div>`;
+    chat.appendChild(wrapper);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function appendBotMessage(text) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "message bot";
+    wrapper.innerHTML = `<div class="label">Bot</div><div>${marked.parse(text)}</div>`;
     chat.appendChild(wrapper);
     chat.scrollTop = chat.scrollHeight;
 }
@@ -273,12 +396,31 @@ function appendBotContainer() {
     return el;
 }
 
+function renderHistoryMessages() {
+    chat.innerHTML = "";
+    history.forEach(entry => {
+        if (entry.role === "user") {
+            appendUser(entry.content.replaceAll("\n", "<br>"));
+        } else if (entry.role === "assistant") {
+            appendBotMessage(entry.content);
+        }
+    });
+}
+
 function ensureBotSelected() {
     if (!currentBotId) {
         alert("Please create or select a bot first.");
         return false;
     }
     return true;
+}
+
+function clearChat() {
+    history = [];
+    chat.innerHTML = "";
+    if (currentBotId) {
+        localStorage.removeItem(historyKey(currentBotId));
+    }
 }
 
 async function sendMessage() {
@@ -288,16 +430,17 @@ async function sendMessage() {
     if (!q) return;
 
     history.push({ role: "user", content: q });
+    persistHistory();
 
     appendUser(q.replaceAll("\n", "<br>"));
     input.value = "";
 
     const typingEl = appendTyping();
 
-    const response = await fetch("/ask_stream", {
+    const response = await authedFetch("/ask_stream", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ q, bot_id: currentBotId })
+        headers: {"Content-Type": "application/json", ...buildAuthHeaders()},
+        body: JSON.stringify({ q, bot_id: currentBotId, password: getBotPassword(currentBotId) })
     });
 
     if (!response.ok || !response.body) {
@@ -349,6 +492,7 @@ async function sendMessage() {
     chat.scrollTop = chat.scrollHeight;
 
     history.push({ role: "assistant", content: botContainer.rawText });
+    persistHistory();
 }
 
 document.getElementById("uploadForm").onsubmit = async e => {
@@ -356,14 +500,14 @@ document.getElementById("uploadForm").onsubmit = async e => {
     if (!ensureBotSelected()) return;
     const form = new FormData(e.target);
     form.append("path", folderSelect.value || "");
-    await fetch(`/bots/${currentBotId}/upload`, { method: "POST", body: form });
+    await authedFetch(`/bots/${currentBotId}/upload`, { method: "POST", headers: buildAuthHeaders(), body: form });
     alert("Uploaded");
     refreshFiles();
 };
 
 async function rebuild() {
     if (!ensureBotSelected()) return;
-    await fetch(`/bots/${currentBotId}/rebuild`, { method: "POST" });
+    await authedFetch(`/bots/${currentBotId}/rebuild`, { method: "POST", headers: buildAuthHeaders() });
     alert("Reindexed!");
 }
 
@@ -434,7 +578,7 @@ async function refreshFiles() {
         return;
     }
 
-    const r = await fetch(`/bots/${currentBotId}/files`);
+    const r = await authedFetch(`/bots/${currentBotId}/files`);
     const data = await r.json();
     const tree = data.tree;
     renderTree(tree, fileTree);
@@ -477,7 +621,7 @@ async function refreshFiles() {
 
 async function deleteFileKB(name) {
     if (!ensureBotSelected()) return;
-    await fetch(`/bots/${currentBotId}/file/${encodeURIComponent(name)}`, { method: "DELETE" });
+    await authedFetch(`/bots/${currentBotId}/file/${encodeURIComponent(name)}`, { method: "DELETE", headers: buildAuthHeaders() });
     alert("Deleted " + name);
     refreshFiles();
 }
@@ -490,9 +634,9 @@ async function createFolder() {
         alert("Please enter a folder path.");
         return;
     }
-    await fetch(`/bots/${currentBotId}/folders`, {
+    await authedFetch(`/bots/${currentBotId}/folders`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", ...buildAuthHeaders()},
         body: JSON.stringify({ path })
     });
     inputEl.value = "";
@@ -506,7 +650,7 @@ async function deleteFolder(path) {
         alert("Select a folder to delete.");
         return;
     }
-    await fetch(`/bots/${currentBotId}/folders?path=${encodeURIComponent(folderPath)}`, { method: "DELETE" });
+    await authedFetch(`/bots/${currentBotId}/folders?path=${encodeURIComponent(folderPath)}`, { method: "DELETE", headers: buildAuthHeaders() });
     refreshFiles();
 }
 
@@ -518,9 +662,9 @@ async function moveFile() {
         alert("Select a file to move.");
         return;
     }
-    await fetch(`/bots/${currentBotId}/move_file`, {
+    await authedFetch(`/bots/${currentBotId}/move_file`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", ...buildAuthHeaders()},
         body: JSON.stringify({ source, destination_folder })
     });
     refreshFiles();
@@ -531,7 +675,7 @@ async function loadPrompt() {
         document.getElementById("systemPrompt").value = "";
         return;
     }
-    const r = await fetch(`/bots/${currentBotId}/prompt`);
+    const r = await authedFetch(`/bots/${currentBotId}/prompt`);
     const data = await r.json();
     document.getElementById("systemPrompt").value = data.prompt;
 }
@@ -539,21 +683,50 @@ async function loadPrompt() {
 async function savePrompt() {
     if (!ensureBotSelected()) return;
     const txt = document.getElementById("systemPrompt").value;
-    await fetch(`/bots/${currentBotId}/prompt`, {
+    await authedFetch(`/bots/${currentBotId}/prompt`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", ...buildAuthHeaders()},
         body: JSON.stringify({ prompt: txt })
     });
     alert("Saved");
 }
 
+async function updatePassword() {
+    if (!ensureBotSelected()) return;
+    const hasAccess = await requestPasswordForCurrentBot();
+    if (!hasAccess) return;
+
+    const newPassword = (document.getElementById("passwordInput").value || "").trim();
+    const res = await authedFetch(`/bots/${currentBotId}/password`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json", ...buildAuthHeaders()},
+        body: JSON.stringify({ new_password: newPassword })
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Unable to update password.");
+        return;
+    }
+
+    setBotPassword(currentBotId, newPassword);
+    alert(newPassword ? "Password updated." : "Password removed.");
+    document.getElementById("passwordInput").value = "";
+}
+
+async function removePassword() {
+    document.getElementById("passwordInput").value = "";
+    await updatePassword();
+}
+
 async function loadBots() {
     const r = await fetch("/bots");
     const data = await r.json();
+    botsMeta = data.bots || [];
 
     botSelect.innerHTML = "";
 
-    data.bots.forEach(bot => {
+    botsMeta.forEach(bot => {
         const option = document.createElement("option");
         option.value = bot.id;
         option.textContent = bot.name;
@@ -590,17 +763,35 @@ async function switchBot(id, { force = false } = {}) {
 
     if (!force && id === currentBotId) {
         await Promise.all([loadPrompt(), refreshFiles()]);
+        renderHistoryMessages();
         return;
     }
 
+    const previousBot = currentBotId;
     currentBotId = id;
+
+    const meta = findBotMeta(id);
+    if (meta && meta.protected) {
+        const unlocked = await requestPasswordForCurrentBot();
+        if (!unlocked) {
+            currentBotId = previousBot;
+            if (botSelect.value !== previousBot) {
+                botSelect.value = previousBot || "";
+            }
+            return;
+        }
+    } else {
+        setBotPassword(id, "");
+    }
+
     localStorage.setItem(BOT_STORAGE_KEY, currentBotId);
     if (botSelect.value !== id) {
         botSelect.value = id;
     }
 
-    history = [];
-    chat.innerHTML = "";
+    history = loadStoredHistory(currentBotId);
+    renderHistoryMessages();
+    document.getElementById("passwordInput").value = "";
     await Promise.all([loadPrompt(), refreshFiles()]);
 }
 
@@ -609,9 +800,13 @@ async function createBot() {
     if (!name || !name.trim()) return;
 
     const promptText = prompt("Optional system prompt (leave blank for default):", "");
+    const passwordText = prompt("Optional password (leave blank for a public bot):", "");
     const payload = { name: name.trim() };
     if (promptText !== null && promptText.trim() !== "") {
         payload.prompt = promptText;
+    }
+    if (passwordText !== null && passwordText.trim() !== "") {
+        payload.password = passwordText.trim();
     }
 
     const res = await fetch("/bots", {
