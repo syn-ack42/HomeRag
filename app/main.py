@@ -36,6 +36,16 @@ If something is not in the context, say you don't know.
 Never hallucinate.
 """
 
+
+def ensure_directories():
+    """Make sure all required storage directories exist."""
+    for path in (DATA_PATH, DB_PATH, CONFIG_PATH):
+        path.mkdir(parents=True, exist_ok=True)
+
+
+ensure_directories()
+
+
 def load_system_prompt():
     CONFIG_PATH.mkdir(parents=True, exist_ok=True)
     if PROMPT_FILE.exists():
