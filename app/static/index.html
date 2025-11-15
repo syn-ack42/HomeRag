@@ -8,6 +8,8 @@
 
 <style>
 body { font-family: system-ui, sans-serif; margin: 2em; }
+#botControls { margin-bottom: 1em; }
+#botControls select { margin: 0 0.5em; }
 #chat {
     border: 1px solid #ccc;
     border-radius: 10px;
@@ -24,6 +26,12 @@ body { font-family: system-ui, sans-serif; margin: 2em; }
 <body>
 
 <h2>Local RAG Chat</h2>
+
+<div id="botControls">
+    <label for="botSelect"><strong>Active Bot:</strong></label>
+    <select id="botSelect"></select>
+    <button onclick="createBot()">Create Bot</button>
+</div>
 
 <div id="chat"></div>
 
@@ -61,14 +69,20 @@ body { font-family: system-ui, sans-serif; margin: 2em; }
 <script>
 const chat = document.getElementById("chat");
 const input = document.getElementById("q");
+const botSelect = document.getElementById("botSelect");
 
 let history = [];
+let currentBotId = null;
 
 input.addEventListener("keydown", e => {
     if (e.key === "Enter") {
         e.preventDefault();
         sendMessage();
     }
+});
+
+botSelect.addEventListener("change", async e => {
+    await switchBot(e.target.value, { force: true });
 });
 
 function appendUser(msg) {
@@ -96,7 +110,17 @@ function appendBotContainer() {
     return el;
 }
 
+function ensureBotSelected() {
+    if (!currentBotId) {
+        alert("Please create or select a bot first.");
+        return false;
+    }
+    return true;
+}
+
 async function sendMessage() {
+    if (!ensureBotSelected()) return;
+
     const q = input.value.trim();
     if (!q) return;
 
@@ -110,8 +134,20 @@ async function sendMessage() {
     const response = await fetch("/ask_stream", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ q })
+        body: JSON.stringify({ q, bot_id: currentBotId })
     });
+
+    if (!response.ok || !response.body) {
+        if (typingEl.parentNode) typingEl.remove();
+        const text = await response.text();
+        const errorEl = document.createElement("div");
+        errorEl.className = "bot";
+        const message = text || response.statusText || "Error communicating with the bot.";
+        errorEl.innerHTML = `<b>Bot:</b><br><i>${message}</i>`;
+        chat.appendChild(errorEl);
+        chat.scrollTop = chat.scrollHeight;
+        return;
+    }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
@@ -158,54 +194,71 @@ async function sendMessage() {
 
 document.getElementById("uploadForm").onsubmit = async e => {
     e.preventDefault();
+    if (!ensureBotSelected()) return;
     const form = new FormData(e.target);
-    await fetch("/upload", { method: "POST", body: form });
+    await fetch(`/bots/${currentBotId}/upload`, { method: "POST", body: form });
     alert("Uploaded");
     refreshFiles();
 };
 
 document.getElementById("zipForm").onsubmit = async e => {
     e.preventDefault();
+    if (!ensureBotSelected()) return;
     const form = new FormData(e.target);
-    await fetch("/upload_zip", { method: "POST", body: form });
+    await fetch(`/bots/${currentBotId}/upload_zip`, { method: "POST", body: form });
     alert("ZIP uploaded");
     refreshFiles();
 };
 
 async function rebuild() {
-    await fetch("/rebuild", { method: "POST" });
+    if (!ensureBotSelected()) return;
+    await fetch(`/bots/${currentBotId}/rebuild`, { method: "POST" });
     alert("Reindexed!");
 }
 
 async function refreshFiles() {
-    const r = await fetch("/files");
+    if (!currentBotId) {
+        document.getElementById("fileList").innerHTML = "";
+        return;
+    }
+
+    const r = await fetch(`/bots/${currentBotId}/files`);
     const data = await r.json();
     const list = document.getElementById("fileList");
     list.innerHTML = "";
 
     data.files.forEach(f => {
         const li = document.createElement("li");
-        li.innerHTML =
-            `${f} <button onclick="deleteFileKB('${f}')">Delete</button>`;
+        li.textContent = f + " ";
+        const btn = document.createElement("button");
+        btn.textContent = "Delete";
+        btn.onclick = () => deleteFileKB(f);
+        li.appendChild(btn);
         list.appendChild(li);
     });
 }
 
 async function deleteFileKB(name) {
-    await fetch(`/file/${name}`, { method: "DELETE" });
+    if (!ensureBotSelected()) return;
+    await fetch(`/bots/${currentBotId}/file/${encodeURIComponent(name)}`, { method: "DELETE" });
     alert("Deleted " + name);
     refreshFiles();
 }
 
 async function loadPrompt() {
-    const r = await fetch("/prompt");
+    if (!currentBotId) {
+        document.getElementById("systemPrompt").value = "";
+        return;
+    }
+    const r = await fetch(`/bots/${currentBotId}/prompt`);
     const data = await r.json();
     document.getElementById("systemPrompt").value = data.prompt;
 }
 
 async function savePrompt() {
+    if (!ensureBotSelected()) return;
     const txt = document.getElementById("systemPrompt").value;
-    await fetch("/prompt", {
+    await fetch(`/bots/${currentBotId}/prompt`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ prompt: txt })
@@ -213,8 +266,95 @@ async function savePrompt() {
     alert("Saved");
 }
 
-refreshFiles();
-loadPrompt();
+async function loadBots() {
+    const r = await fetch("/bots");
+    const data = await r.json();
+
+    botSelect.innerHTML = "";
+
+    data.bots.forEach(bot => {
+        const option = document.createElement("option");
+        option.value = bot.id;
+        option.textContent = bot.name;
+        botSelect.appendChild(option);
+    });
+
+    botSelect.disabled = data.bots.length === 0;
+
+    if (!data.bots.length) {
+        await switchBot(null);
+        return;
+    }
+
+    if (!currentBotId || !data.bots.some(bot => bot.id === currentBotId)) {
+        currentBotId = data.bots[0].id;
+    }
+
+    botSelect.value = currentBotId;
+    await switchBot(currentBotId, { force: true });
+}
+
+async function switchBot(id, { force = false } = {}) {
+    const promptBox = document.getElementById("systemPrompt");
+    const fileList = document.getElementById("fileList");
+
+    if (!id) {
+        currentBotId = null;
+        history = [];
+        chat.innerHTML = "<div class=\"bot\"><i>No bots available. Create one to begin.</i></div>";
+        promptBox.value = "";
+        fileList.innerHTML = "";
+        return;
+    }
+
+    if (!force && id === currentBotId) {
+        await Promise.all([loadPrompt(), refreshFiles()]);
+        return;
+    }
+
+    currentBotId = id;
+    if (botSelect.value !== id) {
+        botSelect.value = id;
+    }
+
+    history = [];
+    chat.innerHTML = "";
+    await Promise.all([loadPrompt(), refreshFiles()]);
+}
+
+async function createBot() {
+    const name = prompt("Name for the new bot:");
+    if (!name || !name.trim()) return;
+
+    const promptText = prompt("Optional system prompt (leave blank for default):", "");
+    const payload = { name: name.trim() };
+    if (promptText !== null && promptText.trim() !== "") {
+        payload.prompt = promptText;
+    }
+
+    const res = await fetch("/bots", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+        let detail = res.statusText;
+        try {
+            const err = await res.json();
+            detail = err.detail || detail;
+        } catch (e) {}
+        alert("Failed to create bot: " + detail);
+        return;
+    }
+
+    const data = await res.json();
+    currentBotId = data.bot.id;
+    await loadBots();
+    alert(`Created bot "${data.bot.name}"`);
+}
+
+loadBots();
 </script>
 
 </body>
