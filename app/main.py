@@ -38,6 +38,7 @@ Never hallucinate.
 BOT_REGISTRY_FILE = CONFIG_PATH / "bots.json"
 DEFAULT_BOT_ID = "default"
 DEFAULT_BOT_NAME = "Default Bot"
+PASSWORD_HEADER = "X-Bot-Password"
 
 
 def ensure_base_directories():
@@ -63,18 +64,24 @@ def bot_paths(bot_id: str) -> Dict[str, Path]:
     }
 
 
+def normalize_bot(bot: Dict[str, str]) -> Dict[str, str]:
+    bot.setdefault("password", None)
+    return bot
+
+
 def load_bot_registry() -> Dict[str, List[Dict[str, str]]]:
     ensure_base_directories()
     if not BOT_REGISTRY_FILE.exists():
-        registry = {"bots": [{"id": DEFAULT_BOT_ID, "name": DEFAULT_BOT_NAME}]}
+        registry = {"bots": [normalize_bot({"id": DEFAULT_BOT_ID, "name": DEFAULT_BOT_NAME})]}
         BOT_REGISTRY_FILE.write_text(json.dumps(registry, indent=2))
         save_system_prompt(DEFAULT_BOT_ID, DEFAULT_PROMPT)
     with BOT_REGISTRY_FILE.open() as f:
         data = json.load(f)
     # Defensive: ensure required keys
     if "bots" not in data or not isinstance(data["bots"], list):
-        data = {"bots": [{"id": DEFAULT_BOT_ID, "name": DEFAULT_BOT_NAME}]}
+        data = {"bots": [normalize_bot({"id": DEFAULT_BOT_ID, "name": DEFAULT_BOT_NAME})]}
         BOT_REGISTRY_FILE.write_text(json.dumps(data, indent=2))
+    data["bots"] = [normalize_bot(b) for b in data.get("bots", [])]
     return data
 
 
@@ -83,13 +90,45 @@ def save_bot_registry(registry: Dict[str, List[Dict[str, str]]]):
     BOT_REGISTRY_FILE.write_text(json.dumps(registry, indent=2))
 
 
-def ensure_bot_exists(bot_id: str) -> Dict[str, str]:
+def get_bot(bot_id: str) -> Dict[str, str]:
     registry = load_bot_registry()
     for bot in registry["bots"]:
         if bot["id"] == bot_id:
-            bot_paths(bot_id)  # ensure directories
             return bot
     raise HTTPException(status_code=404, detail="Bot not found")
+
+
+def ensure_bot_exists(bot_id: str) -> Dict[str, str]:
+    bot = get_bot(bot_id)
+    bot_paths(bot_id)
+    return bot
+
+
+def require_bot_access(bot_id: str, password: Optional[str]) -> Dict[str, str]:
+    bot = ensure_bot_exists(bot_id)
+    stored = bot.get("password")
+    if stored and (password or "") != stored:
+        raise HTTPException(status_code=403, detail="Invalid password for this bot")
+    return bot
+
+
+def update_bot_password(bot_id: str, new_password: Optional[str]):
+    registry = load_bot_registry()
+    updated = False
+    for bot in registry["bots"]:
+        if bot["id"] == bot_id:
+            bot["password"] = new_password or None
+            updated = True
+            break
+    if not updated:
+        raise HTTPException(status_code=404, detail="Bot not found")
+    save_bot_registry(registry)
+
+
+def password_from_request(request: Request, body: Optional[Dict] = None) -> Optional[str]:
+    body = body or {}
+    header_password = request.headers.get(PASSWORD_HEADER)
+    return body.get("password") or header_password
 
 
 def load_system_prompt(bot_id: str) -> str:
@@ -134,7 +173,7 @@ def slugify(name: str) -> str:
     return cleaned
 
 
-def create_bot(name: str, prompt: Optional[str] = None) -> Dict[str, str]:
+def create_bot(name: str, prompt: Optional[str] = None, password: Optional[str] = None) -> Dict[str, str]:
     registry = load_bot_registry()
     existing_ids = {bot["id"] for bot in registry["bots"]}
     base_id = slugify(name)
@@ -144,10 +183,10 @@ def create_bot(name: str, prompt: Optional[str] = None) -> Dict[str, str]:
         candidate = f"{base_id}-{suffix}"
         suffix += 1
 
-    registry["bots"].append({"id": candidate, "name": name})
+    registry["bots"].append(normalize_bot({"id": candidate, "name": name, "password": password or None}))
     save_bot_registry(registry)
     save_system_prompt(candidate, prompt or DEFAULT_PROMPT)
-    return {"id": candidate, "name": name}
+    return {"id": candidate, "name": name, "password": password or None}
 
 
 def validate_filename(filename: str) -> str:
@@ -300,7 +339,12 @@ def index():
 @app.get("/bots")
 def list_bots() -> Dict[str, List[Dict[str, str]]]:
     registry = load_bot_registry()
-    return {"bots": registry["bots"]}
+    return {
+        "bots": [
+            {"id": bot["id"], "name": bot["name"], "protected": bool(bot.get("password"))}
+            for bot in registry["bots"]
+        ]
+    }
 
 
 @app.post("/bots")
@@ -310,21 +354,43 @@ async def create_bot_endpoint(request: Request):
     if not name:
         raise HTTPException(status_code=400, detail="Name is required")
     prompt = body.get("prompt")
-    bot = create_bot(name, prompt)
-    return {"bot": bot}
+    password = (body.get("password") or "").strip() or None
+    bot = create_bot(name, prompt, password)
+    return {"bot": {"id": bot["id"], "name": bot["name"], "protected": bool(password)}}
+
+
+@app.post("/bots/{bot_id}/access")
+async def access_bot(bot_id: str, request: Request):
+    body = await request.json()
+    require_bot_access(bot_id, password_from_request(request, body))
+    bot = get_bot(bot_id)
+    return {"status": "ok", "protected": bool(bot.get("password"))}
+
+
+@app.post("/bots/{bot_id}/password")
+async def change_bot_password(bot_id: str, request: Request):
+    body = await request.json()
+    current_password = password_from_request(request, body)
+    bot = get_bot(bot_id)
+    if bot.get("password") and (current_password or "") != bot["password"]:
+        raise HTTPException(status_code=403, detail="Invalid password for this bot")
+
+    new_password = (body.get("new_password") or "").strip()
+    update_bot_password(bot_id, new_password or None)
+    return {"status": "updated", "protected": bool(new_password)}
 
 
 @app.get("/bots/{bot_id}/files")
-def list_files(bot_id: str):
-    ensure_bot_exists(bot_id)
+def list_files(bot_id: str, request: Request):
+    require_bot_access(bot_id, password_from_request(request))
     data_dir = bot_paths(bot_id)["data"]
     tree = build_tree(data_dir)
     return {"tree": tree}
 
 
 @app.delete("/bots/{bot_id}/file/{file_path:path}")
-def delete_file(bot_id: str, file_path: str):
-    ensure_bot_exists(bot_id)
+def delete_file(bot_id: str, file_path: str, request: Request):
+    require_bot_access(bot_id, password_from_request(request))
     target = resolve_data_path(bot_id, file_path)
     data_dir = bot_paths(bot_id)["data"].resolve()
     if target == data_dir:
@@ -376,21 +442,21 @@ async def store_upload(bot_id: str, file: UploadFile, folder: Optional[str] = No
 
 
 @app.post("/bots/{bot_id}/upload")
-async def upload(bot_id: str, file: UploadFile, path: Optional[str] = None):
-    ensure_bot_exists(bot_id)
+async def upload(bot_id: str, request: Request, file: UploadFile, path: Optional[str] = None):
+    require_bot_access(bot_id, password_from_request(request))
     return await store_upload(bot_id, file, path)
 
 
 @app.post("/bots/{bot_id}/upload_zip")
-async def upload_zip(bot_id: str, file: UploadFile, path: Optional[str] = None):
-    ensure_bot_exists(bot_id)
+async def upload_zip(bot_id: str, request: Request, file: UploadFile, path: Optional[str] = None):
+    require_bot_access(bot_id, password_from_request(request))
     return await store_upload(bot_id, file, path)
 
 
 @app.post("/bots/{bot_id}/folders")
 async def create_folder(bot_id: str, request: Request):
-    ensure_bot_exists(bot_id)
     body = await request.json()
+    require_bot_access(bot_id, password_from_request(request, body))
     path = body.get("path", "")
     target = resolve_data_path(bot_id, path)
     target.mkdir(parents=True, exist_ok=True)
@@ -399,8 +465,8 @@ async def create_folder(bot_id: str, request: Request):
 
 
 @app.delete("/bots/{bot_id}/folders")
-def delete_folder(bot_id: str, path: str):
-    ensure_bot_exists(bot_id)
+def delete_folder(bot_id: str, path: str, request: Request):
+    require_bot_access(bot_id, password_from_request(request))
     if not path:
         raise HTTPException(status_code=400, detail="Folder path is required")
     target = resolve_data_path(bot_id, path)
@@ -415,8 +481,8 @@ def delete_folder(bot_id: str, path: str):
 
 @app.post("/bots/{bot_id}/move_file")
 async def move_file(bot_id: str, request: Request):
-    ensure_bot_exists(bot_id)
     body = await request.json()
+    require_bot_access(bot_id, password_from_request(request, body))
     source = body.get("source")
     destination_folder = body.get("destination_folder", "")
 
@@ -443,22 +509,22 @@ async def move_file(bot_id: str, request: Request):
 
 
 @app.post("/bots/{bot_id}/rebuild")
-def rebuild(bot_id: str):
-    ensure_bot_exists(bot_id)
+def rebuild(bot_id: str, request: Request):
+    require_bot_access(bot_id, password_from_request(request))
     build_db(bot_id)
     return {"status": "reindexed"}
 
 
 @app.get("/bots/{bot_id}/prompt")
-def get_prompt(bot_id: str):
-    ensure_bot_exists(bot_id)
+def get_prompt(bot_id: str, request: Request):
+    require_bot_access(bot_id, password_from_request(request))
     return {"prompt": load_system_prompt(bot_id)}
 
 
 @app.post("/bots/{bot_id}/prompt")
 async def update_prompt(bot_id: str, request: Request):
-    ensure_bot_exists(bot_id)
     body = await request.json()
+    require_bot_access(bot_id, password_from_request(request, body))
     save_system_prompt(bot_id, body.get("prompt", ""))
     return {"status": "saved"}
 
@@ -480,8 +546,9 @@ async def ask_stream(request: Request):
     body = await request.json()
     question = body.get("q")
     bot_id = body.get("bot_id") or DEFAULT_BOT_ID
+    password = password_from_request(request, body)
 
-    ensure_bot_exists(bot_id)
+    require_bot_access(bot_id, password)
 
     embeddings = OllamaEmbeddings(
         base_url=os.environ.get("OLLAMA_URL", "http://ollama:11434"),
