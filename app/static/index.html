@@ -190,6 +190,7 @@ textarea#systemPrompt { width: 100%; min-height: 160px; resize: vertical; }
             </div>
             <div class="password-controls">
                 <input id="passwordInput" type="password" placeholder="Set or change password" />
+                <label class="inline-label"><input id="hiddenCheckbox" type="checkbox" /> Hidden</label>
                 <button type="button" onclick="updatePassword()">Save Password</button>
                 <button type="button" class="secondary" onclick="removePassword()">Remove Password</button>
             </div>
@@ -251,6 +252,7 @@ const deleteFolderSelect = document.getElementById("deleteFolderSelect");
 const moveDestSelect = document.getElementById("moveDestSelect");
 const moveFileSelect = document.getElementById("moveFileSelect");
 const fileTree = document.getElementById("fileTree");
+const hiddenCheckbox = document.getElementById("hiddenCheckbox");
 
 const BOT_STORAGE_KEY = "selectedBotId";
 const HISTORY_KEY_PREFIX = "chatHistory:";
@@ -258,7 +260,8 @@ const PASSWORD_KEY_PREFIX = "botPassword:";
 const PASSWORD_HEADER = "X-Bot-Password";
 
 let history = [];
-let currentBotId = localStorage.getItem(BOT_STORAGE_KEY);
+const initialHashBotId = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+let currentBotId = initialHashBotId || localStorage.getItem(BOT_STORAGE_KEY);
 let botsMeta = [];
 
 input.addEventListener("keydown", e => {
@@ -705,10 +708,11 @@ async function updatePassword() {
     if (!hasAccess) return;
 
     const newPassword = (document.getElementById("passwordInput").value || "").trim();
+    const hidden = hiddenCheckbox.checked;
     const res = await authedFetch(`/bots/${currentBotId}/password`, {
         method: "POST",
         headers: {"Content-Type": "application/json", ...buildAuthHeaders()},
-        body: JSON.stringify({ new_password: newPassword })
+        body: JSON.stringify({ new_password: newPassword, hidden })
     });
 
     if (!res.ok) {
@@ -717,7 +721,13 @@ async function updatePassword() {
         return;
     }
 
+    const data = await res.json();
     setBotPassword(currentBotId, newPassword);
+    const meta = findBotMeta(currentBotId);
+    if (meta) {
+        meta.protected = !!data?.protected;
+        meta.hidden = !!data?.hidden;
+    }
     alert(newPassword ? "Password updated." : "Password removed.");
     document.getElementById("passwordInput").value = "";
 }
@@ -728,28 +738,33 @@ async function removePassword() {
 }
 
 async function loadBots() {
+    const hashBotId = decodeURIComponent(window.location.hash.replace(/^#/, ""));
     const r = await fetch("/bots");
     const data = await r.json();
     botsMeta = data.bots || [];
 
     botSelect.innerHTML = "";
 
-    botsMeta.forEach(bot => {
+    const visibleBots = botsMeta.filter(bot => !bot.hidden);
+    visibleBots.forEach(bot => {
         const option = document.createElement("option");
         option.value = bot.id;
         option.textContent = bot.protected ? `${bot.name} *` : bot.name;
         botSelect.appendChild(option);
     });
 
-    botSelect.disabled = data.bots.length === 0;
+    botSelect.disabled = visibleBots.length === 0;
 
     if (!data.bots.length) {
         await switchBot(null);
         return;
     }
 
-    if (!currentBotId || !data.bots.some(bot => bot.id === currentBotId)) {
-        currentBotId = data.bots[0].id;
+    const preferredBotId = hashBotId || currentBotId;
+    if (preferredBotId && data.bots.some(bot => bot.id === preferredBotId)) {
+        currentBotId = preferredBotId;
+    } else if (!currentBotId || !data.bots.some(bot => bot.id === currentBotId)) {
+        currentBotId = visibleBots[0]?.id || null;
     }
 
     botSelect.value = currentBotId;
@@ -766,6 +781,10 @@ async function switchBot(id, { force = false, requirePasswordPrompt = false } = 
         chat.innerHTML = "<div class=\"message bot\"><div class=\"label\">Bot</div><i>No bots available. Create one to begin.</i></div>";
         promptBox.value = "";
         fileTree.innerHTML = "";
+        hiddenCheckbox.checked = false;
+        if (window.location.hash) {
+            history.replaceState(null, "", window.location.pathname);
+        }
         return;
     }
 
@@ -793,6 +812,7 @@ async function switchBot(id, { force = false, requirePasswordPrompt = false } = 
     }
 
     localStorage.setItem(BOT_STORAGE_KEY, currentBotId);
+    hiddenCheckbox.checked = !!meta?.hidden;
     if (botSelect.value !== id) {
         botSelect.value = id;
     }
@@ -801,6 +821,12 @@ async function switchBot(id, { force = false, requirePasswordPrompt = false } = 
     renderHistoryMessages();
     document.getElementById("passwordInput").value = "";
     await Promise.all([loadPrompt(), refreshFiles()]);
+    if (currentBotId) {
+        const targetHash = `#${encodeURIComponent(currentBotId)}`;
+        if (window.location.hash !== targetHash) {
+            window.location.hash = targetHash;
+        }
+    }
 }
 
 async function createBot() {
@@ -816,6 +842,7 @@ async function createBot() {
     if (passwordText !== null && passwordText.trim() !== "") {
         payload.password = passwordText.trim();
     }
+    payload.hidden = hiddenCheckbox.checked;
 
     const res = await fetch("/bots", {
         method: "POST",

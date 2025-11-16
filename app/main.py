@@ -9,6 +9,10 @@ import json
 import zipfile
 from io import BytesIO
 from typing import Any, Dict, List, Optional
+import base64
+import hashlib
+import hmac
+import secrets
 
 from pypdf import PdfReader
 from bs4 import BeautifulSoup
@@ -41,6 +45,30 @@ DEFAULT_BOT_NAME = "Default Bot"
 PASSWORD_HEADER = "X-Bot-Password"
 
 
+def hash_password(password: str) -> str:
+    salt = secrets.token_bytes(16)
+    derived = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 100_000)
+    return base64.b64encode(salt + derived).decode()
+
+
+def verify_password(stored_hash: Optional[str], candidate: Optional[str]) -> bool:
+    if not stored_hash:
+        return False
+    if candidate is None:
+        return False
+    try:
+        raw = base64.b64decode(stored_hash)
+    except Exception:
+        return False
+    salt, expected = raw[:16], raw[16:]
+    attempt = hashlib.pbkdf2_hmac("sha256", candidate.encode(), salt, 100_000)
+    return hmac.compare_digest(expected, attempt)
+
+
+def is_bot_protected(bot: Dict[str, Any]) -> bool:
+    return bool(bot.get("password_hash"))
+
+
 def ensure_base_directories():
     """Make sure top-level storage directories exist."""
     for path in (DATA_PATH, DB_PATH, CONFIG_PATH):
@@ -65,7 +93,12 @@ def bot_paths(bot_id: str) -> Dict[str, Path]:
 
 
 def normalize_bot(bot: Dict[str, str]) -> Dict[str, str]:
-    bot.setdefault("password", None)
+    bot.setdefault("password_hash", None)
+    bot.setdefault("hidden", False)
+    if "password" in bot:
+        if bot["password"]:
+            bot["password_hash"] = hash_password(bot["password"])
+        bot.pop("password", None)
     return bot
 
 
@@ -81,7 +114,17 @@ def load_bot_registry() -> Dict[str, List[Dict[str, str]]]:
     if "bots" not in data or not isinstance(data["bots"], list):
         data = {"bots": [normalize_bot({"id": DEFAULT_BOT_ID, "name": DEFAULT_BOT_NAME})]}
         BOT_REGISTRY_FILE.write_text(json.dumps(data, indent=2))
-    data["bots"] = [normalize_bot(b) for b in data.get("bots", [])]
+    normalized_bots = []
+    changed = False
+    for bot in data.get("bots", []):
+        original = dict(bot)
+        normalized = normalize_bot(bot)
+        normalized_bots.append(normalized)
+        if normalized != original:
+            changed = True
+    data["bots"] = normalized_bots
+    if changed:
+        save_bot_registry(data)
     return data
 
 
@@ -106,8 +149,8 @@ def ensure_bot_exists(bot_id: str) -> Dict[str, str]:
 
 def require_bot_access(bot_id: str, password: Optional[str]) -> Dict[str, str]:
     bot = ensure_bot_exists(bot_id)
-    stored = bot.get("password")
-    if stored and (password or "") != stored:
+    stored_hash = bot.get("password_hash")
+    if stored_hash and not verify_password(stored_hash, password or ""):
         raise HTTPException(status_code=403, detail="Invalid password for this bot")
     return bot
 
@@ -117,7 +160,7 @@ def update_bot_password(bot_id: str, new_password: Optional[str]):
     updated = False
     for bot in registry["bots"]:
         if bot["id"] == bot_id:
-            bot["password"] = new_password or None
+            bot["password_hash"] = hash_password(new_password) if new_password else None
             updated = True
             break
     if not updated:
@@ -196,7 +239,12 @@ def slugify(name: str) -> str:
     return cleaned
 
 
-def create_bot(name: str, prompt: Optional[str] = None, password: Optional[str] = None) -> Dict[str, str]:
+def create_bot(
+    name: str,
+    prompt: Optional[str] = None,
+    password: Optional[str] = None,
+    hidden: bool = False,
+) -> Dict[str, str]:
     registry = load_bot_registry()
     existing_ids = {bot["id"] for bot in registry["bots"]}
     base_id = slugify(name)
@@ -206,10 +254,20 @@ def create_bot(name: str, prompt: Optional[str] = None, password: Optional[str] 
         candidate = f"{base_id}-{suffix}"
         suffix += 1
 
-    registry["bots"].append(normalize_bot({"id": candidate, "name": name, "password": password or None}))
+    password_hash = hash_password(password) if password else None
+    registry["bots"].append(
+        normalize_bot(
+            {
+                "id": candidate,
+                "name": name,
+                "password_hash": password_hash,
+                "hidden": bool(hidden),
+            }
+        )
+    )
     save_bot_registry(registry)
     save_system_prompt(candidate, prompt or DEFAULT_PROMPT)
-    return {"id": candidate, "name": name, "password": password or None}
+    return {"id": candidate, "name": name, "password_hash": password_hash, "hidden": bool(hidden)}
 
 
 def validate_filename(filename: str) -> str:
@@ -364,7 +422,12 @@ def list_bots() -> Dict[str, List[Dict[str, Any]]]:
     registry = load_bot_registry()
     return {
         "bots": [
-            {"id": bot["id"], "name": bot["name"], "protected": bool(bot.get("password"))}
+            {
+                "id": bot["id"],
+                "name": bot["name"],
+                "protected": is_bot_protected(bot),
+                "hidden": bool(bot.get("hidden")),
+            }
             for bot in registry["bots"]
         ]
     }
@@ -378,8 +441,16 @@ async def create_bot_endpoint(request: Request):
         raise HTTPException(status_code=400, detail="Name is required")
     prompt = body.get("prompt")
     password = (body.get("password") or "").strip() or None
-    bot = create_bot(name, prompt, password)
-    return {"bot": {"id": bot["id"], "name": bot["name"], "protected": bool(password)}}
+    hidden = bool(body.get("hidden", False))
+    bot = create_bot(name, prompt, password, hidden)
+    return {
+        "bot": {
+            "id": bot["id"],
+            "name": bot["name"],
+            "protected": is_bot_protected(bot),
+            "hidden": hidden,
+        }
+    }
 
 
 @app.post("/bots/{bot_id}/access")
@@ -387,7 +458,7 @@ async def access_bot(bot_id: str, request: Request):
     body = await request.json()
     require_bot_access(bot_id, password_from_request(request, body))
     bot = get_bot(bot_id)
-    return {"status": "ok", "protected": bool(bot.get("password"))}
+    return {"status": "ok", "protected": is_bot_protected(bot)}
 
 
 @app.post("/bots/{bot_id}/password")
@@ -395,12 +466,20 @@ async def change_bot_password(bot_id: str, request: Request):
     body = await request.json()
     current_password = password_from_request(request, body)
     bot = get_bot(bot_id)
-    if bot.get("password") and (current_password or "") != bot["password"]:
+    if is_bot_protected(bot) and not verify_password(bot.get("password_hash"), current_password or ""):
         raise HTTPException(status_code=403, detail="Invalid password for this bot")
 
     new_password = (body.get("new_password") or "").strip()
+    hidden = bool(body.get("hidden", bot.get("hidden", False)))
     update_bot_password(bot_id, new_password or None)
-    return {"status": "updated", "protected": bool(new_password)}
+    registry = load_bot_registry()
+    for b in registry["bots"]:
+        if b["id"] == bot_id:
+            b["hidden"] = hidden
+            break
+    save_bot_registry(registry)
+    updated_bot = get_bot(bot_id)
+    return {"status": "updated", "protected": is_bot_protected(updated_bot), "hidden": hidden}
 
 
 @app.delete("/bots/{bot_id}")
