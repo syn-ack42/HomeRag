@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from pathlib import Path, PurePosixPath
+import asyncio
 import os
 import shutil
 import json
@@ -413,17 +414,17 @@ def build_db(bot_id: str):
     save_embedding_model(bot_id, current_embedding_model())
 
 
-def ensure_db_embeddings(bot_id: str):
+async def ensure_db_embeddings(bot_id: str):
     saved_model = load_saved_embedding_model(bot_id)
     db_dir = bot_paths(bot_id)["db"]
     has_db = (db_dir / "chroma.sqlite3").exists()
 
     if saved_model is None and has_db:
-        build_db(bot_id)
+        await asyncio.to_thread(build_db, bot_id)
         return
 
     if saved_model and saved_model != current_embedding_model():
-        build_db(bot_id)
+        await asyncio.to_thread(build_db, bot_id)
 
 
 app = FastAPI()
@@ -431,7 +432,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.on_event("startup")
-def startup_event():
+async def startup_event():
     registry = load_bot_registry()
     for bot in registry["bots"]:
         bot_id = bot["id"]
@@ -440,7 +441,7 @@ def startup_event():
             save_system_prompt(bot_id, DEFAULT_PROMPT)
         db_file = paths["db"] / "chroma.sqlite3"
         if not db_file.exists() and any(paths["data"].iterdir()):
-            build_db(bot_id)
+            await asyncio.to_thread(build_db, bot_id)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -702,7 +703,7 @@ async def ask_stream(request: Request):
 
     require_bot_access(bot_id, password)
 
-    ensure_db_embeddings(bot_id)
+    await ensure_db_embeddings(bot_id)
 
     def build_chain():
         embeddings = OllamaEmbeddings(
@@ -754,7 +755,7 @@ User: {question_text}
             async for token in rag_chain.astream(question):
                 yield json.dumps({"type": "token", "token": token}) + "\n"
         except InvalidArgumentError:
-            build_db(bot_id)
+            await asyncio.to_thread(build_db, bot_id)
             rebuilt_chain = build_chain()
             async for token in rebuilt_chain.astream(question):
                 yield json.dumps({"type": "token", "token": token}) + "\n"
