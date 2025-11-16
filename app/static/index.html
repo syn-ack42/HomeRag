@@ -299,11 +299,11 @@ const hiddenCheckbox = document.getElementById("hiddenCheckbox");
 const passwordInput = document.getElementById("passwordInput");
 
 const BOT_STORAGE_KEY = "selectedBotId";
-const HISTORY_KEY_PREFIX = "chatHistory:";
 const PASSWORD_KEY_PREFIX = "botPassword:";
 const PASSWORD_HEADER = "X-Bot-Password";
 
-let history = [];
+const botConversations = {};
+let messages = [];
 const initialHashBotId = decodeURIComponent(window.location.hash.replace(/^#/, ""));
 let currentBotId = initialHashBotId || localStorage.getItem(BOT_STORAGE_KEY);
 let botsMeta = [];
@@ -329,10 +329,6 @@ passwordInput.addEventListener("input", () => {
     passwordEdited = true;
 });
 
-function historyKey(botId) {
-    return `${HISTORY_KEY_PREFIX}${botId}`;
-}
-
 function passwordKey(botId) {
     return `${PASSWORD_KEY_PREFIX}${botId}`;
 }
@@ -348,20 +344,6 @@ function setBotPassword(botId, password) {
     } else {
         sessionStorage.removeItem(passwordKey(botId));
     }
-}
-
-function loadStoredHistory(botId) {
-    if (!botId) return [];
-    try {
-        return JSON.parse(localStorage.getItem(historyKey(botId))) || [];
-    } catch (e) {
-        return [];
-    }
-}
-
-function persistHistory() {
-    if (!currentBotId) return;
-    localStorage.setItem(historyKey(currentBotId), JSON.stringify(history));
 }
 
 function buildAuthHeaders() {
@@ -569,7 +551,7 @@ function appendBotContainer() {
 
 function renderHistoryMessages() {
     chat.innerHTML = "";
-    history.forEach(entry => {
+    messages.forEach(entry => {
         if (entry.role === "user") {
             appendUser(entry.content.replaceAll("\n", "<br>"));
         } else if (entry.role === "assistant") {
@@ -587,11 +569,11 @@ function ensureBotSelected() {
 }
 
 function clearChat() {
-    history = [];
-    chat.innerHTML = "";
+    messages = [];
     if (currentBotId) {
-        localStorage.removeItem(historyKey(currentBotId));
+        botConversations[currentBotId] = messages;
     }
+    chat.innerHTML = "";
 }
 
 async function sendMessage() {
@@ -600,8 +582,8 @@ async function sendMessage() {
     const q = input.value.trim();
     if (!q) return;
 
-    history.push({ role: "user", content: q });
-    persistHistory();
+    messages.push({ role: "user", content: q });
+    botConversations[currentBotId] = messages;
 
     appendUser(q.replaceAll("\n", "<br>"));
     input.value = "";
@@ -611,7 +593,7 @@ async function sendMessage() {
     const response = await authedFetch("/ask_stream", {
         method: "POST",
         headers: {"Content-Type": "application/json", ...buildAuthHeaders()},
-        body: JSON.stringify({ q, bot_id: currentBotId, password: getBotPassword(currentBotId) })
+        body: JSON.stringify({ question: q, bot: currentBotId, history: messages })
     });
 
     if (!response.ok || !response.body) {
@@ -662,8 +644,8 @@ async function sendMessage() {
     botContainer.children[1].innerHTML = marked.parse(botContainer.rawText);
     chat.scrollTop = chat.scrollHeight;
 
-    history.push({ role: "assistant", content: botContainer.rawText });
-    persistHistory();
+    messages.push({ role: "assistant", content: botContainer.rawText });
+    botConversations[currentBotId] = messages;
 }
 
 document.getElementById("uploadForm").onsubmit = async e => {
@@ -973,7 +955,7 @@ async function switchBot(id, { force = false, requirePasswordPrompt = false } = 
     if (!id) {
         currentBotId = null;
         localStorage.removeItem(BOT_STORAGE_KEY);
-        history = [];
+        messages = [];
         chat.innerHTML = "<div class=\"message bot\"><div class=\"label\">Bot</div><i>No bots available. Create one to begin.</i></div>";
         promptBox.value = "";
         fileTree.innerHTML = "";
@@ -992,6 +974,9 @@ async function switchBot(id, { force = false, requirePasswordPrompt = false } = 
     }
 
     const previousBot = currentBotId;
+    if (previousBot) {
+        botConversations[previousBot] = messages;
+    }
     currentBotId = id;
 
     const meta = findBotMeta(id);
@@ -1014,7 +999,7 @@ async function switchBot(id, { force = false, requirePasswordPrompt = false } = 
         botSelect.value = id;
     }
 
-    history = loadStoredHistory(currentBotId);
+    messages = botConversations[currentBotId] || [];
     renderHistoryMessages();
     setPasswordFieldForBot(meta);
     await Promise.all([loadPrompt(), refreshFiles()]);
