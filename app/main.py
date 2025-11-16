@@ -8,7 +8,7 @@ import shutil
 import json
 import zipfile
 from io import BytesIO
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pypdf import PdfReader
 from bs4 import BeautifulSoup
@@ -337,7 +337,7 @@ def index():
 
 
 @app.get("/bots")
-def list_bots() -> Dict[str, List[Dict[str, str]]]:
+def list_bots() -> Dict[str, List[Dict[str, Any]]]:
     registry = load_bot_registry()
     return {
         "bots": [
