@@ -1,3 +1,6 @@
+import logging
+import time
+
 from fastapi import FastAPI, UploadFile, Request, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -45,6 +48,14 @@ BOT_REGISTRY_FILE = CONFIG_PATH / "bots.json"
 DEFAULT_BOT_ID = "default"
 DEFAULT_BOT_NAME = "Default Bot"
 PASSWORD_HEADER = "X-Bot-Password"
+
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("homerag")
 
 
 def hash_password(password: str) -> str:
@@ -381,12 +392,16 @@ def load_documents(bot_id: str):
 
 
 def build_db(bot_id: str):
+    logger.debug("Starting database rebuild for bot %s", bot_id)
+    start_time = time.perf_counter()
     docs = load_documents(bot_id)
     if not docs:
         db_dir = bot_paths(bot_id)["db"]
         if db_dir.exists():
             shutil.rmtree(db_dir)
             db_dir.mkdir(parents=True, exist_ok=True)
+        duration_ms = (time.perf_counter() - start_time) * 1000
+        logger.debug("No documents found for bot %s; cleared DB in %.2f ms", bot_id, duration_ms)
         return
 
     splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
@@ -412,23 +427,55 @@ def build_db(bot_id: str):
 
     vectordb.persist()
     save_embedding_model(bot_id, current_embedding_model())
+    duration_ms = (time.perf_counter() - start_time) * 1000
+    logger.debug(
+        "Finished database rebuild for bot %s with %d documents in %.2f ms",
+        bot_id,
+        len(docs),
+        duration_ms,
+    )
 
 
 async def ensure_db_embeddings(bot_id: str):
+    logger.debug("Ensuring embeddings for bot %s", bot_id)
     saved_model = load_saved_embedding_model(bot_id)
     db_dir = bot_paths(bot_id)["db"]
     has_db = (db_dir / "chroma.sqlite3").exists()
 
     if saved_model is None and has_db:
         await asyncio.to_thread(build_db, bot_id)
+        logger.debug("Rebuilt DB for bot %s because no saved model was recorded", bot_id)
         return
 
     if saved_model and saved_model != current_embedding_model():
         await asyncio.to_thread(build_db, bot_id)
+        logger.debug(
+            "Rebuilt DB for bot %s due to embedding model change (%s -> %s)",
+            bot_id,
+            saved_model,
+            current_embedding_model(),
+        )
 
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.perf_counter()
+    logger.debug("Received %s %s", request.method, request.url.path)
+    response = await call_next(request)
+    duration_ms = (time.perf_counter() - start_time) * 1000
+    logger.debug(
+        "Handled %s %s in %.2f ms with status %s",
+        request.method,
+        request.url.path,
+        duration_ms,
+        response.status_code,
+    )
+    response.headers["X-Process-Time"] = f"{duration_ms:.2f}ms"
+    return response
 
 
 @app.on_event("startup")
