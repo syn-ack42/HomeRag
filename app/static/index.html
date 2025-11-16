@@ -168,6 +168,7 @@ textarea#systemPrompt { width: 100%; min-height: 160px; resize: vertical; }
                 <label for="botSelect"><strong>Active Bot:</strong></label>
                 <select id="botSelect"></select>
                 <button onclick="createBot()">Create Bot</button>
+                <button class="secondary" onclick="deleteBot()">Delete Bot</button>
                 <button class="secondary" onclick="clearChat()">Clear Chat</button>
             </div>
 
@@ -268,7 +269,7 @@ input.addEventListener("keydown", e => {
 });
 
 botSelect.addEventListener("change", async e => {
-    await switchBot(e.target.value, { force: true });
+    await switchBot(e.target.value, { force: true, requirePasswordPrompt: true });
 });
 
 function historyKey(botId) {
@@ -337,13 +338,16 @@ async function verifyBotPassword(botId, password) {
     return res.ok;
 }
 
-async function requestPasswordForCurrentBot() {
-    if (!currentBotId) return false;
-    const meta = findBotMeta(currentBotId);
-    if (!meta || !meta.protected) return true;
+async function requestPasswordForBot(botId, { forcePrompt = false } = {}) {
+    if (!botId) return false;
+    const meta = findBotMeta(botId);
+    if (!meta || !meta.protected) {
+        setBotPassword(botId, "");
+        return true;
+    }
 
-    let existing = getBotPassword(currentBotId);
-    if (existing && await verifyBotPassword(currentBotId, existing)) {
+    const existing = !forcePrompt ? getBotPassword(botId) : "";
+    if (existing && await verifyBotPassword(botId, existing)) {
         return true;
     }
 
@@ -352,12 +356,16 @@ async function requestPasswordForCurrentBot() {
         if (entered === null) {
             return false;
         }
-        if (await verifyBotPassword(currentBotId, entered)) {
-            setBotPassword(currentBotId, entered);
+        if (await verifyBotPassword(botId, entered)) {
+            setBotPassword(botId, entered);
             return true;
         }
         alert("Incorrect password. Please try again.");
     }
+}
+
+function requestPasswordForCurrentBot(options = {}) {
+    return requestPasswordForBot(currentBotId, options);
 }
 
 function appendUser(msg) {
@@ -729,7 +737,7 @@ async function loadBots() {
     botsMeta.forEach(bot => {
         const option = document.createElement("option");
         option.value = bot.id;
-        option.textContent = bot.name;
+        option.textContent = bot.protected ? `${bot.name} *` : bot.name;
         botSelect.appendChild(option);
     });
 
@@ -745,10 +753,10 @@ async function loadBots() {
     }
 
     botSelect.value = currentBotId;
-    await switchBot(currentBotId, { force: true });
+    await switchBot(currentBotId, { force: true, requirePasswordPrompt: true });
 }
 
-async function switchBot(id, { force = false } = {}) {
+async function switchBot(id, { force = false, requirePasswordPrompt = false } = {}) {
     const promptBox = document.getElementById("systemPrompt");
 
     if (!id) {
@@ -772,7 +780,7 @@ async function switchBot(id, { force = false } = {}) {
 
     const meta = findBotMeta(id);
     if (meta && meta.protected) {
-        const unlocked = await requestPasswordForCurrentBot();
+        const unlocked = await requestPasswordForBot(id, { forcePrompt: requirePasswordPrompt });
         if (!unlocked) {
             currentBotId = previousBot;
             if (botSelect.value !== previousBot) {
@@ -830,6 +838,34 @@ async function createBot() {
     localStorage.setItem(BOT_STORAGE_KEY, currentBotId);
     await loadBots();
     alert(`Created bot "${data.bot.name}"`);
+}
+
+async function deleteBot() {
+    if (!ensureBotSelected()) return;
+
+    const meta = findBotMeta(currentBotId);
+    const label = meta ? meta.name : currentBotId;
+    if (!confirm(`Delete bot "${label}"? This cannot be undone.`)) return;
+
+    const hasAccess = await requestPasswordForBot(currentBotId, { forcePrompt: true });
+    if (!hasAccess) return;
+
+    const res = await authedFetch(`/bots/${currentBotId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", ...buildAuthHeaders() },
+        body: JSON.stringify({ password: getBotPassword(currentBotId) })
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Failed to delete bot.");
+        return;
+    }
+
+    setBotPassword(currentBotId, "");
+    alert("Bot deleted.");
+    currentBotId = null;
+    await loadBots();
 }
 
 loadBots();
