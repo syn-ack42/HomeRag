@@ -671,7 +671,7 @@ async def ask_stream(request: Request):
 
     embeddings = OllamaEmbeddings(
         base_url=os.environ.get("OLLAMA_URL", "http://ollama:11434"),
-        model="nomic-embed-text"
+        model="mxbai-embed-large"
     )
 
     vectordb = Chroma(
