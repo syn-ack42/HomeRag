@@ -125,6 +125,29 @@ def update_bot_password(bot_id: str, new_password: Optional[str]):
     save_bot_registry(registry)
 
 
+def remove_bot(bot_id: str):
+    if bot_id == DEFAULT_BOT_ID:
+        raise HTTPException(status_code=400, detail="Cannot delete the default bot")
+
+    registry = load_bot_registry()
+    before = len(registry["bots"])
+    registry["bots"] = [bot for bot in registry["bots"] if bot["id"] != bot_id]
+
+    if len(registry["bots"]) == before:
+        raise HTTPException(status_code=404, detail="Bot not found")
+
+    save_bot_registry(registry)
+
+    # Clean up storage for the bot if it exists
+    for path in (
+        CONFIG_PATH / bot_id,
+        DATA_PATH / bot_id,
+        DB_PATH / bot_id,
+    ):
+        if path.exists():
+            shutil.rmtree(path)
+
+
 def password_from_request(request: Request, body: Optional[Dict] = None) -> Optional[str]:
     body = body or {}
     header_password = request.headers.get(PASSWORD_HEADER)
@@ -378,6 +401,18 @@ async def change_bot_password(bot_id: str, request: Request):
     new_password = (body.get("new_password") or "").strip()
     update_bot_password(bot_id, new_password or None)
     return {"status": "updated", "protected": bool(new_password)}
+
+
+@app.delete("/bots/{bot_id}")
+async def delete_bot(bot_id: str, request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    require_bot_access(bot_id, password_from_request(request, body))
+    remove_bot(bot_id)
+    return {"status": "deleted"}
 
 
 @app.get("/bots/{bot_id}/files")
