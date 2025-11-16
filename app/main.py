@@ -706,7 +706,7 @@ User: {question_text}
             "context": retriever | RunnableLambda(join_docs),
             "question": RunnablePassthrough()
         }
-        | format_prompt
+        | RunnableLambda(format_prompt)
         | llm
         | StrOutputParser()
     )
