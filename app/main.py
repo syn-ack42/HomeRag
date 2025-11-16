@@ -23,7 +23,7 @@ from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.llms import Ollama
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
 
@@ -703,7 +703,7 @@ User: {question_text}
 
     rag_chain = (
         {
-            "context": retriever | (lambda docs: join_docs(docs)),
+            "context": retriever | RunnableLambda(join_docs),
             "question": RunnablePassthrough()
         }
         | format_prompt
