@@ -18,6 +18,7 @@ from pypdf import PdfReader
 from bs4 import BeautifulSoup
 import markdown
 
+from chromadb.errors import InvalidArgumentError
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.llms import Ollama
@@ -30,6 +31,7 @@ from langchain_core.output_parsers import StrOutputParser
 DATA_PATH = Path(os.environ.get("DATA_PATH", "/data"))
 DB_PATH = Path(os.environ.get("DB_PATH", "/chroma"))
 CONFIG_PATH = Path(os.environ.get("CONFIG_PATH", "/config"))
+EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "mxbai-embed-large")
 
 DEFAULT_PROMPT = """
 You are a helpful assistant.
@@ -88,7 +90,24 @@ def bot_paths(bot_id: str) -> Dict[str, Path]:
         "data": bot_data_path,
         "db": bot_db_path,
         "prompt": bot_config_path / "prompt.txt",
+        "embedding_model": bot_config_path / "embedding_model.txt",
     }
+
+
+def current_embedding_model() -> str:
+    return EMBEDDING_MODEL
+
+
+def save_embedding_model(bot_id: str, model_name: str):
+    paths = bot_paths(bot_id)
+    paths["embedding_model"].write_text(model_name)
+
+
+def load_saved_embedding_model(bot_id: str) -> Optional[str]:
+    path = bot_paths(bot_id)["embedding_model"]
+    if path.exists():
+        return path.read_text().strip()
+    return None
 
 
 def normalize_bot(bot: Dict[str, str]) -> Dict[str, str]:
@@ -377,7 +396,7 @@ def build_db(bot_id: str):
 
     embeddings = OllamaEmbeddings(
         base_url=os.environ.get("OLLAMA_URL", "http://ollama:11434"),
-        model="mxbai-embed-large"
+        model=current_embedding_model()
     )
 
     db_dir = bot_paths(bot_id)["db"]
@@ -391,6 +410,20 @@ def build_db(bot_id: str):
     )
 
     vectordb.persist()
+    save_embedding_model(bot_id, current_embedding_model())
+
+
+def ensure_db_embeddings(bot_id: str):
+    saved_model = load_saved_embedding_model(bot_id)
+    db_dir = bot_paths(bot_id)["db"]
+    has_db = (db_dir / "chroma.sqlite3").exists()
+
+    if saved_model is None and has_db:
+        build_db(bot_id)
+        return
+
+    if saved_model and saved_model != current_embedding_model():
+        build_db(bot_id)
 
 
 app = FastAPI()
@@ -669,26 +702,29 @@ async def ask_stream(request: Request):
 
     require_bot_access(bot_id, password)
 
-    embeddings = OllamaEmbeddings(
-        base_url=os.environ.get("OLLAMA_URL", "http://ollama:11434"),
-        model="mxbai-embed-large"
-    )
+    ensure_db_embeddings(bot_id)
 
-    vectordb = Chroma(
-        persist_directory=str(bot_paths(bot_id)["db"]),
-        embedding_function=embeddings
-    )
+    def build_chain():
+        embeddings = OllamaEmbeddings(
+            base_url=os.environ.get("OLLAMA_URL", "http://ollama:11434"),
+            model=current_embedding_model()
+        )
 
-    retriever = vectordb.as_retriever()
-    llm = Ollama(
-        base_url=os.environ.get("OLLAMA_URL", "http://ollama:11434"),
-        model=os.environ.get("MODEL", "mistral")
-    )
+        vectordb = Chroma(
+            persist_directory=str(bot_paths(bot_id)["db"]),
+            embedding_function=embeddings
+        )
 
-    def format_prompt(inputs: Dict[str, str]) -> str:
-        context = inputs.get("context", "")
-        question_text = inputs.get("question", "")
-        return f"""{system_prompt}
+        retriever = vectordb.as_retriever()
+        llm = Ollama(
+            base_url=os.environ.get("OLLAMA_URL", "http://ollama:11434"),
+            model=os.environ.get("MODEL", "mistral")
+        )
+
+        def format_prompt(inputs: Dict[str, str]) -> str:
+            context = inputs.get("context", "")
+            question_text = inputs.get("question", "")
+            return f"""{system_prompt}
 
 Conversation so far:
 {history_text}
@@ -701,18 +737,26 @@ Context:
 User: {question_text}
 """
 
-    rag_chain = (
-        {
-            "context": retriever | RunnableLambda(join_docs),
-            "question": RunnablePassthrough()
-        }
-        | RunnableLambda(format_prompt)
-        | llm
-        | StrOutputParser()
-    )
+        return (
+            {
+                "context": retriever | RunnableLambda(join_docs),
+                "question": RunnablePassthrough()
+            }
+            | RunnableLambda(format_prompt)
+            | llm
+            | StrOutputParser()
+        )
+
+    rag_chain = build_chain()
 
     async def event_stream():
-        async for token in rag_chain.astream(question):
-            yield json.dumps({"type": "token", "token": token}) + "\n"
+        try:
+            async for token in rag_chain.astream(question):
+                yield json.dumps({"type": "token", "token": token}) + "\n"
+        except InvalidArgumentError:
+            build_db(bot_id)
+            rebuilt_chain = build_chain()
+            async for token in rebuilt_chain.astream(question):
+                yield json.dumps({"type": "token", "token": token}) + "\n"
 
     return StreamingResponse(event_stream(), media_type="text/plain")
