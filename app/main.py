@@ -469,9 +469,11 @@ async def change_bot_password(bot_id: str, request: Request):
     if is_bot_protected(bot) and not verify_password(bot.get("password_hash"), current_password or ""):
         raise HTTPException(status_code=403, detail="Invalid password for this bot")
 
-    new_password = (body.get("new_password") or "").strip()
+    new_password_provided = "new_password" in body
+    new_password = (body.get("new_password") or "").strip() if new_password_provided else None
     hidden = bool(body.get("hidden", bot.get("hidden", False)))
-    update_bot_password(bot_id, new_password or None)
+    if new_password_provided:
+        update_bot_password(bot_id, new_password or None)
     registry = load_bot_registry()
     for b in registry["bots"]:
         if b["id"] == bot_id:

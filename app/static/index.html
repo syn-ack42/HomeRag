@@ -151,6 +151,50 @@ textarea#systemPrompt { width: 100%; min-height: 160px; resize: vertical; }
 .details-card[open] summary::before { transform: rotate(0deg); }
 .details-card:not([open]) summary::before { transform: rotate(-90deg); }
 
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1rem;
+    width: min(420px, 92vw);
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
+}
+
+.modal-card h3 {
+    margin: 0 0 0.25rem;
+}
+
+.modal-card p {
+    margin: 0 0 0.75rem;
+    color: var(--text-muted);
+}
+
+.modal-card input[type="password"] {
+    width: 100%;
+    margin-bottom: 0.75rem;
+}
+
+.modal-card .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.modal-error {
+    color: #dc2626;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
 @media (max-width: 980px) {
     .main { grid-template-columns: 1fr; }
 }
@@ -192,7 +236,6 @@ textarea#systemPrompt { width: 100%; min-height: 160px; resize: vertical; }
                 <input id="passwordInput" type="password" placeholder="Set or change password" />
                 <label class="inline-label"><input id="hiddenCheckbox" type="checkbox" /> Hidden</label>
                 <button type="button" onclick="updatePassword()">Save Password</button>
-                <button type="button" class="secondary" onclick="removePassword()">Remove Password</button>
             </div>
             <span class="hint">You must unlock a private bot before changing or removing its password.</span>
 
@@ -253,6 +296,7 @@ const moveDestSelect = document.getElementById("moveDestSelect");
 const moveFileSelect = document.getElementById("moveFileSelect");
 const fileTree = document.getElementById("fileTree");
 const hiddenCheckbox = document.getElementById("hiddenCheckbox");
+const passwordInput = document.getElementById("passwordInput");
 
 const BOT_STORAGE_KEY = "selectedBotId";
 const HISTORY_KEY_PREFIX = "chatHistory:";
@@ -263,6 +307,7 @@ let history = [];
 const initialHashBotId = decodeURIComponent(window.location.hash.replace(/^#/, ""));
 let currentBotId = initialHashBotId || localStorage.getItem(BOT_STORAGE_KEY);
 let botsMeta = [];
+let passwordEdited = false;
 
 input.addEventListener("keydown", e => {
     if (e.key === "Enter" && e.ctrlKey) {
@@ -273,6 +318,15 @@ input.addEventListener("keydown", e => {
 
 botSelect.addEventListener("change", async e => {
     await switchBot(e.target.value, { force: true, requirePasswordPrompt: true });
+});
+
+passwordInput.addEventListener("input", () => {
+    if (passwordInput.dataset.masked === "true" && passwordInput.value === "••••") {
+        passwordEdited = false;
+        return;
+    }
+    passwordInput.dataset.masked = "false";
+    passwordEdited = true;
 });
 
 function historyKey(botId) {
@@ -328,6 +382,109 @@ async function authedFetch(url, options = {}, retry = true) {
     return res;
 }
 
+function openPasswordDialog({ title = "Enter password", description = "", requireConfirmation = false } = {}) {
+    return new Promise(resolve => {
+        const overlay = document.createElement("div");
+        overlay.className = "modal-overlay";
+
+        const card = document.createElement("div");
+        card.className = "modal-card";
+
+        const heading = document.createElement("h3");
+        heading.textContent = title;
+        card.appendChild(heading);
+
+        if (description) {
+            const desc = document.createElement("p");
+            desc.textContent = description;
+            card.appendChild(desc);
+        }
+
+        const form = document.createElement("form");
+        const error = document.createElement("div");
+        error.className = "modal-error";
+        error.style.display = "none";
+
+        const input = document.createElement("input");
+        input.type = "password";
+        input.placeholder = "Password";
+
+        const confirmInput = document.createElement("input");
+        confirmInput.type = "password";
+        confirmInput.placeholder = "Confirm password";
+        confirmInput.style.display = requireConfirmation ? "block" : "none";
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        const cancelBtn = document.createElement("button");
+        cancelBtn.type = "button";
+        cancelBtn.className = "secondary";
+        cancelBtn.textContent = "Cancel";
+
+        const submitBtn = document.createElement("button");
+        submitBtn.type = "submit";
+        submitBtn.textContent = "Submit";
+
+        actions.appendChild(cancelBtn);
+        actions.appendChild(submitBtn);
+
+        form.appendChild(error);
+        form.appendChild(input);
+        if (requireConfirmation) {
+            form.appendChild(confirmInput);
+        }
+        form.appendChild(actions);
+        card.appendChild(form);
+        overlay.appendChild(card);
+        document.body.appendChild(overlay);
+
+        setTimeout(() => input.focus(), 10);
+
+        const close = (value) => {
+            overlay.remove();
+            resolve(value);
+        };
+
+        cancelBtn.onclick = () => close(null);
+        overlay.onclick = (e) => { if (e.target === overlay) close(null); };
+
+        form.onsubmit = e => {
+            e.preventDefault();
+            const value = (input.value || "").trim();
+            if (!value) {
+                error.textContent = "Password is required.";
+                error.style.display = "block";
+                input.focus();
+                return;
+            }
+
+            if (requireConfirmation) {
+                const confirmation = (confirmInput.value || "").trim();
+                if (confirmation !== value) {
+                    error.textContent = "Passwords do not match.";
+                    error.style.display = "block";
+                    confirmInput.focus();
+                    return;
+                }
+            }
+
+            close(value);
+        };
+    });
+}
+
+function setPasswordFieldForBot(meta) {
+    passwordEdited = false;
+    if (meta?.protected) {
+        passwordInput.value = "••••";
+        passwordInput.dataset.masked = "true";
+    } else {
+        passwordInput.value = "";
+        passwordInput.dataset.masked = "false";
+    }
+}
+
 function findBotMeta(id) {
     return botsMeta.find(b => b.id === id);
 }
@@ -355,7 +512,10 @@ async function requestPasswordForBot(botId, { forcePrompt = false } = {}) {
     }
 
     while (true) {
-        const entered = prompt("This bot is private. Enter the password to continue:");
+        const entered = await openPasswordDialog({
+            title: "Unlock bot",
+            description: "This bot is private. Enter the password to continue.",
+        });
         if (entered === null) {
             return false;
         }
@@ -704,15 +864,47 @@ async function savePrompt() {
 
 async function updatePassword() {
     if (!ensureBotSelected()) return;
+    const meta = findBotMeta(currentBotId);
     const hasAccess = await requestPasswordForCurrentBot();
     if (!hasAccess) return;
 
-    const newPassword = (document.getElementById("passwordInput").value || "").trim();
     const hidden = hiddenCheckbox.checked;
+    const payload = { hidden };
+
+    const masked = passwordInput.dataset.masked === "true";
+    const rawInput = (passwordInput.value || "").trim();
+    let newPasswordValue;
+
+    if (masked && !passwordEdited) {
+        newPasswordValue = undefined;
+    } else if (!rawInput) {
+        if (!confirm("Remove password protection from this bot?")) {
+            return;
+        }
+        newPasswordValue = "";
+    } else {
+        const confirmation = await openPasswordDialog({
+            title: "Confirm new password",
+            description: "Re-enter the new password to confirm.",
+        });
+        if (confirmation === null) {
+            return;
+        }
+        if (confirmation !== rawInput) {
+            alert("Passwords do not match. Please try again.");
+            return;
+        }
+        newPasswordValue = rawInput;
+    }
+
+    if (typeof newPasswordValue !== "undefined") {
+        payload.new_password = newPasswordValue;
+    }
+
     const res = await authedFetch(`/bots/${currentBotId}/password`, {
         method: "POST",
         headers: {"Content-Type": "application/json", ...buildAuthHeaders()},
-        body: JSON.stringify({ new_password: newPassword, hidden })
+        body: JSON.stringify(payload)
     });
 
     if (!res.ok) {
@@ -722,19 +914,23 @@ async function updatePassword() {
     }
 
     const data = await res.json();
-    setBotPassword(currentBotId, newPassword);
-    const meta = findBotMeta(currentBotId);
-    if (meta) {
-        meta.protected = !!data?.protected;
-        meta.hidden = !!data?.hidden;
+    const updatedMeta = findBotMeta(currentBotId);
+    if (updatedMeta) {
+        if (typeof newPasswordValue !== "undefined") {
+            updatedMeta.protected = !!data?.protected;
+        }
+        updatedMeta.hidden = !!data?.hidden;
     }
-    alert(newPassword ? "Password updated." : "Password removed.");
-    document.getElementById("passwordInput").value = "";
-}
 
-async function removePassword() {
-    document.getElementById("passwordInput").value = "";
-    await updatePassword();
+    if (typeof newPasswordValue !== "undefined") {
+        setBotPassword(currentBotId, newPasswordValue);
+        alert(newPasswordValue ? "Password saved." : "Password removed.");
+    } else {
+        alert("Settings saved.");
+    }
+
+    setPasswordFieldForBot(updatedMeta);
+    hiddenCheckbox.checked = !!updatedMeta?.hidden;
 }
 
 async function loadBots() {
@@ -745,7 +941,8 @@ async function loadBots() {
 
     botSelect.innerHTML = "";
 
-    const visibleBots = botsMeta.filter(bot => !bot.hidden);
+    const preferredBotId = hashBotId || currentBotId;
+    const visibleBots = botsMeta.filter(bot => !bot.hidden || bot.id === preferredBotId);
     visibleBots.forEach(bot => {
         const option = document.createElement("option");
         option.value = bot.id;
@@ -760,7 +957,6 @@ async function loadBots() {
         return;
     }
 
-    const preferredBotId = hashBotId || currentBotId;
     if (preferredBotId && data.bots.some(bot => bot.id === preferredBotId)) {
         currentBotId = preferredBotId;
     } else if (!currentBotId || !data.bots.some(bot => bot.id === currentBotId)) {
@@ -782,6 +978,7 @@ async function switchBot(id, { force = false, requirePasswordPrompt = false } = 
         promptBox.value = "";
         fileTree.innerHTML = "";
         hiddenCheckbox.checked = false;
+        setPasswordFieldForBot(null);
         if (window.location.hash) {
             history.replaceState(null, "", window.location.pathname);
         }
@@ -819,7 +1016,7 @@ async function switchBot(id, { force = false, requirePasswordPrompt = false } = 
 
     history = loadStoredHistory(currentBotId);
     renderHistoryMessages();
-    document.getElementById("passwordInput").value = "";
+    setPasswordFieldForBot(meta);
     await Promise.all([loadPrompt(), refreshFiles()]);
     if (currentBotId) {
         const targetHash = `#${encodeURIComponent(currentBotId)}`;
@@ -894,6 +1091,13 @@ async function deleteBot() {
     currentBotId = null;
     await loadBots();
 }
+
+window.addEventListener("hashchange", async () => {
+    const hashBotId = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+    if (!hashBotId || hashBotId === currentBotId) return;
+    currentBotId = hashBotId;
+    await loadBots();
+});
 
 loadBots();
 </script>
