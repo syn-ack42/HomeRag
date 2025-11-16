@@ -23,7 +23,6 @@ from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.llms import Ollama
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
@@ -649,20 +648,24 @@ def join_docs(docs):
     return "\n\n---\n\n".join(doc.page_content for doc in docs)
 
 
-def build_prompt(bot_id: str):
-    system = load_system_prompt(bot_id)
-    return ChatPromptTemplate.from_template(
-        system + "\n\nContext:\n{context}\n\nQuestion:\n{question}"
-    )
-
-
 @app.post("/ask_stream")
 async def ask_stream(request: Request):
 
     body = await request.json()
-    question = body.get("q")
-    bot_id = body.get("bot_id") or DEFAULT_BOT_ID
+    question = body.get("question") or body.get("q")
+    bot_id = body.get("bot") or body.get("bot_id") or DEFAULT_BOT_ID
+    history = body.get("history") or []
     password = password_from_request(request, body)
+
+    if not isinstance(history, list):
+        history = []
+
+    system_prompt = load_system_prompt(bot_id)
+
+    history_text = ""
+    for msg in history:
+        role = "User" if msg.get("role") == "user" else "Assistant"
+        history_text += f"{role}: {msg.get('content', '')}\n"
 
     require_bot_access(bot_id, password)
 
@@ -682,14 +685,28 @@ async def ask_stream(request: Request):
         model=os.environ.get("MODEL", "mistral")
     )
 
-    prompt = build_prompt(bot_id)
+    def format_prompt(inputs: Dict[str, str]) -> str:
+        context = inputs.get("context", "")
+        question_text = inputs.get("question", "")
+        return f"""{system_prompt}
+
+Conversation so far:
+{history_text}
+
+Use ONLY the provided context to answer.
+
+Context:
+{context}
+
+User: {question_text}
+"""
 
     rag_chain = (
         {
             "context": retriever | (lambda docs: join_docs(docs)),
             "question": RunnablePassthrough()
         }
-        | prompt
+        | format_prompt
         | llm
         | StrOutputParser()
     )
