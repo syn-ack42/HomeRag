@@ -23,9 +23,10 @@ from bs4 import BeautifulSoup
 import markdown
 
 from chromadb.errors import InvalidArgumentError
+
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import OllamaEmbeddings
-from langchain_ollama import OllamaLLM
+from langchain_community.llms import Ollama
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
