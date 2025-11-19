@@ -6,6 +6,8 @@ requests
 langchain
 langchain-core
 langchain-community
+langchain-chroma
+langchain-ollama
 langchain-text-splitters
 pypdf
 jinja2
