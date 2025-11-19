@@ -23,8 +23,9 @@ from bs4 import BeautifulSoup
 import markdown
 
 from chromadb.errors import InvalidArgumentError
-from langchain_chroma import Chroma
-from langchain_ollama import OllamaEmbeddings
+
+from langchain_community.vectorstores import Chroma
+from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.llms import Ollama
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -764,7 +765,7 @@ async def ask_stream(request: Request):
         )
 
         retriever = vectordb.as_retriever()
-        llm = Ollama(
+        llm = OllamaLLM(
             base_url=os.environ.get("OLLAMA_URL", "http://ollama:11434"),
             model=os.environ.get("MODEL", "mistral")
         )
