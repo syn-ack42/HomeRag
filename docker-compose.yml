@@ -24,6 +24,7 @@ services:
       - DATA_PATH=/data
       - DB_PATH=/chroma
       - CONFIG_PATH=/config
+      - ANONYMIZED_TELEMETRY=false
     volumes:
       - ./data:/data
       - ./chroma:/chroma
