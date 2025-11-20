@@ -247,6 +247,14 @@ def fetch_installed_models() -> List[str]:
     return models
 
 
+def fetch_installed_embedding_models() -> List[str]:
+    return [model for model in fetch_installed_models() if model in ALLOWED_EMBEDDING_MODELS]
+
+
+def fetch_installed_llm_models() -> List[str]:
+    return [model for model in fetch_installed_models() if model not in ALLOWED_EMBEDDING_MODELS]
+
+
 def sanitize_config(config: Dict[str, Any]) -> Dict[str, Any]:
     base = default_bot_config()
     allowed_keys = set(DEFAULT_BOT_CONFIG.keys())
@@ -814,7 +822,12 @@ def index():
 
 @app.get("/models")
 def list_models():
-    return {"models": fetch_installed_models()}
+    return {"models": fetch_installed_llm_models()}
+
+
+@app.get("/embedding-models")
+def list_embedding_models():
+    return {"models": fetch_installed_embedding_models()}
 
 
 @app.get("/bots")
@@ -1063,7 +1076,7 @@ async def update_bot_model(bot_id: str, request: Request):
     if not selected_model:
         raise HTTPException(status_code=400, detail="Model is required")
 
-    available_models = fetch_installed_models()
+    available_models = fetch_installed_llm_models()
     if selected_model not in available_models:
         raise HTTPException(status_code=400, detail="Unknown or unavailable model")
 

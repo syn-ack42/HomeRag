@@ -336,9 +336,6 @@ textarea#systemPrompt { width: 100%; min-height: 160px; resize: vertical; }
                     <label>Repeat Penalty
                         <input id="llmRepeatPenalty" type="number" step="0.01" />
                     </label>
-                    <label>Prompt Template Path
-                        <input id="promptTemplatePath" type="text" placeholder="Relative to bot config folder" />
-                    </label>
                 </div>
 
                 <div class="section-title">
@@ -375,21 +372,10 @@ const llmTemperatureInput = document.getElementById("llmTemperature");
 const llmTopPInput = document.getElementById("llmTopP");
 const llmMaxTokensInput = document.getElementById("llmMaxTokens");
 const llmRepeatPenaltyInput = document.getElementById("llmRepeatPenalty");
-const promptTemplatePathInput = document.getElementById("promptTemplatePath");
 
 const BOT_STORAGE_KEY = "selectedBotId";
 const PASSWORD_KEY_PREFIX = "botPassword:";
 const PASSWORD_HEADER = "X-Bot-Password";
-const EMBEDDING_MODELS = [
-    "mxbai-embed-large",
-    "nomic-embed-text",
-    "bge-small-en-v1.5",
-    "bge-base-en-v1.5",
-    "bge-large-en-v1.5",
-    "gte-small",
-    "gte-large",
-];
-
 const DEFAULT_LLM_MODEL = "phi3";
 
 const DEFAULT_CONFIG = {
@@ -404,7 +390,6 @@ const DEFAULT_CONFIG = {
     llm_top_p: 0.9,
     llm_max_output_tokens: 512,
     llm_repeat_penalty: 1.1,
-    prompt_template_path: "",
 };
 
 const botConversations = {};
@@ -413,6 +398,8 @@ const initialHashBotId = decodeURIComponent(window.location.hash.replace(/^#/, "
 let currentBotId = initialHashBotId || localStorage.getItem(BOT_STORAGE_KEY);
 let botsMeta = [];
 let passwordEdited = false;
+let availableEmbeddingModels = [];
+let embeddingModelsError = "";
 let availableLLMModels = [];
 let llmModelsError = "";
 
@@ -452,16 +439,61 @@ llmModelSelect.addEventListener("change", async () => {
     }
 });
 
-function populateEmbeddingOptions() {
+function renderEmbeddingOptions(selectedValue = DEFAULT_CONFIG.embedding_model) {
     embeddingModelSelect.innerHTML = "";
-    EMBEDDING_MODELS.forEach(model => {
+
+    if (embeddingModelsError) {
+        const option = document.createElement("option");
+        option.textContent = embeddingModelsError;
+        option.disabled = true;
+        option.value = "";
+        embeddingModelSelect.appendChild(option);
+        embeddingModelSelect.disabled = true;
+        return;
+    }
+
+    if (!availableEmbeddingModels.length) {
+        const option = document.createElement("option");
+        option.textContent = "No embedding models available";
+        option.disabled = true;
+        option.value = "";
+        embeddingModelSelect.appendChild(option);
+        embeddingModelSelect.disabled = true;
+        return;
+    }
+
+    availableEmbeddingModels.forEach(model => {
         const option = document.createElement("option");
         option.value = model;
         option.textContent = model;
         embeddingModelSelect.appendChild(option);
     });
+
+    const valueToUse = availableEmbeddingModels.includes(selectedValue) ? selectedValue : availableEmbeddingModels[0];
+    embeddingModelSelect.value = valueToUse || "";
+    embeddingModelSelect.disabled = false;
 }
-populateEmbeddingOptions();
+
+async function loadAvailableEmbeddingModels() {
+    if (loadAvailableEmbeddingModels.loading) return loadAvailableEmbeddingModels.loading;
+    embeddingModelSelect.innerHTML = "<option>Loading embedding models...</option>";
+    embeddingModelSelect.disabled = true;
+    loadAvailableEmbeddingModels.loading = (async () => {
+        try {
+            const res = await fetch("/embedding-models");
+            if (!res.ok) throw new Error("Failed to load embedding models");
+            const data = await res.json();
+            availableEmbeddingModels = data.models || [];
+            embeddingModelsError = availableEmbeddingModels.length ? "" : "No embedding models available";
+        } catch (e) {
+            availableEmbeddingModels = [];
+            embeddingModelsError = "Unable to load embedding models";
+        }
+        renderEmbeddingOptions(embeddingModelSelect.value || DEFAULT_CONFIG.embedding_model);
+        loadAvailableEmbeddingModels.loading = null;
+    })();
+    return loadAvailableEmbeddingModels.loading;
+}
 
 function renderModelOptions(selectedValue = DEFAULT_LLM_MODEL) {
     llmModelSelect.innerHTML = "";
@@ -498,11 +530,11 @@ function renderModelOptions(selectedValue = DEFAULT_LLM_MODEL) {
     llmModelSelect.disabled = !currentBotId;
 }
 
-async function loadAvailableModels() {
-    if (loadAvailableModels.loading) return loadAvailableModels.loading;
+async function loadAvailableLLMModels() {
+    if (loadAvailableLLMModels.loading) return loadAvailableLLMModels.loading;
     llmModelSelect.innerHTML = "<option>Loading models...</option>";
     llmModelSelect.disabled = true;
-    loadAvailableModels.loading = (async () => {
+    loadAvailableLLMModels.loading = (async () => {
         try {
             const res = await fetch("/models");
             if (!res.ok) throw new Error("Failed to load models");
@@ -514,9 +546,9 @@ async function loadAvailableModels() {
             llmModelsError = "Unable to load models";
         }
         renderModelOptions(llmModelSelect.value || DEFAULT_LLM_MODEL);
-        loadAvailableModels.loading = null;
+        loadAvailableLLMModels.loading = null;
     })();
-    return loadAvailableModels.loading;
+    return loadAvailableLLMModels.loading;
 }
 
 async function loadBotModel() {
@@ -526,7 +558,7 @@ async function loadBotModel() {
         return;
     }
 
-    await loadAvailableModels();
+    await loadAvailableLLMModels();
     if (llmModelsError) return;
 
     const res = await authedFetch(`/bots/${currentBotId}/model`);
@@ -585,7 +617,7 @@ function parseFloatInput(el) {
 
 function applyConfigToForm(config = DEFAULT_CONFIG) {
     const cfg = { ...DEFAULT_CONFIG, ...(config || {}) };
-    embeddingModelSelect.value = cfg.embedding_model || DEFAULT_CONFIG.embedding_model;
+    renderEmbeddingOptions(cfg.embedding_model || DEFAULT_CONFIG.embedding_model);
     renderModelOptions(cfg.llm_model || DEFAULT_CONFIG.llm_model);
     chunkSizeInput.value = cfg.chunk_size ?? DEFAULT_CONFIG.chunk_size;
     chunkOverlapInput.value = cfg.chunk_overlap ?? DEFAULT_CONFIG.chunk_overlap;
@@ -596,10 +628,10 @@ function applyConfigToForm(config = DEFAULT_CONFIG) {
     llmTopPInput.value = cfg.llm_top_p ?? DEFAULT_CONFIG.llm_top_p;
     llmMaxTokensInput.value = cfg.llm_max_output_tokens ?? DEFAULT_CONFIG.llm_max_output_tokens;
     llmRepeatPenaltyInput.value = cfg.llm_repeat_penalty ?? DEFAULT_CONFIG.llm_repeat_penalty;
-    promptTemplatePathInput.value = cfg.prompt_template_path || "";
 }
 
 async function loadConfig() {
+    await loadAvailableEmbeddingModels();
     if (!currentBotId) {
         applyConfigToForm();
         return;
@@ -626,7 +658,6 @@ async function saveConfig() {
         llm_top_p: parseFloatInput(llmTopPInput),
         llm_max_output_tokens: parseIntInput(llmMaxTokensInput),
         llm_repeat_penalty: parseFloatInput(llmRepeatPenaltyInput),
-        prompt_template_path: (promptTemplatePathInput.value || "").trim(),
     };
 
     const res = await authedFetch(`/bots/${currentBotId}/config`, {
@@ -1367,7 +1398,7 @@ window.addEventListener("hashchange", async () => {
     await loadBots();
 });
 
-loadAvailableModels().then(loadBots);
+Promise.all([loadAvailableEmbeddingModels(), loadAvailableLLMModels()]).then(loadBots);
 </script>
 </body>
 </html>
