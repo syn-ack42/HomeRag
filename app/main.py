@@ -974,7 +974,43 @@ async def ask_stream(request: Request):
             embedding_function=embeddings
         )
 
-        retriever = vectordb.as_retriever(search_kwargs={"k": bot_config.get("retrieval_top_k", 3)})
+        top_k = bot_config.get("retrieval_top_k", 3)
+
+        def retrieve_with_logging(query: str):
+            search_start = time.perf_counter()
+            try:
+                results = vectordb.similarity_search_with_score(query, k=top_k)
+            except Exception:
+                logger.exception("Vector search failed for bot %s", bot_id)
+                raise
+
+            docs = [doc for doc, _score in results]
+
+            log_performance(
+                "vector_search",
+                search_start,
+                bot_id=bot_id,
+                query_chars=len(query or ""),
+                hits=len(results),
+                top_k=top_k,
+            )
+
+            for idx, (doc, score) in enumerate(results, start=1):
+                metadata = doc.metadata or {}
+                source = metadata.get("source") or metadata.get("file") or "unknown"
+                logger.debug(
+                    "Result %d for bot %s: score=%.4f, source=%s, metadata=%s, excerpt=%s",
+                    idx,
+                    bot_id,
+                    score,
+                    source,
+                    metadata,
+                    (doc.page_content or "").replace("\n", " ")[:200],
+                )
+
+            return docs
+
+        retriever = RunnableLambda(retrieve_with_logging)
         llm_params = {
             "base_url": os.environ.get("OLLAMA_URL", "http://ollama:11434"),
             "model": os.environ.get("MODEL", "mistral"),
