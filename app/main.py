@@ -59,6 +59,18 @@ logging.basicConfig(
 logger = logging.getLogger("homerag")
 
 
+def duration_ms(start_time: float) -> float:
+    return (time.perf_counter() - start_time) * 1000
+
+
+def log_performance(event: str, start_time: float, **details):
+    elapsed = duration_ms(start_time)
+    extras = ", ".join(f"{key}={value}" for key, value in details.items())
+    suffix = f" ({extras})" if extras else ""
+    logger.info("%s completed in %.2f ms%s", event, elapsed, suffix)
+    return elapsed
+
+
 def hash_password(password: str) -> str:
     salt = secrets.token_bytes(16)
     derived = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 100_000)
@@ -395,20 +407,30 @@ def load_documents(bot_id: str):
 def build_db(bot_id: str):
     logger.debug("Starting database rebuild for bot %s", bot_id)
     start_time = time.perf_counter()
+    load_start = time.perf_counter()
     docs = load_documents(bot_id)
+    log_performance("load_documents", load_start, bot_id=bot_id, documents=len(docs))
     if not docs:
         db_dir = bot_paths(bot_id)["db"]
         if db_dir.exists():
             shutil.rmtree(db_dir)
             db_dir.mkdir(parents=True, exist_ok=True)
-        duration_ms = (time.perf_counter() - start_time) * 1000
-        logger.debug("No documents found for bot %s; cleared DB in %.2f ms", bot_id, duration_ms)
+        elapsed_ms = duration_ms(start_time)
+        logger.debug("No documents found for bot %s; cleared DB in %.2f ms", bot_id, elapsed_ms)
         return
 
     splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
+    split_start = time.perf_counter()
     chunks = splitter.create_documents(
         [d["page_content"] for d in docs],
         metadatas=[d["metadata"] for d in docs]
+    )
+    log_performance(
+        "split_documents",
+        split_start,
+        bot_id=bot_id,
+        documents=len(docs),
+        chunks=len(chunks),
     )
 
     embeddings = OllamaEmbeddings(
@@ -422,40 +444,57 @@ def build_db(bot_id: str):
         shutil.rmtree(db_dir)
         db_dir.mkdir(parents=True, exist_ok=True)
 
+    embed_start = time.perf_counter()
     vectordb = Chroma.from_documents(
         chunks, embeddings, persist_directory=str(db_dir)
+    )
+    log_performance(
+        "build_vectorstore",
+        embed_start,
+        bot_id=bot_id,
+        chunks=len(chunks),
+        embedding_model=current_embedding_model(),
     )
 
     vectordb.persist()
     save_embedding_model(bot_id, current_embedding_model())
-    duration_ms = (time.perf_counter() - start_time) * 1000
+    total_ms = duration_ms(start_time)
     logger.debug(
         "Finished database rebuild for bot %s with %d documents in %.2f ms",
         bot_id,
         len(docs),
-        duration_ms,
+        total_ms,
     )
 
 
 async def ensure_db_embeddings(bot_id: str):
     logger.debug("Ensuring embeddings for bot %s", bot_id)
+    ensure_start = time.perf_counter()
     saved_model = load_saved_embedding_model(bot_id)
     db_dir = bot_paths(bot_id)["db"]
     has_db = (db_dir / "chroma.sqlite3").exists()
 
     if saved_model is None and has_db:
         await asyncio.to_thread(build_db, bot_id)
-        logger.debug("Rebuilt DB for bot %s because no saved model was recorded", bot_id)
+        log_performance(
+            "rebuild_vectorstore_missing_model",
+            ensure_start,
+            bot_id=bot_id,
+            saved_model=saved_model,
+        )
         return
 
     if saved_model and saved_model != current_embedding_model():
         await asyncio.to_thread(build_db, bot_id)
-        logger.debug(
-            "Rebuilt DB for bot %s due to embedding model change (%s -> %s)",
-            bot_id,
-            saved_model,
-            current_embedding_model(),
+        log_performance(
+            "rebuild_vectorstore_model_change",
+            ensure_start,
+            bot_id=bot_id,
+            saved_model=saved_model,
+            current_model=current_embedding_model(),
         )
+    else:
+        log_performance("verify_vectorstore", ensure_start, bot_id=bot_id, saved_model=saved_model)
 
 
 app = FastAPI()
@@ -750,8 +789,16 @@ async def ask_stream(request: Request):
         history_text += f"{role}: {msg.get('content', '')}\n"
 
     require_bot_access(bot_id, password)
+    logger.info(
+        "Received question for bot %s (history=%d, question_chars=%d)",
+        bot_id,
+        len(history),
+        len(question or ""),
+    )
 
+    ensure_start = time.perf_counter()
     await ensure_db_embeddings(bot_id)
+    log_performance("ensure_embeddings", ensure_start, bot_id=bot_id)
 
     def build_chain():
         embeddings = OllamaEmbeddings(
@@ -799,13 +846,25 @@ User: {question_text}
     rag_chain = build_chain()
 
     async def event_stream():
+        stream_start = time.perf_counter()
+        tokens_emitted = 0
         try:
             async for token in rag_chain.astream(question):
+                tokens_emitted += 1
                 yield json.dumps({"type": "token", "token": token}) + "\n"
         except InvalidArgumentError:
             await asyncio.to_thread(build_db, bot_id)
             rebuilt_chain = build_chain()
             async for token in rebuilt_chain.astream(question):
+                tokens_emitted += 1
                 yield json.dumps({"type": "token", "token": token}) + "\n"
+        finally:
+            log_performance(
+                "stream_response",
+                stream_start,
+                bot_id=bot_id,
+                tokens=tokens_emitted,
+                question_chars=len(question or ""),
+            )
 
     return StreamingResponse(event_stream(), media_type="text/plain")
