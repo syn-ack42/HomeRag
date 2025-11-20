@@ -574,8 +574,8 @@ def build_db(bot_id: str, config: Optional[Dict[str, Any]] = None):
     if not docs:
         db_dir = bot_paths(bot_id)["db"]
         if db_dir.exists():
-            shutil.rmtree(db_dir)
-            db_dir.mkdir(parents=True, exist_ok=True)
+            shutil.rmtree(db_dir, ignore_errors=True)
+        db_dir.mkdir(parents=True, exist_ok=True)
         elapsed_ms = duration_ms(start_time)
         logger.debug("No documents found for bot %s; cleared DB in %.2f ms", bot_id, elapsed_ms)
         return
@@ -642,14 +642,7 @@ async def ensure_db_embeddings(bot_id: str):
     has_db = (db_dir / "chroma.sqlite3").exists()
 
     if saved_model is None and has_db:
-        await asyncio.to_thread(build_db, bot_id, config)
-        log_performance(
-            "rebuild_vectorstore_missing_model",
-            ensure_start,
-            bot_id=bot_id,
-            saved_model=saved_model,
-            desired_model=desired_model,
-        )
+        logger.warning("DB exists but saved_model is None — skipping rebuild to avoid loop.")
         return
 
     if saved_model and saved_model != desired_model:
