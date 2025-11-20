@@ -36,7 +36,8 @@ from langchain_core.output_parsers import StrOutputParser
 DATA_PATH = Path(os.environ.get("DATA_PATH", "/data"))
 DB_PATH = Path(os.environ.get("DB_PATH", "/chroma"))
 CONFIG_PATH = Path(os.environ.get("CONFIG_PATH", "/config"))
-EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "mxbai-embed-large")
+BOT_CONFIG_ROOT = CONFIG_PATH / "bots"
+DEFAULT_EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "mxbai-embed-large")
 
 DEFAULT_PROMPT = """
 You are a helpful assistant.
@@ -57,6 +58,31 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger("homerag")
+
+ALLOWED_EMBEDDING_MODELS = [
+    "mxbai-embed-large",
+    "nomic-embed-text",
+    "bge-small-en-v1.5",
+    "bge-base-en-v1.5",
+    "bge-large-en-v1.5",
+    "gte-small",
+    "gte-large",
+]
+
+DEFAULT_BOT_CONFIG = {
+    "embedding_model": DEFAULT_EMBEDDING_MODEL,
+    "chunk_size": 800,
+    "chunk_overlap": 100,
+    "retrieval_top_k": 3,
+    "history_enabled": True,
+    "history_turns": 10,
+    "llm_temperature": 0.0,
+    "llm_top_p": 0.9,
+    "llm_max_output_tokens": 512,
+    "llm_repeat_penalty": 1.1,
+    "prompt_template_path": "",
+    "last_built_embedding_model": None,
+}
 
 
 def duration_ms(start_time: float) -> float:
@@ -97,14 +123,14 @@ def is_bot_protected(bot: Dict[str, Any]) -> bool:
 
 def ensure_base_directories():
     """Make sure top-level storage directories exist."""
-    for path in (DATA_PATH, DB_PATH, CONFIG_PATH):
+    for path in (DATA_PATH, DB_PATH, CONFIG_PATH, BOT_CONFIG_ROOT):
         path.mkdir(parents=True, exist_ok=True)
 
 
 def bot_paths(bot_id: str) -> Dict[str, Path]:
     """Return useful paths for a given bot identifier."""
     ensure_base_directories()
-    bot_config_path = CONFIG_PATH / bot_id
+    bot_config_path = BOT_CONFIG_ROOT / bot_id
     bot_data_path = DATA_PATH / bot_id
     bot_db_path = DB_PATH / bot_id
     bot_config_path.mkdir(parents=True, exist_ok=True)
@@ -112,6 +138,7 @@ def bot_paths(bot_id: str) -> Dict[str, Path]:
     bot_db_path.mkdir(parents=True, exist_ok=True)
     return {
         "config": bot_config_path,
+        "config_file": bot_config_path / "config.json",
         "data": bot_data_path,
         "db": bot_db_path,
         "prompt": bot_config_path / "prompt.txt",
@@ -119,16 +146,87 @@ def bot_paths(bot_id: str) -> Dict[str, Path]:
     }
 
 
-def current_embedding_model() -> str:
-    return EMBEDDING_MODEL
+def default_bot_config() -> Dict[str, Any]:
+    return dict(DEFAULT_BOT_CONFIG)
+
+
+def validate_embedding_model(model_name: str) -> str:
+    if model_name not in ALLOWED_EMBEDDING_MODELS:
+        raise HTTPException(status_code=400, detail="Unsupported embedding model")
+    return model_name
+
+
+def sanitize_config(config: Dict[str, Any]) -> Dict[str, Any]:
+    base = default_bot_config()
+    allowed_keys = set(DEFAULT_BOT_CONFIG.keys())
+    base.update({k: v for k, v in config.items() if v is not None and k in allowed_keys})
+
+    try:
+        base["embedding_model"] = validate_embedding_model(str(base["embedding_model"]))
+        base["chunk_size"] = max(1, int(base["chunk_size"]))
+        base["chunk_overlap"] = max(0, int(base["chunk_overlap"]))
+        if base["chunk_overlap"] >= base["chunk_size"]:
+            base["chunk_overlap"] = max(0, base["chunk_size"] - 1)
+        base["retrieval_top_k"] = max(1, int(base["retrieval_top_k"]))
+        base["history_enabled"] = bool(base["history_enabled"])
+        base["history_turns"] = max(0, int(base.get("history_turns", 0)))
+        base["llm_temperature"] = float(base.get("llm_temperature", 0.0))
+        base["llm_top_p"] = float(base.get("llm_top_p", 1.0))
+        max_tokens = int(base.get("llm_max_output_tokens", 0))
+        base["llm_max_output_tokens"] = max_tokens if max_tokens > 0 else None
+        base["llm_repeat_penalty"] = float(base.get("llm_repeat_penalty", 1.0))
+        base["prompt_template_path"] = str(base.get("prompt_template_path") or "")
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="Invalid configuration values")
+
+    return base
+
+
+def load_bot_config(bot_id: str) -> Dict[str, Any]:
+    paths = bot_paths(bot_id)
+    config_file = paths.get("config_file")
+    if not config_file.exists():
+        config = default_bot_config()
+        embedding_path = paths.get("embedding_model")
+        if embedding_path and embedding_path.exists():
+            config["embedding_model"] = embedding_path.read_text().strip()
+        save_bot_config(bot_id, config)
+        return config
+
+    try:
+        raw = json.loads(config_file.read_text())
+        return sanitize_config(raw)
+    except Exception:
+        return default_bot_config()
+
+
+def save_bot_config(bot_id: str, config: Dict[str, Any]):
+    paths = bot_paths(bot_id)
+    sanitized = sanitize_config(config)
+    with paths["config_file"].open("w") as f:
+        json.dump(sanitized, f, indent=2)
+
+
+def current_embedding_model(bot_id: Optional[str] = None, config: Optional[Dict[str, Any]] = None) -> str:
+    if config:
+        return config.get("embedding_model", DEFAULT_EMBEDDING_MODEL)
+    if bot_id:
+        return load_bot_config(bot_id).get("embedding_model", DEFAULT_EMBEDDING_MODEL)
+    return DEFAULT_EMBEDDING_MODEL
 
 
 def save_embedding_model(bot_id: str, model_name: str):
+    config = load_bot_config(bot_id)
+    config["last_built_embedding_model"] = model_name
+    save_bot_config(bot_id, config)
     paths = bot_paths(bot_id)
     paths["embedding_model"].write_text(model_name)
 
 
 def load_saved_embedding_model(bot_id: str) -> Optional[str]:
+    config = load_bot_config(bot_id)
+    if config.get("last_built_embedding_model"):
+        return config.get("last_built_embedding_model")
     path = bot_paths(bot_id)["embedding_model"]
     if path.exists():
         return path.read_text().strip()
@@ -151,6 +249,7 @@ def load_bot_registry() -> Dict[str, List[Dict[str, str]]]:
         registry = {"bots": [normalize_bot({"id": DEFAULT_BOT_ID, "name": DEFAULT_BOT_NAME})]}
         BOT_REGISTRY_FILE.write_text(json.dumps(registry, indent=2))
         save_system_prompt(DEFAULT_BOT_ID, DEFAULT_PROMPT)
+        save_bot_config(DEFAULT_BOT_ID, default_bot_config())
     with BOT_REGISTRY_FILE.open() as f:
         data = json.load(f)
     # Defensive: ensure required keys
@@ -226,7 +325,7 @@ def remove_bot(bot_id: str):
 
     # Clean up storage for the bot if it exists
     for path in (
-        CONFIG_PATH / bot_id,
+        BOT_CONFIG_ROOT / bot_id,
         DATA_PATH / bot_id,
         DB_PATH / bot_id,
     ):
@@ -252,6 +351,26 @@ def load_system_prompt(bot_id: str) -> str:
 def save_system_prompt(bot_id: str, text: str):
     paths = bot_paths(bot_id)
     paths["prompt"].write_text(text or DEFAULT_PROMPT)
+
+
+def load_prompt_template(bot_id: str, config: Dict[str, Any]) -> str:
+    template_path = config.get("prompt_template_path") or ""
+    if template_path:
+        candidate = Path(template_path)
+        if not candidate.is_absolute():
+            candidate = bot_paths(bot_id)["config"] / candidate
+        try:
+            resolved = candidate.resolve()
+        except Exception:
+            resolved = candidate
+        if resolved.exists():
+            return resolved.read_text()
+        logger.warning(
+            "Prompt template %s not found for bot %s; falling back to system prompt",
+            resolved,
+            bot_id,
+        )
+    return load_system_prompt(bot_id)
 
 
 def extract_text_from_pdf(pdf_path: Path) -> str:
@@ -309,6 +428,7 @@ def create_bot(
         )
     )
     save_bot_registry(registry)
+    save_bot_config(candidate, default_bot_config())
     save_system_prompt(candidate, prompt or DEFAULT_PROMPT)
     return {"id": candidate, "name": name, "password_hash": password_hash, "hidden": bool(hidden)}
 
@@ -404,8 +524,9 @@ def load_documents(bot_id: str):
     return docs
 
 
-def build_db(bot_id: str):
+def build_db(bot_id: str, config: Optional[Dict[str, Any]] = None):
     logger.debug("Starting database rebuild for bot %s", bot_id)
+    config = config or load_bot_config(bot_id)
     start_time = time.perf_counter()
     load_start = time.perf_counter()
     docs = load_documents(bot_id)
@@ -419,7 +540,10 @@ def build_db(bot_id: str):
         logger.debug("No documents found for bot %s; cleared DB in %.2f ms", bot_id, elapsed_ms)
         return
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=100)
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=config.get("chunk_size", 800),
+        chunk_overlap=config.get("chunk_overlap", 100),
+    )
     split_start = time.perf_counter()
     chunks = splitter.create_documents(
         [d["page_content"] for d in docs],
@@ -433,9 +557,10 @@ def build_db(bot_id: str):
         chunks=len(chunks),
     )
 
+    embedding_model = current_embedding_model(config=config)
     embeddings = OllamaEmbeddings(
         base_url=os.environ.get("OLLAMA_URL", "http://ollama:11434"),
-        model=current_embedding_model()
+        model=embedding_model
     )
 
     db_dir = bot_paths(bot_id)["db"]
@@ -453,11 +578,11 @@ def build_db(bot_id: str):
         embed_start,
         bot_id=bot_id,
         chunks=len(chunks),
-        embedding_model=current_embedding_model(),
+        embedding_model=embedding_model,
     )
 
     vectordb.persist()
-    save_embedding_model(bot_id, current_embedding_model())
+    save_embedding_model(bot_id, embedding_model)
     total_ms = duration_ms(start_time)
     logger.debug(
         "Finished database rebuild for bot %s with %d documents in %.2f ms",
@@ -470,31 +595,40 @@ def build_db(bot_id: str):
 async def ensure_db_embeddings(bot_id: str):
     logger.debug("Ensuring embeddings for bot %s", bot_id)
     ensure_start = time.perf_counter()
+    config = load_bot_config(bot_id)
     saved_model = load_saved_embedding_model(bot_id)
+    desired_model = current_embedding_model(config=config)
     db_dir = bot_paths(bot_id)["db"]
     has_db = (db_dir / "chroma.sqlite3").exists()
 
     if saved_model is None and has_db:
-        await asyncio.to_thread(build_db, bot_id)
+        await asyncio.to_thread(build_db, bot_id, config)
         log_performance(
             "rebuild_vectorstore_missing_model",
             ensure_start,
             bot_id=bot_id,
             saved_model=saved_model,
+            desired_model=desired_model,
         )
         return
 
-    if saved_model and saved_model != current_embedding_model():
-        await asyncio.to_thread(build_db, bot_id)
+    if saved_model and saved_model != desired_model:
+        await asyncio.to_thread(build_db, bot_id, config)
         log_performance(
             "rebuild_vectorstore_model_change",
             ensure_start,
             bot_id=bot_id,
             saved_model=saved_model,
-            current_model=current_embedding_model(),
+            current_model=desired_model,
         )
     else:
-        log_performance("verify_vectorstore", ensure_start, bot_id=bot_id, saved_model=saved_model)
+        log_performance(
+            "verify_vectorstore",
+            ensure_start,
+            bot_id=bot_id,
+            saved_model=saved_model,
+            desired_model=desired_model,
+        )
 
 
 app = FastAPI()
@@ -524,6 +658,7 @@ async def startup_event():
     for bot in registry["bots"]:
         bot_id = bot["id"]
         paths = bot_paths(bot_id)
+        load_bot_config(bot_id)
         if not paths["prompt"].exists():
             save_system_prompt(bot_id, DEFAULT_PROMPT)
         db_file = paths["db"] / "chroma.sqlite3"
@@ -765,6 +900,22 @@ async def update_prompt(bot_id: str, request: Request):
     return {"status": "saved"}
 
 
+@app.get("/bots/{bot_id}/config")
+def get_bot_config(bot_id: str, request: Request):
+    require_bot_access(bot_id, password_from_request(request))
+    return {"config": load_bot_config(bot_id)}
+
+
+@app.post("/bots/{bot_id}/config")
+async def update_bot_config_endpoint(bot_id: str, request: Request):
+    body = await request.json()
+    require_bot_access(bot_id, password_from_request(request, body))
+    current = load_bot_config(bot_id)
+    current.update(body or {})
+    save_bot_config(bot_id, current)
+    return {"status": "saved", "config": load_bot_config(bot_id)}
+
+
 def join_docs(docs):
     return "\n\n---\n\n".join(doc.page_content for doc in docs)
 
@@ -781,10 +932,16 @@ async def ask_stream(request: Request):
     if not isinstance(history, list):
         history = []
 
-    system_prompt = load_system_prompt(bot_id)
+    bot_config = load_bot_config(bot_id)
+    system_prompt = load_prompt_template(bot_id, bot_config)
+
+    chat_history = history if bot_config.get("history_enabled", True) else []
+    max_turns = bot_config.get("history_turns", 0)
+    if max_turns:
+        chat_history = chat_history[-max_turns:]
 
     history_text = ""
-    for msg in history:
+    for msg in chat_history:
         role = "User" if msg.get("role") == "user" else "Assistant"
         history_text += f"{role}: {msg.get('content', '')}\n"
 
@@ -803,7 +960,7 @@ async def ask_stream(request: Request):
     def build_chain():
         embeddings = OllamaEmbeddings(
             base_url=os.environ.get("OLLAMA_URL", "http://ollama:11434"),
-            model=current_embedding_model()
+            model=current_embedding_model(config=bot_config)
         )
 
         vectordb = Chroma(
@@ -811,11 +968,21 @@ async def ask_stream(request: Request):
             embedding_function=embeddings
         )
 
-        retriever = vectordb.as_retriever()
-        llm = OllamaLLM(
-            base_url=os.environ.get("OLLAMA_URL", "http://ollama:11434"),
-            model=os.environ.get("MODEL", "mistral")
-        )
+        retriever = vectordb.as_retriever(search_kwargs={"k": bot_config.get("retrieval_top_k", 3)})
+        llm_params = {
+            "base_url": os.environ.get("OLLAMA_URL", "http://ollama:11434"),
+            "model": os.environ.get("MODEL", "mistral"),
+        }
+        if bot_config.get("llm_temperature") is not None:
+            llm_params["temperature"] = bot_config.get("llm_temperature")
+        if bot_config.get("llm_top_p") is not None:
+            llm_params["top_p"] = bot_config.get("llm_top_p")
+        if bot_config.get("llm_max_output_tokens"):
+            llm_params["num_predict"] = bot_config.get("llm_max_output_tokens")
+        if bot_config.get("llm_repeat_penalty") is not None:
+            llm_params["repeat_penalty"] = bot_config.get("llm_repeat_penalty")
+
+        llm = Ollama(**llm_params)
 
         def format_prompt(inputs: Dict[str, str]) -> str:
             context = inputs.get("context", "")
