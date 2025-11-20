@@ -304,6 +304,9 @@ textarea#systemPrompt { width: 100%; min-height: 160px; resize: vertical; }
                     <label>Embedding Model
                         <select id="embeddingModel"></select>
                     </label>
+                    <label>LLM Model
+                        <select id="llmModel"></select>
+                    </label>
                     <label>Chunk Size
                         <input id="chunkSize" type="number" min="1" />
                     </label>
@@ -362,6 +365,7 @@ const fileTree = document.getElementById("fileTree");
 const hiddenCheckbox = document.getElementById("hiddenCheckbox");
 const passwordInput = document.getElementById("passwordInput");
 const embeddingModelSelect = document.getElementById("embeddingModel");
+const llmModelSelect = document.getElementById("llmModel");
 const chunkSizeInput = document.getElementById("chunkSize");
 const chunkOverlapInput = document.getElementById("chunkOverlap");
 const retrievalTopKInput = document.getElementById("retrievalTopK");
@@ -386,8 +390,11 @@ const EMBEDDING_MODELS = [
     "gte-large",
 ];
 
+const DEFAULT_LLM_MODEL = "phi3";
+
 const DEFAULT_CONFIG = {
     embedding_model: "mxbai-embed-large",
+    llm_model: DEFAULT_LLM_MODEL,
     chunk_size: 800,
     chunk_overlap: 100,
     retrieval_top_k: 3,
@@ -406,6 +413,8 @@ const initialHashBotId = decodeURIComponent(window.location.hash.replace(/^#/, "
 let currentBotId = initialHashBotId || localStorage.getItem(BOT_STORAGE_KEY);
 let botsMeta = [];
 let passwordEdited = false;
+let availableLLMModels = [];
+let llmModelsError = "";
 
 input.addEventListener("keydown", e => {
     if (e.key === "Enter" && e.ctrlKey) {
@@ -427,6 +436,22 @@ passwordInput.addEventListener("input", () => {
     passwordEdited = true;
 });
 
+llmModelSelect.addEventListener("change", async () => {
+    if (!currentBotId || llmModelSelect.disabled || llmModelsError) return;
+    const selected = llmModelSelect.value;
+    const res = await authedFetch(`/bots/${currentBotId}/model`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...buildAuthHeaders() },
+        body: JSON.stringify({ model: selected })
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Unable to update model.");
+        await loadBotModel();
+    }
+});
+
 function populateEmbeddingOptions() {
     embeddingModelSelect.innerHTML = "";
     EMBEDDING_MODELS.forEach(model => {
@@ -437,6 +462,81 @@ function populateEmbeddingOptions() {
     });
 }
 populateEmbeddingOptions();
+
+function renderModelOptions(selectedValue = DEFAULT_LLM_MODEL) {
+    llmModelSelect.innerHTML = "";
+
+    if (llmModelsError) {
+        const option = document.createElement("option");
+        option.textContent = llmModelsError;
+        option.disabled = true;
+        option.value = "";
+        llmModelSelect.appendChild(option);
+        llmModelSelect.disabled = true;
+        return;
+    }
+
+    if (!availableLLMModels.length) {
+        const option = document.createElement("option");
+        option.textContent = "No models available";
+        option.disabled = true;
+        option.value = "";
+        llmModelSelect.appendChild(option);
+        llmModelSelect.disabled = true;
+        return;
+    }
+
+    availableLLMModels.forEach(model => {
+        const option = document.createElement("option");
+        option.value = model;
+        option.textContent = model;
+        llmModelSelect.appendChild(option);
+    });
+
+    const valueToUse = availableLLMModels.includes(selectedValue) ? selectedValue : availableLLMModels[0];
+    llmModelSelect.value = valueToUse || "";
+    llmModelSelect.disabled = !currentBotId;
+}
+
+async function loadAvailableModels() {
+    if (loadAvailableModels.loading) return loadAvailableModels.loading;
+    llmModelSelect.innerHTML = "<option>Loading models...</option>";
+    llmModelSelect.disabled = true;
+    loadAvailableModels.loading = (async () => {
+        try {
+            const res = await fetch("/models");
+            if (!res.ok) throw new Error("Failed to load models");
+            const data = await res.json();
+            availableLLMModels = data.models || [];
+            llmModelsError = availableLLMModels.length ? "" : "No models available";
+        } catch (e) {
+            availableLLMModels = [];
+            llmModelsError = "Unable to load models";
+        }
+        renderModelOptions(llmModelSelect.value || DEFAULT_LLM_MODEL);
+        loadAvailableModels.loading = null;
+    })();
+    return loadAvailableModels.loading;
+}
+
+async function loadBotModel() {
+    if (!currentBotId) {
+        renderModelOptions(DEFAULT_LLM_MODEL);
+        llmModelSelect.disabled = true;
+        return;
+    }
+
+    await loadAvailableModels();
+    if (llmModelsError) return;
+
+    const res = await authedFetch(`/bots/${currentBotId}/model`);
+    if (!res.ok) {
+        renderModelOptions(DEFAULT_LLM_MODEL);
+        return;
+    }
+    const data = await res.json();
+    renderModelOptions(data.model || DEFAULT_LLM_MODEL);
+}
 
 function passwordKey(botId) {
     return `${PASSWORD_KEY_PREFIX}${botId}`;
@@ -486,6 +586,7 @@ function parseFloatInput(el) {
 function applyConfigToForm(config = DEFAULT_CONFIG) {
     const cfg = { ...DEFAULT_CONFIG, ...(config || {}) };
     embeddingModelSelect.value = cfg.embedding_model || DEFAULT_CONFIG.embedding_model;
+    renderModelOptions(cfg.llm_model || DEFAULT_CONFIG.llm_model);
     chunkSizeInput.value = cfg.chunk_size ?? DEFAULT_CONFIG.chunk_size;
     chunkOverlapInput.value = cfg.chunk_overlap ?? DEFAULT_CONFIG.chunk_overlap;
     retrievalTopKInput.value = cfg.retrieval_top_k ?? DEFAULT_CONFIG.retrieval_top_k;
@@ -1184,7 +1285,7 @@ async function switchBot(id, { force = false, requirePasswordPrompt = false } = 
     messages = botConversations[currentBotId] || [];
     renderHistoryMessages();
     setPasswordFieldForBot(meta);
-    await Promise.all([loadPrompt(), refreshFiles(), loadConfig()]);
+    await Promise.all([loadPrompt(), refreshFiles(), loadConfig(), loadBotModel()]);
     if (currentBotId) {
         const targetHash = `#${encodeURIComponent(currentBotId)}`;
         if (window.location.hash !== targetHash) {
@@ -1266,7 +1367,7 @@ window.addEventListener("hashchange", async () => {
     await loadBots();
 });
 
-loadBots();
+loadAvailableModels().then(loadBots);
 </script>
 </body>
 </html>

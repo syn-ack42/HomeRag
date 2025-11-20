@@ -21,6 +21,7 @@ import secrets
 from pypdf import PdfReader
 from bs4 import BeautifulSoup
 import markdown
+import requests
 
 from chromadb.errors import InvalidArgumentError
 
@@ -44,6 +45,7 @@ DB_PATH = Path(os.environ.get("DB_PATH", "/chroma"))
 CONFIG_PATH = Path(os.environ.get("CONFIG_PATH", "/config"))
 BOT_CONFIG_ROOT = CONFIG_PATH / "bots"
 DEFAULT_EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "mxbai-embed-large")
+DEFAULT_LLM_MODEL = os.environ.get("MODEL", "phi3")
 
 DEFAULT_PROMPT = """
 You are a helpful assistant.
@@ -77,6 +79,7 @@ ALLOWED_EMBEDDING_MODELS = [
 
 DEFAULT_BOT_CONFIG = {
     "embedding_model": DEFAULT_EMBEDDING_MODEL,
+    "llm_model": DEFAULT_LLM_MODEL,
     "chunk_size": 800,
     "chunk_overlap": 100,
     "retrieval_top_k": 3,
@@ -162,6 +165,28 @@ def validate_embedding_model(model_name: str) -> str:
     return model_name
 
 
+def fetch_installed_models() -> List[str]:
+    base_url = os.environ.get("OLLAMA_URL", "http://ollama:11434").rstrip("/")
+    try:
+        response = requests.get(f"{base_url}/api/tags", timeout=5)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        logger.error("Failed to fetch models from Ollama: %s", exc)
+        raise HTTPException(status_code=503, detail="Unable to load models from Ollama")
+
+    try:
+        data = response.json()
+    except ValueError:
+        raise HTTPException(status_code=502, detail="Invalid response from Ollama")
+
+    models = []
+    for model in data.get("models", []):
+        name = model.get("model") or model.get("name")
+        if name:
+            models.append(name)
+    return models
+
+
 def sanitize_config(config: Dict[str, Any]) -> Dict[str, Any]:
     base = default_bot_config()
     allowed_keys = set(DEFAULT_BOT_CONFIG.keys())
@@ -169,6 +194,7 @@ def sanitize_config(config: Dict[str, Any]) -> Dict[str, Any]:
 
     try:
         base["embedding_model"] = validate_embedding_model(str(base["embedding_model"]))
+        base["llm_model"] = str(base.get("llm_model") or DEFAULT_LLM_MODEL)
         base["chunk_size"] = max(1, int(base["chunk_size"]))
         base["chunk_overlap"] = max(0, int(base["chunk_overlap"]))
         if base["chunk_overlap"] >= base["chunk_size"]:
@@ -219,6 +245,14 @@ def current_embedding_model(bot_id: Optional[str] = None, config: Optional[Dict[
     if bot_id:
         return load_bot_config(bot_id).get("embedding_model", DEFAULT_EMBEDDING_MODEL)
     return DEFAULT_EMBEDDING_MODEL
+
+
+def current_llm_model(bot_id: Optional[str] = None, config: Optional[Dict[str, Any]] = None) -> str:
+    if config:
+        return config.get("llm_model", DEFAULT_LLM_MODEL)
+    if bot_id:
+        return load_bot_config(bot_id).get("llm_model", DEFAULT_LLM_MODEL)
+    return DEFAULT_LLM_MODEL
 
 
 def save_embedding_model(bot_id: str, model_name: str):
@@ -714,6 +748,11 @@ def index():
         return HTMLResponse(f.read())
 
 
+@app.get("/models")
+def list_models():
+    return {"models": fetch_installed_models()}
+
+
 @app.get("/bots")
 def list_bots() -> Dict[str, List[Dict[str, Any]]]:
     registry = load_bot_registry()
@@ -946,6 +985,30 @@ async def update_prompt(bot_id: str, request: Request):
     return {"status": "saved"}
 
 
+@app.get("/bots/{bot_id}/model")
+def get_bot_model(bot_id: str, request: Request):
+    require_bot_access(bot_id, password_from_request(request))
+    return {"model": current_llm_model(bot_id)}
+
+
+@app.post("/bots/{bot_id}/model")
+async def update_bot_model(bot_id: str, request: Request):
+    body = await request.json()
+    require_bot_access(bot_id, password_from_request(request, body))
+    selected_model = (body.get("model") or "").strip()
+    if not selected_model:
+        raise HTTPException(status_code=400, detail="Model is required")
+
+    available_models = fetch_installed_models()
+    if selected_model not in available_models:
+        raise HTTPException(status_code=400, detail="Unknown or unavailable model")
+
+    config = load_bot_config(bot_id)
+    config["llm_model"] = selected_model
+    save_bot_config(bot_id, config)
+    return {"status": "saved", "model": selected_model}
+
+
 @app.get("/bots/{bot_id}/config")
 def get_bot_config(bot_id: str, request: Request):
     require_bot_access(bot_id, password_from_request(request))
@@ -1054,7 +1117,7 @@ async def ask_stream(request: Request):
         context_text = join_docs(docs)
         llm_params = {
             "base_url": os.environ.get("OLLAMA_URL", "http://ollama:11434"),
-            "model": os.environ.get("MODEL", "mistral"),
+            "model": current_llm_model(config=bot_config),
         }
         if bot_config.get("llm_temperature") is not None:
             llm_params["temperature"] = bot_config.get("llm_temperature")
