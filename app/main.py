@@ -28,6 +28,12 @@ from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.llms import Ollama
 
+# Backwards compatibility alias: older code paths and logs may reference
+# `OllamaLLM`, but the current LangChain community package exposes the client as
+# `Ollama`. Defining this alias prevents NameError crashes when legacy names are
+# used.
+OllamaLLM = Ollama
+
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
@@ -982,7 +988,7 @@ async def ask_stream(request: Request):
         if bot_config.get("llm_repeat_penalty") is not None:
             llm_params["repeat_penalty"] = bot_config.get("llm_repeat_penalty")
 
-        llm = Ollama(**llm_params)
+        llm = OllamaLLM(**llm_params)
 
         def format_prompt(inputs: Dict[str, str]) -> str:
             context = inputs.get("context", "")
