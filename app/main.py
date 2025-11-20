@@ -1050,7 +1050,8 @@ async def ask_stream(request: Request):
 
             return docs
 
-        retriever = RunnableLambda(retrieve_with_logging)
+        docs = retrieve_with_logging(question)
+        context_text = join_docs(docs)
         llm_params = {
             "base_url": os.environ.get("OLLAMA_URL", "http://ollama:11434"),
             "model": os.environ.get("MODEL", "mistral"),
@@ -1083,10 +1084,7 @@ User: {question_text}
 """
 
         return (
-            {
-                "context": retriever | RunnableLambda(join_docs),
-                "question": RunnablePassthrough()
-            }
+            RunnableLambda(lambda q: {"context": context_text, "question": q})
             | RunnableLambda(format_prompt)
             | llm
             | StrOutputParser()
