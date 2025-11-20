@@ -639,20 +639,29 @@ async def ensure_db_embeddings(bot_id: str):
     saved_model = load_saved_embedding_model(bot_id)
     desired_model = current_embedding_model(config=config)
     db_dir = bot_paths(bot_id)["db"]
+    data_dir = bot_paths(bot_id)["data"]
+    has_documents = any(data_dir.iterdir())
     has_db = (db_dir / "chroma.sqlite3").exists()
 
-    if saved_model is None and has_db:
-        logger.warning("DB exists but saved_model is None — skipping rebuild to avoid loop.")
-        return
+    needs_rebuild = False
 
-    if saved_model and saved_model != desired_model:
+    if not has_db and has_documents:
+        needs_rebuild = True
+    elif saved_model is None and has_documents:
+        needs_rebuild = True
+    elif saved_model and saved_model != desired_model:
+        needs_rebuild = True
+
+    if needs_rebuild:
         await asyncio.to_thread(build_db, bot_id, config)
         log_performance(
-            "rebuild_vectorstore_model_change",
+            "rebuild_vectorstore",
             ensure_start,
             bot_id=bot_id,
             saved_model=saved_model,
             current_model=desired_model,
+            has_db=has_db,
+            has_documents=has_documents,
         )
     else:
         log_performance(
@@ -661,6 +670,8 @@ async def ensure_db_embeddings(bot_id: str):
             bot_id=bot_id,
             saved_model=saved_model,
             desired_model=desired_model,
+            has_db=has_db,
+            has_documents=has_documents,
         )
 
 
