@@ -1121,8 +1121,19 @@ async def ask_stream(request: Request):
     bot_config = load_bot_config(bot_id)
     system_prompt = load_prompt_template(bot_id, bot_config)
 
-    chat_history = history if bot_config.get("history_enabled", True) else []
-    max_turns = bot_config.get("history_turns", 0)
+    embedding_model = current_embedding_model(config=bot_config)
+    llm_model = current_llm_model(config=bot_config)
+    llm_temperature = bot_config.get("llm_temperature")
+    llm_top_p = bot_config.get("llm_top_p")
+    llm_max_tokens = bot_config.get("llm_max_output_tokens")
+    llm_repeat_penalty = bot_config.get("llm_repeat_penalty")
+    retrieval_top_k = bot_config.get("retrieval_top_k", 3)
+    history_enabled = bot_config.get("history_enabled", True)
+    history_turns = bot_config.get("history_turns", 0)
+    ollama_url = os.environ.get("OLLAMA_URL", "http://ollama:11434")
+
+    chat_history = history if history_enabled else []
+    max_turns = history_turns
     if max_turns:
         chat_history = chat_history[-max_turns:]
 
@@ -1133,10 +1144,20 @@ async def ask_stream(request: Request):
 
     require_bot_access(bot_id, password)
     logger.info(
-        "Received question for bot %s (history=%d, question_chars=%d)",
+        "Received question for bot %s (history=%d, question_chars=%d, embedding_model=%s, llm_model=%s, temperature=%s, top_p=%s, max_tokens=%s, repeat_penalty=%s, retrieval_top_k=%s, history_enabled=%s, history_turns=%s, ollama_url=%s)",
         bot_id,
         len(history),
         len(question or ""),
+        embedding_model,
+        llm_model,
+        llm_temperature,
+        llm_top_p,
+        llm_max_tokens,
+        llm_repeat_penalty,
+        retrieval_top_k,
+        history_enabled,
+        history_turns,
+        ollama_url,
     )
 
     ensure_start = time.perf_counter()
@@ -1145,8 +1166,8 @@ async def ask_stream(request: Request):
 
     def build_chain():
         embeddings = LoggingOllamaEmbeddings(
-            base_url=os.environ.get("OLLAMA_URL", "http://ollama:11434"),
-            model=current_embedding_model(config=bot_config)
+            base_url=ollama_url,
+            model=embedding_model,
         )
 
         vectordb = Chroma(
@@ -1154,7 +1175,7 @@ async def ask_stream(request: Request):
             embedding_function=embeddings
         )
 
-        top_k = bot_config.get("retrieval_top_k", 3)
+        top_k = retrieval_top_k
 
         def retrieve_with_logging(query: str):
             search_start = time.perf_counter()
@@ -1193,17 +1214,17 @@ async def ask_stream(request: Request):
         docs = retrieve_with_logging(question)
         context_text = join_docs(docs)
         llm_params = {
-            "base_url": os.environ.get("OLLAMA_URL", "http://ollama:11434"),
-            "model": current_llm_model(config=bot_config),
+            "base_url": ollama_url,
+            "model": llm_model,
         }
-        if bot_config.get("llm_temperature") is not None:
-            llm_params["temperature"] = bot_config.get("llm_temperature")
-        if bot_config.get("llm_top_p") is not None:
-            llm_params["top_p"] = bot_config.get("llm_top_p")
-        if bot_config.get("llm_max_output_tokens"):
-            llm_params["num_predict"] = bot_config.get("llm_max_output_tokens")
-        if bot_config.get("llm_repeat_penalty") is not None:
-            llm_params["repeat_penalty"] = bot_config.get("llm_repeat_penalty")
+        if llm_temperature is not None:
+            llm_params["temperature"] = llm_temperature
+        if llm_top_p is not None:
+            llm_params["top_p"] = llm_top_p
+        if llm_max_tokens:
+            llm_params["num_predict"] = llm_max_tokens
+        if llm_repeat_penalty is not None:
+            llm_params["repeat_penalty"] = llm_repeat_penalty
 
         llm = OllamaLLM(**llm_params)
 
