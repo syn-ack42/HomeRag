@@ -67,6 +67,66 @@ logging.basicConfig(
 )
 logger = logging.getLogger("homerag")
 
+
+class LoggingOllamaEmbeddings:
+    """Wrapper around OllamaEmbeddings with extra logging.
+
+    This class helps distinguish legitimate embedding calls from runaway loops by
+    emitting structured logs whenever embeddings are requested. The interface is
+    intentionally minimal and forwards to the underlying LangChain implementation.
+    """
+
+    def __init__(self, **kwargs):
+        self._delegate = OllamaEmbeddings(**kwargs)
+        self._model = kwargs.get("model")
+        self._base_url = kwargs.get("base_url")
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        start = time.perf_counter()
+        logger.info(
+            "Embedding %d documents via Ollama (model=%s, url=%s)",
+            len(texts),
+            self._model,
+            self._base_url,
+        )
+        try:
+            vectors = self._delegate.embed_documents(texts)
+        except Exception:
+            logger.exception("Embedding documents failed (model=%s, url=%s)", self._model, self._base_url)
+            raise
+
+        log_performance(
+            "embed_documents",
+            start,
+            count=len(texts),
+            model=self._model,
+            base_url=self._base_url,
+        )
+        return vectors
+
+    def embed_query(self, text: str) -> List[float]:
+        start = time.perf_counter()
+        logger.info(
+            "Embedding query via Ollama (chars=%d, model=%s, url=%s)",
+            len(text or ""),
+            self._model,
+            self._base_url,
+        )
+        try:
+            vector = self._delegate.embed_query(text)
+        except Exception:
+            logger.exception("Embedding query failed (model=%s, url=%s)", self._model, self._base_url)
+            raise
+
+        log_performance(
+            "embed_query",
+            start,
+            chars=len(text or ""),
+            model=self._model,
+            base_url=self._base_url,
+        )
+        return vector
+
 ALLOWED_EMBEDDING_MODELS = [
     "mxbai-embed-large",
     "nomic-embed-text",
@@ -598,7 +658,7 @@ def build_db(bot_id: str, config: Optional[Dict[str, Any]] = None):
     )
 
     embedding_model = current_embedding_model(config=config)
-    embeddings = OllamaEmbeddings(
+    embeddings = LoggingOllamaEmbeddings(
         base_url=os.environ.get("OLLAMA_URL", "http://ollama:11434"),
         model=embedding_model
     )
@@ -1071,7 +1131,7 @@ async def ask_stream(request: Request):
     log_performance("ensure_embeddings", ensure_start, bot_id=bot_id)
 
     def build_chain():
-        embeddings = OllamaEmbeddings(
+        embeddings = LoggingOllamaEmbeddings(
             base_url=os.environ.get("OLLAMA_URL", "http://ollama:11434"),
             model=current_embedding_model(config=bot_config)
         )
