@@ -289,17 +289,13 @@ def fetch_installed_embedding_models() -> List[str]:
 
         seen.add(base_name)
 
-        details = model.get("details") if isinstance(model, dict) else None
-        families = details.get("families") if isinstance(details, dict) else None
-
-        is_embedding = False
-        if families:
-            is_embedding = any(
-                isinstance(family, str) and "embed" in family.lower() for family in families
-            )
-        else:
-            lowered_name = base_name.lower()
-            is_embedding = "embed" in lowered_name or "embedding" in lowered_name
+        lowered_name = base_name.lower()
+        is_embedding = (
+            "embed" in lowered_name
+            or base_name.startswith("bge-")
+            or base_name.startswith("gte-")
+            or base_name in ALLOWED_EMBEDDING_MODELS
+        )
 
         if is_embedding:
             embeddings.append(base_name)
@@ -335,17 +331,13 @@ def fetch_installed_llm_models() -> List[str]:
 
         seen.add(base_name)
 
-        details = model.get("details") if isinstance(model, dict) else None
-        families = details.get("families") if isinstance(details, dict) else None
-
-        is_embedding = False
-        if families:
-            is_embedding = any(
-                isinstance(family, str) and "embed" in family.lower() for family in families
-            )
-        else:
-            lowered_name = base_name.lower()
-            is_embedding = "embed" in lowered_name or "embedding" in lowered_name
+        lowered_name = base_name.lower()
+        is_embedding = (
+            "embed" in lowered_name
+            or base_name.startswith("bge-")
+            or base_name.startswith("gte-")
+            or base_name in ALLOWED_EMBEDDING_MODELS
+        )
 
         if not is_embedding:
             llms.append(base_name)
