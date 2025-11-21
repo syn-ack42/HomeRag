@@ -256,11 +256,95 @@ def fetch_installed_models() -> List[str]:
 
 
 def fetch_installed_embedding_models() -> List[str]:
-    return [model for model in fetch_installed_models() if model in ALLOWED_EMBEDDING_MODELS]
+    base_url = get_ollama_url()
+
+    try:
+        response = requests.get(f"{base_url}/api/tags", timeout=5)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        logger.error("Failed to fetch models from Ollama: %s", exc)
+        raise HTTPException(status_code=503, detail="Unable to load models from Ollama")
+
+    try:
+        data = response.json()
+    except ValueError:
+        raise HTTPException(status_code=502, detail="Invalid response from Ollama")
+
+    embeddings = []
+    seen = set()
+    for model in data.get("models", []):
+        name = model.get("model") or model.get("name")
+        if not name:
+            continue
+
+        base_name = name.split(":", 1)[0]
+        if base_name in seen:
+            continue
+
+        seen.add(base_name)
+
+        details = model.get("details") if isinstance(model, dict) else None
+        families = details.get("families") if isinstance(details, dict) else None
+
+        is_embedding = False
+        if families:
+            is_embedding = any(
+                isinstance(family, str) and "embed" in family.lower() for family in families
+            )
+        else:
+            lowered_name = base_name.lower()
+            is_embedding = "embed" in lowered_name or "embedding" in lowered_name
+
+        if is_embedding:
+            embeddings.append(base_name)
+
+    return embeddings
 
 
 def fetch_installed_llm_models() -> List[str]:
-    return [model for model in fetch_installed_models() if model not in ALLOWED_EMBEDDING_MODELS]
+    base_url = get_ollama_url()
+
+    try:
+        response = requests.get(f"{base_url}/api/tags", timeout=5)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        logger.error("Failed to fetch models from Ollama: %s", exc)
+        raise HTTPException(status_code=503, detail="Unable to load models from Ollama")
+
+    try:
+        data = response.json()
+    except ValueError:
+        raise HTTPException(status_code=502, detail="Invalid response from Ollama")
+
+    llms = []
+    seen = set()
+    for model in data.get("models", []):
+        name = model.get("model") or model.get("name")
+        if not name:
+            continue
+
+        base_name = name.split(":", 1)[0]
+        if base_name in seen:
+            continue
+
+        seen.add(base_name)
+
+        details = model.get("details") if isinstance(model, dict) else None
+        families = details.get("families") if isinstance(details, dict) else None
+
+        is_embedding = False
+        if families:
+            is_embedding = any(
+                isinstance(family, str) and "embed" in family.lower() for family in families
+            )
+        else:
+            lowered_name = base_name.lower()
+            is_embedding = "embed" in lowered_name or "embedding" in lowered_name
+
+        if not is_embedding:
+            llms.append(base_name)
+
+    return llms
 
 
 def sanitize_config(config: Dict[str, Any]) -> Dict[str, Any]:
