@@ -240,10 +240,18 @@ def fetch_installed_models() -> List[str]:
         raise HTTPException(status_code=502, detail="Invalid response from Ollama")
 
     models = []
+    seen = set()
     for model in data.get("models", []):
         name = model.get("model") or model.get("name")
-        if name:
-            models.append(name)
+        if not name:
+            continue
+
+        base_name = name.split(":", 1)[0]
+        if base_name in seen:
+            continue
+
+        seen.add(base_name)
+        models.append(base_name)
     return models
 
 
