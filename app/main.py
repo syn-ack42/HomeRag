@@ -225,8 +225,14 @@ def validate_embedding_model(model_name: str) -> str:
     return model_name
 
 
+def get_ollama_url() -> str:
+    """Return the configured Ollama base URL without a trailing slash."""
+
+    return os.environ.get("OLLAMA_URL", "http://ollama:11434").rstrip("/")
+
+
 def fetch_installed_models() -> List[str]:
-    base_url = os.environ.get("OLLAMA_URL", "http://ollama:11434").rstrip("/")
+    base_url = get_ollama_url()
     try:
         response = requests.get(f"{base_url}/api/tags", timeout=5)
         response.raise_for_status()
