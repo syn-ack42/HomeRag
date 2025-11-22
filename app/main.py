@@ -215,6 +215,10 @@ def bot_paths(bot_id: str) -> Dict[str, Path]:
     }
 
 
+def embedding_db_path(bot_id: str, embedding_model: str) -> Path:
+    return bot_paths(bot_id)["db"] / embedding_model
+
+
 def default_bot_config() -> Dict[str, Any]:
     return dict(DEFAULT_BOT_CONFIG)
 
@@ -723,9 +727,15 @@ def load_documents(bot_id: str):
     return docs
 
 
-def build_db(bot_id: str, config: Optional[Dict[str, Any]] = None):
+def build_db(
+    bot_id: str,
+    config: Optional[Dict[str, Any]] = None,
+    embedding_models: Optional[List[str]] = None,
+):
     logger.debug("Starting database rebuild for bot %s", bot_id)
     config = config or load_bot_config(bot_id)
+    embedding_models = embedding_models or list(ALLOWED_EMBEDDING_MODELS)
+    embedding_models = list(dict.fromkeys(validate_embedding_model(m) for m in embedding_models))
     start_time = time.perf_counter()
     load_start = time.perf_counter()
     docs = load_documents(bot_id)
@@ -756,32 +766,32 @@ def build_db(bot_id: str, config: Optional[Dict[str, Any]] = None):
         chunks=len(chunks),
     )
 
-    embedding_model = current_embedding_model(config=config)
-    embeddings = LoggingOllamaEmbeddings(
-        base_url=os.environ.get("OLLAMA_URL", "http://ollama:11434"),
-        model=embedding_model
-    )
+    base_url = os.environ.get("OLLAMA_URL", "http://ollama:11434")
+    for embedding_model in embedding_models:
+        embeddings = LoggingOllamaEmbeddings(
+            base_url=base_url,
+            model=embedding_model
+        )
 
-    db_dir = bot_paths(bot_id)["db"]
-
-    if db_dir.exists():
-        shutil.rmtree(db_dir)
+        db_dir = embedding_db_path(bot_id, embedding_model)
+        if db_dir.exists():
+            shutil.rmtree(db_dir)
         db_dir.mkdir(parents=True, exist_ok=True)
 
-    embed_start = time.perf_counter()
-    vectordb = Chroma.from_documents(
-        chunks, embeddings, persist_directory=str(db_dir)
-    )
-    log_performance(
-        "build_vectorstore",
-        embed_start,
-        bot_id=bot_id,
-        chunks=len(chunks),
-        embedding_model=embedding_model,
-    )
+        embed_start = time.perf_counter()
+        vectordb = Chroma.from_documents(
+            chunks, embeddings, persist_directory=str(db_dir)
+        )
+        log_performance(
+            "build_vectorstore",
+            embed_start,
+            bot_id=bot_id,
+            chunks=len(chunks),
+            embedding_model=embedding_model,
+        )
 
-    vectordb.persist()
-    save_embedding_model(bot_id, embedding_model)
+        vectordb.persist()
+        save_embedding_model(bot_id, embedding_model)
     total_ms = duration_ms(start_time)
     logger.debug(
         "Finished database rebuild for bot %s with %d documents in %.2f ms",
@@ -795,31 +805,22 @@ async def ensure_db_embeddings(bot_id: str):
     logger.debug("Ensuring embeddings for bot %s", bot_id)
     ensure_start = time.perf_counter()
     config = load_bot_config(bot_id)
-    saved_model = load_saved_embedding_model(bot_id)
-    desired_model = current_embedding_model(config=config)
-    db_dir = bot_paths(bot_id)["db"]
     data_dir = bot_paths(bot_id)["data"]
     has_documents = any(data_dir.iterdir())
-    has_db = (db_dir / "chroma.sqlite3").exists()
+    missing_models = []
 
-    needs_rebuild = False
+    for model in ALLOWED_EMBEDDING_MODELS:
+        db_file = embedding_db_path(bot_id, model) / "chroma.sqlite3"
+        if not db_file.exists():
+            missing_models.append(model)
 
-    if not has_db and has_documents:
-        needs_rebuild = True
-    elif saved_model is None and has_documents:
-        needs_rebuild = True
-    elif saved_model and saved_model != desired_model:
-        needs_rebuild = True
-
-    if needs_rebuild:
-        await asyncio.to_thread(build_db, bot_id, config)
+    if missing_models and has_documents:
+        await asyncio.to_thread(build_db, bot_id, config, missing_models)
         log_performance(
             "rebuild_vectorstore",
             ensure_start,
             bot_id=bot_id,
-            saved_model=saved_model,
-            current_model=desired_model,
-            has_db=has_db,
+            missing_models=missing_models,
             has_documents=has_documents,
         )
     else:
@@ -827,9 +828,7 @@ async def ensure_db_embeddings(bot_id: str):
             "verify_vectorstore",
             ensure_start,
             bot_id=bot_id,
-            saved_model=saved_model,
-            desired_model=desired_model,
-            has_db=has_db,
+            missing_models=missing_models,
             has_documents=has_documents,
         )
 
@@ -900,7 +899,7 @@ async def startup_event():
         load_bot_config(bot_id)
         if not paths["prompt"].exists():
             save_system_prompt(bot_id, DEFAULT_PROMPT)
-        db_file = paths["db"] / "chroma.sqlite3"
+        db_file = embedding_db_path(bot_id, current_embedding_model(bot_id=bot_id)) / "chroma.sqlite3"
         if not db_file.exists() and any(paths["data"].iterdir()):
             await asyncio.to_thread(build_db, bot_id)
 
@@ -1262,7 +1261,7 @@ async def ask_stream(request: Request):
         )
 
         vectordb = Chroma(
-            persist_directory=str(bot_paths(bot_id)["db"]),
+            persist_directory=str(embedding_db_path(bot_id, embedding_model)),
             embedding_function=embeddings
         )
 
