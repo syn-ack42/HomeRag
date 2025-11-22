@@ -382,6 +382,41 @@ def save_embedding_model(bot_id: str, model_name: str):
     paths["embedding_model"].write_text(model_name)
 
 
+def ensure_installed_embedding_model(
+    bot_id: str,
+    requested_model: str,
+    config: Dict[str, Any],
+    installed: Optional[List[str]] = None,
+) -> Optional[str]:
+    installed = installed or fetch_installed_embedding_models()
+    if requested_model in installed:
+        return requested_model
+
+    replacement = None
+    if DEFAULT_EMBEDDING_MODEL in installed:
+        replacement = DEFAULT_EMBEDDING_MODEL
+    elif installed:
+        replacement = installed[0]
+
+    if replacement:
+        logger.warning(
+            "Embedding model %s not installed — switching to %s",
+            requested_model,
+            replacement,
+        )
+        config["embedding_model"] = replacement
+        save_bot_config(bot_id, config)
+        paths = bot_paths(bot_id)
+        paths["embedding_model"].write_text(replacement)
+        return replacement
+
+    logger.warning(
+        "Embedding model %s not installed and no embedding models are available",
+        requested_model,
+    )
+    return None
+
+
 def load_saved_embedding_model(bot_id: str) -> Optional[str]:
     config = load_bot_config(bot_id)
     if config.get("last_built_embedding_model"):
@@ -690,9 +725,21 @@ def build_db(
 ):
     logger.debug("Starting database rebuild for bot %s", bot_id)
     config = config or load_bot_config(bot_id)
+    installed_embeddings = fetch_installed_embedding_models()
     if embedding_models is None:
         embedding_models = [current_embedding_model(bot_id=bot_id, config=config)]
     embedding_models = list(dict.fromkeys(str(m) for m in embedding_models if m))
+    resolved_embeddings: List[str] = []
+    for embedding_model in embedding_models:
+        resolved = ensure_installed_embedding_model(
+            bot_id,
+            embedding_model,
+            config,
+            installed_embeddings,
+        )
+        if resolved and resolved not in resolved_embeddings:
+            resolved_embeddings.append(resolved)
+    embedding_models = resolved_embeddings
     start_time = time.perf_counter()
     load_start = time.perf_counter()
     docs = load_documents(bot_id)
@@ -762,9 +809,24 @@ async def ensure_db_embeddings(bot_id: str):
     logger.debug("Ensuring embeddings for bot %s", bot_id)
     ensure_start = time.perf_counter()
     config = load_bot_config(bot_id)
+    installed_embeddings = fetch_installed_embedding_models()
     data_dir = bot_paths(bot_id)["data"]
     has_documents = any(data_dir.iterdir())
-    embedding_model = current_embedding_model(bot_id=bot_id, config=config)
+    embedding_model = ensure_installed_embedding_model(
+        bot_id,
+        current_embedding_model(bot_id=bot_id, config=config),
+        config,
+        installed_embeddings,
+    )
+    if not embedding_model:
+        log_performance(
+            "verify_vectorstore",
+            ensure_start,
+            bot_id=bot_id,
+            missing_models=[],
+            has_documents=has_documents,
+        )
+        return
     db_file = embedding_db_path(bot_id, embedding_model) / "chroma.sqlite3"
 
     if not db_file.exists() and has_documents:
