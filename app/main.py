@@ -321,15 +321,16 @@ def fetch_installed_llm_models() -> List[str]:
     llms = []
     seen = set()
     for model in data.get("models", []):
-        name = model.get("model") or model.get("name")
-        if not name:
+        full_name = model.get("model") or model.get("name")
+        if not full_name:
             continue
 
-        base_name = name.split(":", 1)[0]
-        if base_name in seen:
+        if full_name in seen:
             continue
 
-        seen.add(base_name)
+        seen.add(full_name)
+
+        base_name = full_name.split(":", 1)[0]
 
         lowered_name = base_name.lower()
         is_embedding = (
@@ -340,7 +341,7 @@ def fetch_installed_llm_models() -> List[str]:
         )
 
         if not is_embedding:
-            llms.append(base_name)
+            llms.append(full_name)
 
     return llms
 
