@@ -127,16 +127,6 @@ class LoggingOllamaEmbeddings:
         )
         return vector
 
-ALLOWED_EMBEDDING_MODELS = [
-    "mxbai-embed-large",
-    "nomic-embed-text",
-    "bge-small-en-v1.5",
-    "bge-base-en-v1.5",
-    "bge-large-en-v1.5",
-    "gte-small",
-    "gte-large",
-]
-
 DEFAULT_BOT_CONFIG = {
     "embedding_model": DEFAULT_EMBEDDING_MODEL,
     "llm_model": DEFAULT_LLM_MODEL,
@@ -223,12 +213,6 @@ def default_bot_config() -> Dict[str, Any]:
     return dict(DEFAULT_BOT_CONFIG)
 
 
-def validate_embedding_model(model_name: str) -> str:
-    if model_name not in ALLOWED_EMBEDDING_MODELS:
-        raise HTTPException(status_code=400, detail="Unsupported embedding model")
-    return model_name
-
-
 def get_ollama_url() -> str:
     """Return the configured Ollama base URL without a trailing slash."""
 
@@ -253,19 +237,14 @@ def fetch_installed_models() -> List[str]:
     seen = set()
     for model in data.get("models", []):
         name = model.get("model") or model.get("name")
-        if not name:
+        if not name or name in seen:
             continue
-
-        base_name = name.split(":", 1)[0]
-        if base_name in seen:
-            continue
-
-        seen.add(base_name)
-        models.append(base_name)
+        seen.add(name)
+        models.append(name)
     return models
 
 
-def fetch_installed_embedding_models() -> List[str]:
+def _fetch_model_data() -> List[Dict[str, Any]]:
     base_url = get_ollama_url()
 
     try:
@@ -280,72 +259,49 @@ def fetch_installed_embedding_models() -> List[str]:
     except ValueError:
         raise HTTPException(status_code=502, detail="Invalid response from Ollama")
 
-    embeddings = []
+    return data.get("models", [])
+
+
+def fetch_installed_embedding_models() -> List[str]:
+    embeddings: List[str] = []
     seen = set()
-    for model in data.get("models", []):
+    for model in _fetch_model_data():
         name = model.get("model") or model.get("name")
-        if not name:
+        if not name or name in seen:
             continue
 
-        base_name = name.split(":", 1)[0]
-        if base_name in seen:
-            continue
-
-        seen.add(base_name)
-
-        lowered_name = base_name.lower()
-        is_embedding = (
-            "embed" in lowered_name
-            or base_name.startswith("bge-")
-            or base_name.startswith("gte-")
-            or base_name in ALLOWED_EMBEDDING_MODELS
+        details = model.get("details") or {}
+        families = details.get("families") or []
+        families = [str(fam).lower() for fam in families if fam]
+        is_embedding = any(
+            fam in {"bert", "nomic-bert", "embed", "bge", "gte"} for fam in families
         )
 
         if is_embedding:
-            embeddings.append(base_name)
+            embeddings.append(name)
+            seen.add(name)
 
     return embeddings
 
 
 def fetch_installed_llm_models() -> List[str]:
-    base_url = get_ollama_url()
-
-    try:
-        response = requests.get(f"{base_url}/api/tags", timeout=5)
-        response.raise_for_status()
-    except requests.RequestException as exc:
-        logger.error("Failed to fetch models from Ollama: %s", exc)
-        raise HTTPException(status_code=503, detail="Unable to load models from Ollama")
-
-    try:
-        data = response.json()
-    except ValueError:
-        raise HTTPException(status_code=502, detail="Invalid response from Ollama")
-
-    llms = []
+    llms: List[str] = []
     seen = set()
-    for model in data.get("models", []):
-        full_name = model.get("model") or model.get("name")
-        if not full_name:
+    for model in _fetch_model_data():
+        name = model.get("model") or model.get("name")
+        if not name or name in seen:
             continue
 
-        if full_name in seen:
-            continue
-
-        seen.add(full_name)
-
-        base_name = full_name.split(":", 1)[0]
-
-        lowered_name = base_name.lower()
-        is_embedding = (
-            "embed" in lowered_name
-            or base_name.startswith("bge-")
-            or base_name.startswith("gte-")
-            or base_name in ALLOWED_EMBEDDING_MODELS
+        details = model.get("details") or {}
+        families = details.get("families") or []
+        families = [str(fam).lower() for fam in families if fam]
+        is_embedding = any(
+            fam in {"bert", "nomic-bert", "embed", "bge", "gte"} for fam in families
         )
 
         if not is_embedding:
-            llms.append(full_name)
+            llms.append(name)
+            seen.add(name)
 
     return llms
 
@@ -356,7 +312,7 @@ def sanitize_config(config: Dict[str, Any]) -> Dict[str, Any]:
     base.update({k: v for k, v in config.items() if v is not None and k in allowed_keys})
 
     try:
-        base["embedding_model"] = validate_embedding_model(str(base["embedding_model"]))
+        base["embedding_model"] = str(base.get("embedding_model") or DEFAULT_EMBEDDING_MODEL)
         base["llm_model"] = str(base.get("llm_model") or DEFAULT_LLM_MODEL)
         base["chunk_size"] = max(1, int(base["chunk_size"]))
         base["chunk_overlap"] = max(0, int(base["chunk_overlap"]))
@@ -734,8 +690,9 @@ def build_db(
 ):
     logger.debug("Starting database rebuild for bot %s", bot_id)
     config = config or load_bot_config(bot_id)
-    embedding_models = embedding_models or list(ALLOWED_EMBEDDING_MODELS)
-    embedding_models = list(dict.fromkeys(validate_embedding_model(m) for m in embedding_models))
+    if embedding_models is None:
+        embedding_models = [current_embedding_model(bot_id=bot_id, config=config)]
+    embedding_models = list(dict.fromkeys(str(m) for m in embedding_models if m))
     start_time = time.perf_counter()
     load_start = time.perf_counter()
     docs = load_documents(bot_id)
@@ -766,7 +723,7 @@ def build_db(
         chunks=len(chunks),
     )
 
-    base_url = os.environ.get("OLLAMA_URL", "http://ollama:11434")
+    base_url = get_ollama_url()
     for embedding_model in embedding_models:
         embeddings = LoggingOllamaEmbeddings(
             base_url=base_url,
@@ -807,20 +764,16 @@ async def ensure_db_embeddings(bot_id: str):
     config = load_bot_config(bot_id)
     data_dir = bot_paths(bot_id)["data"]
     has_documents = any(data_dir.iterdir())
-    missing_models = []
+    embedding_model = current_embedding_model(bot_id=bot_id, config=config)
+    db_file = embedding_db_path(bot_id, embedding_model) / "chroma.sqlite3"
 
-    for model in ALLOWED_EMBEDDING_MODELS:
-        db_file = embedding_db_path(bot_id, model) / "chroma.sqlite3"
-        if not db_file.exists():
-            missing_models.append(model)
-
-    if missing_models and has_documents:
-        await asyncio.to_thread(build_db, bot_id, config, missing_models)
+    if not db_file.exists() and has_documents:
+        await asyncio.to_thread(build_db, bot_id, config, [embedding_model])
         log_performance(
             "rebuild_vectorstore",
             ensure_start,
             bot_id=bot_id,
-            missing_models=missing_models,
+            missing_models=[embedding_model],
             has_documents=has_documents,
         )
     else:
@@ -828,7 +781,7 @@ async def ensure_db_embeddings(bot_id: str):
             "verify_vectorstore",
             ensure_start,
             bot_id=bot_id,
-            missing_models=missing_models,
+            missing_models=[] if db_file.exists() else [embedding_model],
             has_documents=has_documents,
         )
 
@@ -893,15 +846,16 @@ async def log_requests(request: Request, call_next):
 @app.on_event("startup")
 async def startup_event():
     registry = load_bot_registry()
+    app.state.startup_tasks = []
     for bot in registry["bots"]:
         bot_id = bot["id"]
         paths = bot_paths(bot_id)
         load_bot_config(bot_id)
         if not paths["prompt"].exists():
             save_system_prompt(bot_id, DEFAULT_PROMPT)
-        db_file = embedding_db_path(bot_id, current_embedding_model(bot_id=bot_id)) / "chroma.sqlite3"
-        if not db_file.exists() and any(paths["data"].iterdir()):
-            await asyncio.to_thread(build_db, bot_id)
+        if any(paths["data"].iterdir()):
+            task = asyncio.create_task(ensure_db_embeddings(bot_id))
+            app.state.startup_tasks.append(task)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -1254,17 +1208,18 @@ async def ask_stream(request: Request):
     await ensure_db_embeddings(bot_id)
     log_performance("ensure_embeddings", ensure_start, bot_id=bot_id)
 
-    def build_chain():
-        embeddings = LoggingOllamaEmbeddings(
-            base_url=ollama_url,
-            model=embedding_model,
-        )
+    embeddings = LoggingOllamaEmbeddings(
+        base_url=ollama_url,
+        model=embedding_model,
+    )
 
-        vectordb = Chroma(
+    def create_vectordb():
+        return Chroma(
             persist_directory=str(embedding_db_path(bot_id, embedding_model)),
-            embedding_function=embeddings
+            embedding_function=embeddings,
         )
 
+    def build_chain(vectordb: Chroma):
         top_k = retrieval_top_k
 
         def retrieve_with_logging(query: str):
@@ -1341,7 +1296,8 @@ User: {question_text}
             | StrOutputParser()
         )
 
-    rag_chain = build_chain()
+    vectordb = create_vectordb()
+    rag_chain = build_chain(vectordb)
 
     async def event_stream():
         stream_start = time.perf_counter()
@@ -1351,8 +1307,9 @@ User: {question_text}
                 tokens_emitted += 1
                 yield json.dumps({"type": "token", "token": token}) + "\n"
         except InvalidArgumentError:
-            await asyncio.to_thread(build_db, bot_id)
-            rebuilt_chain = build_chain()
+            await asyncio.to_thread(build_db, bot_id, bot_config, [embedding_model])
+            rebuilt_vectordb = create_vectordb()
+            rebuilt_chain = build_chain(rebuilt_vectordb)
             async for token in rebuilt_chain.astream(question):
                 tokens_emitted += 1
                 yield json.dumps({"type": "token", "token": token}) + "\n"
