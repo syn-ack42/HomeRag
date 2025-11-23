@@ -249,7 +249,6 @@ textarea#systemPrompt { width: 100%; min-height: 160px; resize: vertical; }
         <section class="card">
             <div class="section-title">
                 <strong>Bot Controls</strong>
-                <button type="button" class="secondary" onclick="rebuild()">Rebuild Index</button>
             </div>
             <div class="password-controls">
                 <input id="passwordInput" type="password" placeholder="Set or change password" />
@@ -258,39 +257,16 @@ textarea#systemPrompt { width: 100%; min-height: 160px; resize: vertical; }
             </div>
             <span class="hint">You must unlock a private bot before changing or removing its password.</span>
 
-            <details class="details-card" id="kbDetails">
-                <summary>Knowledge Base Files</summary>
-                <div class="kb-actions">
-                    <form id="uploadForm" class="inline-group">
-                        <input type="file" name="file" required />
-                        <select id="folderSelect"></select>
-                        <button type="submit">Upload</button>
-                    </form>
-                    <span class="hint">ZIP files will be extracted automatically.</span>
-
-                    <div class="inline-group">
-                        <input id="newFolderInput" type="text" placeholder="New folder path (e.g. research/notes)" />
-                        <button type="button" onclick="createFolder()">Add Folder</button>
+            <div style="margin-top:1rem;">
+                <div class="section-title">
+                    <strong>System Prompt</strong>
+                    <div>
+                        <button type="button" class="secondary" onclick="loadPrompt()">Reload</button>
+                        <button type="button" onclick="savePrompt()">Save</button>
                     </div>
-
-                    <div class="inline-group">
-                        <select id="deleteFolderSelect"></select>
-                        <button type="button" class="secondary" onclick="deleteFolder()">Delete Folder</button>
-                    </div>
-
-                    <div class="inline-group">
-                        <select id="moveFileSelect"></select>
-                        <select id="moveDestSelect"></select>
-                        <button type="button" onclick="moveFile()">Move File</button>
-                    </div>
-
-                    <div class="section-title">
-                        <strong>Files & Folders</strong>
-                        <button type="button" class="secondary" onclick="refreshFiles()">Refresh</button>
-                    </div>
-                    <div id="fileTree"></div>
                 </div>
-            </details>
+                <textarea id="systemPrompt"></textarea>
+            </div>
 
             <div style="margin-top:1rem;">
                 <div class="section-title">
@@ -337,16 +313,46 @@ textarea#systemPrompt { width: 100%; min-height: 160px; resize: vertical; }
                         <input id="llmRepeatPenalty" type="number" step="0.01" />
                     </label>
                 </div>
-
-                <div class="section-title">
-                    <strong>System Prompt</strong>
-                    <div>
-                        <button type="button" class="secondary" onclick="loadPrompt()">Reload</button>
-                        <button type="button" onclick="savePrompt()">Save</button>
-                    </div>
-                </div>
-                <textarea id="systemPrompt"></textarea>
             </div>
+
+            <div class="section-title">
+                <strong>Index</strong>
+                <button type="button" class="secondary" onclick="rebuild()">Rebuild Index</button>
+            </div>
+
+            <details class="details-card" id="kbDetails">
+                <summary>Knowledge Base Files</summary>
+                <div class="kb-actions">
+                    <form id="uploadForm" class="inline-group">
+                        <input type="file" name="file" required />
+                        <select id="folderSelect"></select>
+                        <button type="submit">Upload</button>
+                    </form>
+                    <span class="hint">ZIP files will be extracted automatically.</span>
+
+                    <div class="inline-group">
+                        <input id="newFolderInput" type="text" placeholder="New folder path (e.g. research/notes)" />
+                        <button type="button" onclick="createFolder()">Add Folder</button>
+                    </div>
+
+                    <div class="inline-group">
+                        <select id="deleteFolderSelect"></select>
+                        <button type="button" class="secondary" onclick="deleteFolder()">Delete Folder</button>
+                    </div>
+
+                    <div class="inline-group">
+                        <select id="moveFileSelect"></select>
+                        <select id="moveDestSelect"></select>
+                        <button type="button" onclick="moveFile()">Move File</button>
+                    </div>
+
+                    <div class="section-title">
+                        <strong>Files & Folders</strong>
+                        <button type="button" class="secondary" onclick="refreshFiles()">Refresh</button>
+                    </div>
+                    <div id="fileTree"></div>
+                </div>
+            </details>
         </section>
     </div>
 
