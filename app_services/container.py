@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Optional
 
 from app_config.settings import Settings, settings as global_settings
+from app_core.vectorstore_backend import ChromaBackend, VectorStoreBackend
 
 
 class ServiceContainer:
@@ -12,12 +13,14 @@ class ServiceContainer:
     def __init__(self, settings: Optional[Settings] = None):
         self.settings: Settings = settings or global_settings
         self._initialized = False
+        self.vectorstore_backend: Optional[VectorStoreBackend] = None
 
     def bootstrap(self):
         """Initialize lazy services. Extend as new shared dependencies are added."""
         if self._initialized:
             return
-        # Placeholder for future shared service initialization
+        if self.vectorstore_backend is None:
+            self.vectorstore_backend = ChromaBackend()
         self._initialized = True
 
 
