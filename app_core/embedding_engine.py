@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections import OrderedDict
+import concurrent.futures
+import threading
 from dataclasses import dataclass
 from typing import List, Optional, Sequence
 
@@ -96,9 +98,32 @@ class ParallelEmbeddingEngine:
             self._cache.put(text, vector)
         return vector
 
+    def _run_blocking(self, coro):
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(coro)
+
+        future: concurrent.futures.Future = concurrent.futures.Future()
+
+        def runner():
+            new_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(new_loop)
+            try:
+                result = new_loop.run_until_complete(coro)
+            except Exception as exc:  # pragma: no cover - passthrough
+                future.set_exception(exc)
+            else:
+                future.set_result(result)
+            finally:
+                new_loop.close()
+
+        threading.Thread(target=runner, daemon=True).start()
+        return future.result()
+
     def embed_documents_sync(self, texts: Sequence[str]) -> List[List[float]]:
-        return asyncio.run(self.embed_documents(texts))
+        return self._run_blocking(self.embed_documents(texts))
 
     def embed_query_sync(self, text: str) -> List[float]:
-        return asyncio.run(self.embed_query(text))
+        return self._run_blocking(self.embed_query(text))
 
