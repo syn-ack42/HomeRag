@@ -11,7 +11,9 @@ services:
 #    restart: unless-stopped
 
   rag-app:
-    build: ./app
+    build:
+      context: .
+      dockerfile: app/Dockerfile
     container_name: rag-app
 #    depends_on:
 #      - ollama
