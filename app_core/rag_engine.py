@@ -557,6 +557,8 @@ def build_rag_chain(
     )
     backend: VectorStoreBackend = service_container.vectorstore_backend or DEFAULT_VECTORSTORE_BACKEND  # type: ignore[assignment]
 
+    retrieval_time_ms = 0.0
+
     def create_vectordb():
         return backend.load(
             persist_directory=embedding_db_path(bot_id, embedding_model),
@@ -567,6 +569,7 @@ def build_rag_chain(
         top_k = retrieval_top_k
 
         def retrieve_with_logging(query: str):
+            nonlocal retrieval_time_ms
             search_start = time.perf_counter()
             try:
                 results = backend.similarity_search_with_score(vectordb, query, k=top_k)
@@ -576,7 +579,7 @@ def build_rag_chain(
 
             docs = [doc for doc, _score in results]
 
-            log_performance(
+            retrieval_time_ms = log_performance(
                 "vector_search",
                 search_start,
                 bot_id=bot_id,
@@ -645,6 +648,10 @@ User: {question_text}
     return {
         "rag_chain": rag_chain,
         "embedding_model": embedding_model,
+        "llm_model": llm_model,
+        "llm_temperature": llm_temperature,
+        "llm_top_p": llm_top_p,
         "create_vectordb": create_vectordb,
         "build_chain": build_chain,
+        "get_retrieval_time_ms": lambda: retrieval_time_ms,
     }
