@@ -97,48 +97,8 @@ class ParallelEmbeddingEngine:
         return vector
 
     def embed_documents_sync(self, texts: Sequence[str]) -> List[List[float]]:
-        try:
-            asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(self.embed_documents(texts))
-
-        # Fallback for synchronous calls invoked inside an existing event loop.
-        # We bypass the async pipeline to avoid nested event loop execution while
-        # still reusing the base embedding implementation and cache.
-        results: List[Optional[List[float]]] = [None] * len(texts)
-        missing: list[tuple[int, str]] = []
-
-        for idx, text in enumerate(texts):
-            cached = self._cache.get(text) if self._cache else None
-            if cached is not None:
-                results[idx] = cached
-            else:
-                missing.append((idx, text))
-
-        if missing:
-            vectors = self._base.embed_documents([text for _idx, text in missing])
-            for (idx, text), vector in zip(missing, vectors):
-                results[idx] = vector
-                if self._cache is not None:
-                    self._cache.put(text, vector)
-
-        return [vector or [] for vector in results]
+        return asyncio.run(self.embed_documents(texts))
 
     def embed_query_sync(self, text: str) -> List[float]:
-        try:
-            asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(self.embed_query(text))
-
-        if not text:
-            return []
-
-        cached = self._cache.get(text) if self._cache else None
-        if cached is not None:
-            return cached
-
-        vector = self._base.embed_query(text)
-        if self._cache is not None:
-            self._cache.put(text, vector)
-        return vector
+        return asyncio.run(self.embed_query(text))
 
