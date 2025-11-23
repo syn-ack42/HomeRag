@@ -45,6 +45,8 @@ DEFAULT_BOT_CONFIG = {
     "llm_repeat_penalty": 1.1,
     "prompt_template_path": "",
     "last_built_embedding_model": None,
+    "embedding_batch_size": None,
+    "embedding_concurrency": None,
 }
 
 
@@ -122,6 +124,10 @@ def sanitize_config(config: Dict[str, Any]) -> Dict[str, Any]:
         base["llm_max_output_tokens"] = max_tokens if max_tokens > 0 else None
         base["llm_repeat_penalty"] = float(base.get("llm_repeat_penalty", 1.0))
         base["prompt_template_path"] = str(base.get("prompt_template_path") or "")
+        batch_size = base.get("embedding_batch_size")
+        concurrency = base.get("embedding_concurrency")
+        base["embedding_batch_size"] = int(batch_size) if batch_size else None
+        base["embedding_concurrency"] = int(concurrency) if concurrency else None
     except (TypeError, ValueError):
         raise HTTPException(status_code=400, detail="Invalid configuration values")
 

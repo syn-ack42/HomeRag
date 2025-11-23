@@ -3,6 +3,7 @@ import json
 import logging
 import shutil
 import time
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -10,7 +11,7 @@ import requests
 from fastapi import HTTPException
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.llms import Ollama
-from langchain_community.vectorstores import Chroma
+from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -24,6 +25,9 @@ from app_core.bot_registry import (
     save_bot_config,
     sanitize_config,
 )
+from app_core.embedding_engine import EmbeddingPipelineConfig, ParallelEmbeddingEngine
+from app_core.index_manager import IndexState, IndexingManager, compute_file_hashes
+from app_core.vectorstore_backend import DEFAULT_VECTORSTORE_BACKEND, VectorStoreBackend
 from app_core.document_loader import load_documents
 from app_services.container import get_service_container
 
@@ -37,6 +41,16 @@ DEFAULT_EMBEDDING_MODEL = settings.DEFAULT_EMBEDDING_MODEL
 DEFAULT_LLM_MODEL = settings.DEFAULT_LLM_MODEL
 
 logger = logging.getLogger("homerag")
+
+
+def embedding_pipeline_config(config: Dict[str, Any]) -> EmbeddingPipelineConfig:
+    return EmbeddingPipelineConfig(
+        batch_size=config.get("embedding_batch_size")
+        or settings.EMBEDDING_BATCH_SIZE,
+        max_concurrency=config.get("embedding_concurrency")
+        or settings.EMBEDDING_MAX_WORKERS,
+        cache_size=settings.EMBEDDING_CACHE_SIZE,
+    )
 
 
 def duration_ms(start_time: float) -> float:
@@ -54,10 +68,11 @@ def log_performance(event: str, start_time: float, **details):
 class LoggingOllamaEmbeddings:
     """Wrapper around OllamaEmbeddings with extra logging."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, pipeline_config: EmbeddingPipelineConfig, **kwargs):
         self._delegate = OllamaEmbeddings(**kwargs)
         self._model = kwargs.get("model")
         self._base_url = kwargs.get("base_url")
+        self._engine = ParallelEmbeddingEngine(self._delegate, pipeline_config)
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         start = time.perf_counter()
@@ -68,9 +83,11 @@ class LoggingOllamaEmbeddings:
             self._base_url,
         )
         try:
-            vectors = self._delegate.embed_documents(texts)
+            vectors = self._engine.embed_documents_sync(texts)
         except Exception:
-            logger.exception("Embedding documents failed (model=%s, url=%s)", self._model, self._base_url)
+            logger.exception(
+                "Embedding documents failed (model=%s, url=%s)", self._model, self._base_url
+            )
             raise
 
         log_performance(
@@ -91,7 +108,7 @@ class LoggingOllamaEmbeddings:
             self._base_url,
         )
         try:
-            vector = self._delegate.embed_query(text)
+            vector = self._engine.embed_query_sync(text)
         except Exception:
             logger.exception("Embedding query failed (model=%s, url=%s)", self._model, self._base_url)
             raise
@@ -347,7 +364,14 @@ def build_db(
     start_time = time.perf_counter()
     load_start = time.perf_counter()
     docs = load_documents(bot_id)
-    log_performance("load_documents", load_start, bot_id=bot_id, documents=len(docs))
+    file_hashes = compute_file_hashes(bot_id)
+    log_performance(
+        "load_documents",
+        load_start,
+        bot_id=bot_id,
+        documents=len(docs),
+        files=len(file_hashes),
+    )
     if not docs:
         db_dir = bot_paths(bot_id)["db"]
         if db_dir.exists():
@@ -366,6 +390,12 @@ def build_db(
         [d["page_content"] for d in docs],
         metadatas=[d["metadata"] for d in docs]
     )
+    chunk_counts: Dict[str, int] = defaultdict(int)
+    for doc in chunks:
+        source = doc.metadata.get("source") or "unknown"
+        idx = chunk_counts[source]
+        chunk_counts[source] += 1
+        doc.metadata["chunk_id"] = f"{source}::chunk-{idx}"
     log_performance(
         "split_documents",
         split_start,
@@ -375,30 +405,76 @@ def build_db(
     )
 
     base_url = get_ollama_url()
+    backend: VectorStoreBackend = service_container.vectorstore_backend or DEFAULT_VECTORSTORE_BACKEND  # type: ignore[assignment]
     for embedding_model in embedding_models:
         embeddings = LoggingOllamaEmbeddings(
+            embedding_pipeline_config(config),
             base_url=base_url,
-            model=embedding_model
+            model=embedding_model,
         )
 
         db_dir = embedding_db_path(bot_id, embedding_model)
-        if db_dir.exists():
-            shutil.rmtree(db_dir)
-        db_dir.mkdir(parents=True, exist_ok=True)
-
-        embed_start = time.perf_counter()
-        vectordb = Chroma.from_documents(
-            chunks, embeddings, persist_directory=str(db_dir)
+        manager = IndexingManager(db_dir)
+        previous_state = manager.load()
+        chunk_changed = (
+            previous_state.chunk_size != config.get("chunk_size", 800)
+            or previous_state.chunk_overlap != config.get("chunk_overlap", 100)
         )
-        log_performance(
-            "build_vectorstore",
-            embed_start,
-            bot_id=bot_id,
-            chunks=len(chunks),
-            embedding_model=embedding_model,
-        )
+        db_file = db_dir / "chroma.sqlite3"
+        full_rebuild = chunk_changed or not db_file.exists()
+        changed_files, removed_files = IndexingManager.diff_hashes(file_hashes, previous_state.file_hashes)
 
-        vectordb.persist()
+        if full_rebuild:
+            if db_dir.exists():
+                shutil.rmtree(db_dir)
+            db_dir.mkdir(parents=True, exist_ok=True)
+            embed_start = time.perf_counter()
+            vectordb = backend.build_from_documents(
+                chunks,
+                embeddings,
+                db_dir,
+                ids=[doc.metadata.get("chunk_id", "") for doc in chunks],
+            )
+            backend.persist(vectordb)
+            log_performance(
+                "build_vectorstore",
+                embed_start,
+                bot_id=bot_id,
+                chunks=len(chunks),
+                embedding_model=embedding_model,
+            )
+        else:
+            vectordb = backend.load(db_dir, embeddings)
+            if removed_files or changed_files:
+                for source in sorted(removed_files | changed_files):
+                    backend.delete(vectordb, where={"source": source})
+            updated_chunks = [
+                doc for doc in chunks if doc.metadata.get("source") in changed_files
+            ]
+            if updated_chunks:
+                embed_start = time.perf_counter()
+                backend.add_documents(
+                    vectordb,
+                    updated_chunks,
+                    ids=[doc.metadata.get("chunk_id", "") for doc in updated_chunks],
+                )
+                log_performance(
+                    "update_vectorstore",
+                    embed_start,
+                    bot_id=bot_id,
+                    chunks=len(updated_chunks),
+                    embedding_model=embedding_model,
+                    removed=len(removed_files),
+                )
+            backend.persist(vectordb)
+
+        manager.save(
+            IndexState(
+                chunk_size=config.get("chunk_size", 800),
+                chunk_overlap=config.get("chunk_overlap", 100),
+                file_hashes=file_hashes,
+            )
+        )
         save_embedding_model(bot_id, embedding_model)
     total_ms = duration_ms(start_time)
     logger.debug(
@@ -416,30 +492,32 @@ async def ensure_db_embeddings(bot_id: str):
     installed_embeddings = fetch_installed_embedding_models()
     data_dir = bot_paths(bot_id)["data"]
     has_documents = any(data_dir.iterdir())
-    embedding_model = ensure_installed_embedding_model(
+    models_to_check: List[str] = []
+    current_model = ensure_installed_embedding_model(
         bot_id,
         current_embedding_model(bot_id=bot_id, config=config),
         config,
         installed_embeddings,
     )
-    if not embedding_model:
-        log_performance(
-            "verify_vectorstore",
-            ensure_start,
-            bot_id=bot_id,
-            missing_models=[],
-            has_documents=has_documents,
-        )
-        return
-    db_file = embedding_db_path(bot_id, embedding_model) / "chroma.sqlite3"
+    if current_model:
+        models_to_check.append(current_model)
+    saved_model = load_saved_embedding_model(bot_id)
+    if saved_model and saved_model in installed_embeddings and saved_model not in models_to_check:
+        models_to_check.append(saved_model)
 
-    if not db_file.exists() and has_documents:
-        await asyncio.to_thread(build_db, bot_id, config, [embedding_model])
+    missing_models: List[str] = []
+    for model_name in models_to_check:
+        db_file = embedding_db_path(bot_id, model_name) / "chroma.sqlite3"
+        if not db_file.exists() and has_documents:
+            missing_models.append(model_name)
+
+    if missing_models:
+        await asyncio.to_thread(build_db, bot_id, config, missing_models)
         log_performance(
             "rebuild_vectorstore",
             ensure_start,
             bot_id=bot_id,
-            missing_models=[embedding_model],
+            missing_models=missing_models,
             has_documents=has_documents,
         )
     else:
@@ -447,7 +525,7 @@ async def ensure_db_embeddings(bot_id: str):
             "verify_vectorstore",
             ensure_start,
             bot_id=bot_id,
-            missing_models=[] if db_file.exists() else [embedding_model],
+            missing_models=missing_models,
             has_documents=has_documents,
         )
 
@@ -473,23 +551,25 @@ def build_rag_chain(
     ollama_url = get_ollama_url()
 
     embeddings = LoggingOllamaEmbeddings(
+        embedding_pipeline_config(config),
         base_url=ollama_url,
         model=embedding_model,
     )
+    backend: VectorStoreBackend = service_container.vectorstore_backend or DEFAULT_VECTORSTORE_BACKEND  # type: ignore[assignment]
 
     def create_vectordb():
-        return Chroma(
-            persist_directory=str(embedding_db_path(bot_id, embedding_model)),
-            embedding_function=embeddings,
+        return backend.load(
+            persist_directory=embedding_db_path(bot_id, embedding_model),
+            embeddings=embeddings,
         )
 
-    def build_chain(vectordb: Chroma):
+    def build_chain(vectordb):
         top_k = retrieval_top_k
 
         def retrieve_with_logging(query: str):
             search_start = time.perf_counter()
             try:
-                results = vectordb.similarity_search_with_score(query, k=top_k)
+                results = backend.similarity_search_with_score(vectordb, query, k=top_k)
             except Exception:
                 logger.exception("Vector search failed for bot %s", bot_id)
                 raise
