@@ -12,45 +12,67 @@ HomeRag is a lightweight retrieval-augmented generation (RAG) service built on F
 ## Installation
 ### Prerequisites
 - Python 3.11+
+- Docker (for the quickest start) or a local Python toolchain
 - Access to an Ollama server (default endpoint: `http://localhost:11434`)
 - (Recommended) `virtualenv` or `pyenv` for isolation
 
-### Local setup
-1. Create and activate a virtual environment.
+### Step-by-step environment setup
+1. **Install Ollama** (required whether you run the app locally or in Docker):
+   ```bash
+   curl -fsSL https://ollama.com/install.sh | sh
+   ```
+   Start the Ollama service and pull at least one chat model and one embedding model:
+   ```bash
+   ollama pull phi3
+   ollama pull mxbai-embed-large
+   ```
+2. **Local Python setup** (choose this if you want to run without containers):
    ```bash
    python -m venv .venv
    source .venv/bin/activate
-   ```
-2. Install dependencies.
-   ```bash
    pip install -r app/requirements.txt
-   ```
-3. Export any environment variables you want to override (see `app_config/settings.py` for defaults), for example:
-   ```bash
    export OLLAMA_URL=http://localhost:11434
    export DATA_PATH=./data
    export DB_PATH=./chroma
    export CONFIG_PATH=./config
+   uvicorn main:app --host 0.0.0.0 --port 8090 --app-dir app
    ```
-
-### Docker
-A ready-to-use image is defined in `app/Dockerfile` and wired in `docker-compose.yml`.
-1. Build and start the service:
+3. **Docker workflow** (recommended for a sealed environment):
    ```bash
+   # Build the FastAPI image and start everything with bind mounts for data/config/indexes
    docker compose up --build
+
+   # Stop the stack when you are done
+   docker compose down
    ```
-2. Volumes persist configuration, ingested data, and Chroma indexes (`./config`, `./data`, `./chroma` on the host). The container exposes port `8090` by default.
-3. Set `OLLAMA_URL` to point at your Ollama instance. The compose file maps `host.docker.internal` so the container can reach a host-side Ollama.
+   - The container exposes port `8090` by default.
+   - Volumes persist configuration, ingested data, and Chroma indexes (`./config`, `./data`, `./chroma` on the host).
+   - Point `OLLAMA_URL` at your Ollama instance; the compose file maps `host.docker.internal` so the container can reach a host-side Ollama.
 
 ## Usage
 ### Running the API
 - Local: `uvicorn main:app --host 0.0.0.0 --port 8090` from the `app` directory after installing dependencies.
 - Docker: `docker compose up` (as above). The FastAPI app is served on `http://localhost:8090`.
 
-### Working with bots and documents
-- Bot configs live under `CONFIG_PATH/bots/<bot_id>` and are generated on first access. Prompts and embedding model choices are stored alongside the config JSON.
-- Upload or place source files under `DATA_PATH/<bot_id>`; embeddings are written to `DB_PATH/<bot_id>/<embedding_model>/` as Chroma databases.
-- Rebuilding indexes happens automatically on startup for missing embeddings and when you trigger a rebuild via the API; incremental updates keep unchanged chunks intact.
+### Using the web GUI
+Open `http://localhost:8090/static/index.html` (or the root if you routed static files there). The right-hand panel manages bots, credentials, and knowledge bases; the left-hand panel is the chat window.
+
+**Creating and securing bots**
+- Use **Active Bot** to switch between bots. **Create Bot** opens a prompt for a bot ID; **Delete Bot** removes it and its data.
+- Set a password in the **Bot Controls** section. Checking **Hidden** marks the bot as protected; you must unlock with the password before viewing or changing its settings. **Save Password** updates or clears the credential depending on whether you submit an empty field.
+
+**Building and maintaining a knowledge base**
+- The **Knowledge Base Files** accordion lets you upload documents (including ZIP archives that are extracted), create or delete folders, move files, and refresh the file tree. Uploads flow into `DATA_PATH/<bot_id>` on disk.
+- Click **Rebuild Index** to force an embedding refresh for the active bot (useful after large document changes). The index section also shows buttons to refresh model lists and reload saved settings.
+
+**Tuning request parameters**
+- **System Prompt**: edit and save the bot’s base instructions.
+- **Retrieval & Model Settings**: choose the embedding and LLM models discovered from Ollama, adjust chunk size/overlap for splitting, set retrieval depth (Top K), toggle history and the number of turns to keep, and tune generation parameters (temperature, top-p, max output tokens, repeat penalty). Saving persists these values under `CONFIG_PATH/bots/<bot_id>` and immediately applies them to new requests.
+
+### What happens when you build a knowledge base
+- When you upload files or click **Rebuild Index**, the app loads documents, splits them into chunks, and writes source-aware metadata for each chunk before embedding.【F:app_core/rag_engine.py†L348-L389】
+- For each selected embedding model, the service embeds chunks via Ollama, writes them to a Chroma database under `DB_PATH/<bot_id>/<embedding_model>/`, and persists index metadata (hashes, chunking settings) to support incremental updates.【F:app_core/rag_engine.py†L391-L449】
+- On startup the app scans existing bots; if documents exist but a matching embedding database is missing for the configured model, it triggers an embedding build in the background so the vector index is ready before the first query.【F:app/main.py†L32-L44】【F:app_core/rag_engine.py†L488-L518】
 
 ### Making new models available (autodiscovery)
 The service relies on Ollama’s `/api/tags` endpoint to discover installed models at runtime. Both LLM and embedding lists are fetched dynamically, so you only need to install models in Ollama:
@@ -59,6 +81,12 @@ ollama pull mistral
 ollama pull mxbai-embed-large
 ```
 Once pulled, the models appear in `/models` and `/embedding-models` API responses and can be assigned to bots without restarting the service.
+
+### Recommended Ollama models by hardware profile
+- **General purpose machine (CPU-only or low RAM)**: `phi3` for chat, `nomic-embed-text` for embeddings (small, lightweight pulls).
+- **Developer laptop with modest GPU (e.g., 8–12 GB VRAM)**: `mistral` or `llama3` for chat, `mxbai-embed-large` for embeddings.
+- **Mid-range gaming rig (e.g., 12–24 GB VRAM)**: `llama3:instruct` or `mixtral` for higher-quality chat, `all-minilm` or `gte-base` variants for embeddings.
+- **Specialized LLM hardware (multi-GPU or high-VRAM workstation)**: `llama3:70b` or other large-context models for chat, paired with `nomic-embed-text:v1.5` or similar higher-capacity embedding models.
 
 ## Architecture
 - **`app/main.py`** bootstraps dependency injection, registers middleware and routers, mounts static assets, and kicks off startup tasks for warming models and rebuilding embeddings when needed.【F:app/main.py†L7-L49】
