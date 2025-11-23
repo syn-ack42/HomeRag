@@ -3,6 +3,7 @@ uvicorn
 chromadb
 sentence-transformers
 requests
+pydantic-settings
 langchain
 langchain-core
 langchain-community
