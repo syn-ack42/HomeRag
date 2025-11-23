@@ -1,14 +1,7 @@
 import asyncio
 import logging
-import sys
-from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-
-# Ensure project root is on the import path when running with --app-dir app
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 from app_api.middleware import register_middleware
 from app_api.routes import bots, files, models, rag
