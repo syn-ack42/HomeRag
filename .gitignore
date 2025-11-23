@@ -5,13 +5,13 @@ __pycache__/
 # Docker
 *.log
 
-# Local RAG bot data
-bots/*/data/*
-bots/*/chroma/*
-# But keep bot metadata & prompts
-#!bots/*/config/
-#!bots/*/meta.json
-#!bots/*/config/prompt.txt
+# Runtime bot/config/data stores (generated per environment)
+config/
+data/
+chroma/
+bots/*/data/
+bots/*/chroma/
+bots/*/config/
 
 # Ollama model store
 ollama/
