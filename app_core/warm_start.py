@@ -14,11 +14,17 @@ from app_core.rag_engine import get_ollama_url
 logger = logging.getLogger("homerag")
 
 
+REQUEST_TIMEOUT = (5, 60)
+
+
 async def _ping_embedding_model(model: str):
     payload = {"model": model, "input": "warm start"}
     try:
         await asyncio.to_thread(
-            requests.post, f"{get_ollama_url()}/api/embeddings", json=payload, timeout=10
+            requests.post,
+            f"{get_ollama_url()}/api/embeddings",
+            json=payload,
+            timeout=REQUEST_TIMEOUT,
         )
         logger.info("Warmed embedding model %s", model)
     except Exception:
@@ -26,10 +32,13 @@ async def _ping_embedding_model(model: str):
 
 
 async def _ping_llm_model(model: str):
-    payload = {"model": model, "prompt": "ping"}
+    payload = {"model": model, "prompt": "ping", "options": {"num_predict": 1}}
     try:
         await asyncio.to_thread(
-            requests.post, f"{get_ollama_url()}/api/generate", json=payload, timeout=10
+            requests.post,
+            f"{get_ollama_url()}/api/generate",
+            json=payload,
+            timeout=REQUEST_TIMEOUT,
         )
         logger.info("Warmed LLM model %s", model)
     except Exception:
