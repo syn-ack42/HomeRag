@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     )
     DEFAULT_LLM_MODEL: str = Field(default="phi3", env="MODEL")
     OLLAMA_URL: str = Field(default="http://ollama:11434", env="OLLAMA_URL")
+    EMBEDDING_MAX_WORKERS: int = Field(default=4, env="EMBEDDING_MAX_WORKERS")
+    EMBEDDING_BATCH_SIZE: int = Field(default=8, env="EMBEDDING_BATCH_SIZE")
+    EMBEDDING_CACHE_SIZE: int = Field(default=256, env="EMBEDDING_CACHE_SIZE")
 
     class Config:
         env_file = ".env"
