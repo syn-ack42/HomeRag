@@ -4,22 +4,39 @@ from fastapi import APIRouter, HTTPException, Request
 from app_core.bot_registry import password_from_request, require_bot_access, save_bot_config
 from app_core.rag_engine import (
     current_llm_model,
-    fetch_installed_embedding_models,
     fetch_installed_llm_models,
+    fetch_model_summaries,
     load_bot_config,
 )
 
 router = APIRouter()
 
 
+def _format_model_entry(entry: dict) -> dict:
+    details = entry.get("details") or {}
+    return {
+        "name": entry.get("name"),
+        "details": {
+            "parameter_size": details.get("parameter_size") or details.get("size"),
+            "quantization_level": details.get("quantization_level"),
+            "context_length": details.get("context_length"),
+            "embedding_length": details.get("embedding_length"),
+        },
+    }
+
+
 @router.get("/models")
 def list_models():
-    return {"models": fetch_installed_llm_models()}
+    summaries = fetch_model_summaries()
+    models = [_format_model_entry(entry) for entry in summaries if not entry.get("is_embedding")]
+    return {"models": models}
 
 
 @router.get("/embedding-models")
 def list_embedding_models():
-    return {"models": fetch_installed_embedding_models()}
+    summaries = fetch_model_summaries()
+    models = [_format_model_entry(entry) for entry in summaries if entry.get("is_embedding")]
+    return {"models": models}
 
 
 @router.get("/bots/{bot_id}/model")
