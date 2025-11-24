@@ -417,6 +417,51 @@ let embeddingModelsError = "";
 let availableLLMModels = [];
 let llmModelsError = "";
 
+function appendErrorMessage(message) {
+    const el = document.createElement("div");
+    el.className = "message bot";
+
+    const label = document.createElement("div");
+    label.className = "label";
+    label.textContent = "Bot";
+
+    const content = document.createElement("div");
+    content.className = "bot-content";
+    const italic = document.createElement("i");
+    italic.textContent = message;
+    content.appendChild(italic);
+
+    el.appendChild(label);
+    el.appendChild(content);
+
+    chat.appendChild(el);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+async function buildErrorMessageFromResponse(response) {
+    const statusPart = response?.status ? ` (${response.status})` : "";
+    let body = "";
+
+    try {
+        body = await response.text();
+    } catch (_) {
+        body = "";
+    }
+
+    let detail = "";
+    if (body) {
+        try {
+            const parsed = JSON.parse(body);
+            detail = parsed?.detail || body;
+        } catch (_) {
+            detail = body;
+        }
+    }
+
+    detail = detail || response.statusText || "Unexpected error";
+    return `Backend error${statusPart}: ${detail}`;
+}
+
 input.addEventListener("keydown", e => {
     if (e.key === "Enter" && e.ctrlKey) {
         e.preventDefault();
@@ -965,22 +1010,24 @@ async function sendMessage() {
     input.value = "";
 
     const typingEl = appendTyping();
+    const removeTyping = () => { if (typingEl.parentNode) typingEl.remove(); };
 
-    const response = await authedFetch("/ask_stream", {
-        method: "POST",
-        headers: {"Content-Type": "application/json", ...buildAuthHeaders()},
-        body: JSON.stringify({ question: q, bot: currentBotId, history: messages })
-    });
+    let response;
+    try {
+        response = await authedFetch("/ask_stream", {
+            method: "POST",
+            headers: {"Content-Type": "application/json", ...buildAuthHeaders()},
+            body: JSON.stringify({ question: q, bot: currentBotId, history: messages })
+        });
+    } catch (err) {
+        removeTyping();
+        appendErrorMessage(`Backend request failed: ${err?.message || err}`);
+        return;
+    }
 
     if (!response.ok || !response.body) {
-        if (typingEl.parentNode) typingEl.remove();
-        const text = await response.text();
-        const errorEl = document.createElement("div");
-        errorEl.className = "message bot";
-        const message = text || response.statusText || "Error communicating with the bot.";
-        errorEl.innerHTML = `<div class="label">Bot</div><i>${message}</i>`;
-        chat.appendChild(errorEl);
-        chat.scrollTop = chat.scrollHeight;
+        removeTyping();
+        appendErrorMessage(await buildErrorMessageFromResponse(response));
         return;
     }
 
@@ -991,35 +1038,45 @@ async function sendMessage() {
     const botContainer = appendBotContainer();
     let pendingMetrics = null;
 
-    while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
+    try {
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
 
-        buf += decoder.decode(value, {stream:true});
-        const lines = buf.split("\n");
-        buf = lines.pop();
+            buf += decoder.decode(value, {stream:true});
+            const lines = buf.split("\n");
+            buf = lines.pop();
 
-        for (let ln of lines) {
-            if (!ln.trim()) continue;
+            for (let ln of lines) {
+                if (!ln.trim()) continue;
 
-            const event = JSON.parse(ln);
+                const event = JSON.parse(ln);
 
-            if (typingEl.parentNode) typingEl.remove();
+                removeTyping();
 
-            if (event.type === "token") {
-                botContainer.rawText += event.token;
-                botContainer.tokenCount++;
+                if (event.type === "token") {
+                    botContainer.rawText += event.token;
+                    botContainer.tokenCount++;
 
-                if (botContainer.tokenCount % 5 === 0) {
-                    botContainer.contentEl.innerHTML = marked.parse(botContainer.rawText);
-                    chat.scrollTop = chat.scrollHeight;
+                    if (botContainer.tokenCount % 5 === 0) {
+                        botContainer.contentEl.innerHTML = marked.parse(botContainer.rawText);
+                        chat.scrollTop = chat.scrollHeight;
+                    }
+                } else if (event.type === "metrics") {
+                    pendingMetrics = event.metrics || null;
                 }
-            } else if (event.type === "metrics") {
-                pendingMetrics = event.metrics || null;
             }
         }
+    } catch (err) {
+        removeTyping();
+        appendErrorMessage(`Backend error while streaming: ${err?.message || err}`);
+        if (botContainer.parentNode) {
+            botContainer.remove();
+        }
+        return;
     }
 
+    removeTyping();
     botContainer.contentEl.innerHTML = marked.parse(botContainer.rawText);
     chat.scrollTop = chat.scrollHeight;
 
