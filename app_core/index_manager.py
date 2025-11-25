@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Iterable, Tuple
 
@@ -36,6 +37,9 @@ class IndexState:
     chunk_size: int
     chunk_overlap: int
     file_hashes: Dict[str, str] = field(default_factory=dict)
+    status: str = "empty"
+    completed_at: str | None = None
+    error: str | None = None
 
 
 class IndexingManager:
@@ -56,6 +60,9 @@ class IndexingManager:
             chunk_size=int(data.get("chunk_size", -1)),
             chunk_overlap=int(data.get("chunk_overlap", -1)),
             file_hashes=data.get("file_hashes", {}) or {},
+            status=str(data.get("status") or "empty"),
+            completed_at=data.get("completed_at"),
+            error=data.get("error"),
         )
 
     def save(self, state: IndexState):
@@ -64,8 +71,15 @@ class IndexingManager:
             "chunk_size": state.chunk_size,
             "chunk_overlap": state.chunk_overlap,
             "file_hashes": state.file_hashes,
+            "status": state.status,
+            "completed_at": state.completed_at,
+            "error": state.error,
         }
         self.meta_file.write_text(json.dumps(payload, indent=2))
+
+    @staticmethod
+    def now_iso() -> str:
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     @staticmethod
     def diff_hashes(new_hashes: Dict[str, str], old_hashes: Dict[str, str]) -> Tuple[set, set]:

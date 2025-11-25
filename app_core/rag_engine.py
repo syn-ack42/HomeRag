@@ -131,6 +131,37 @@ def get_ollama_url() -> str:
     return str(settings.OLLAMA_URL).rstrip("/")
 
 
+def _is_embedding_model(families: List[str]) -> bool:
+    return any(fam in {"bert", "nomic-bert", "embed", "bge", "gte"} for fam in families)
+
+
+def estimate_tokens(text: str) -> int:
+    return max(len((text or "").split()), 0)
+
+
+def fetch_model_summaries() -> List[Dict[str, Any]]:
+    summaries: List[Dict[str, Any]] = []
+    seen = set()
+    for model in _fetch_model_data():
+        name = model.get("model") or model.get("name")
+        if not name or name in seen:
+            continue
+
+        details = model.get("details") or {}
+        families = details.get("families") or []
+        families = [str(fam).lower() for fam in families if fam]
+        summaries.append(
+            {
+                "name": name,
+                "details": details,
+                "families": families,
+                "is_embedding": _is_embedding_model(families),
+            }
+        )
+        seen.add(name)
+    return summaries
+
+
 def fetch_installed_models() -> List[str]:
     base_url = get_ollama_url()
     try:
@@ -175,47 +206,11 @@ def _fetch_model_data() -> List[Dict[str, Any]]:
 
 
 def fetch_installed_embedding_models() -> List[str]:
-    embeddings: List[str] = []
-    seen = set()
-    for model in _fetch_model_data():
-        name = model.get("model") or model.get("name")
-        if not name or name in seen:
-            continue
-
-        details = model.get("details") or {}
-        families = details.get("families") or []
-        families = [str(fam).lower() for fam in families if fam]
-        is_embedding = any(
-            fam in {"bert", "nomic-bert", "embed", "bge", "gte"} for fam in families
-        )
-
-        if is_embedding:
-            embeddings.append(name)
-            seen.add(name)
-
-    return embeddings
+    return [m["name"] for m in fetch_model_summaries() if m.get("is_embedding")]
 
 
 def fetch_installed_llm_models() -> List[str]:
-    llms: List[str] = []
-    seen = set()
-    for model in _fetch_model_data():
-        name = model.get("model") or model.get("name")
-        if not name or name in seen:
-            continue
-
-        details = model.get("details") or {}
-        families = details.get("families") or []
-        families = [str(fam).lower() for fam in families if fam]
-        is_embedding = any(
-            fam in {"bert", "nomic-bert", "embed", "bge", "gte"} for fam in families
-        )
-
-        if not is_embedding:
-            llms.append(name)
-            seen.add(name)
-
-    return llms
+    return [m["name"] for m in fetch_model_summaries() if not m.get("is_embedding")]
 
 
 def load_bot_config(bot_id: str) -> Dict[str, Any]:
@@ -377,8 +372,24 @@ def build_db(
         if db_dir.exists():
             shutil.rmtree(db_dir, ignore_errors=True)
         db_dir.mkdir(parents=True, exist_ok=True)
+        for embedding_model in embedding_models:
+            manager = IndexingManager(embedding_db_path(bot_id, embedding_model))
+            manager.save(
+                IndexState(
+                    chunk_size=config.get("chunk_size", 800),
+                    chunk_overlap=config.get("chunk_overlap", 100),
+                    file_hashes=file_hashes,
+                    status="empty",
+                    completed_at=IndexingManager.now_iso(),
+                    error=None,
+                )
+            )
         elapsed_ms = duration_ms(start_time)
-        logger.debug("No documents found for bot %s; cleared DB in %.2f ms", bot_id, elapsed_ms)
+        logger.debug(
+            "No documents found for bot %s; cleared DB in %.2f ms",
+            bot_id,
+            elapsed_ms,
+        )
         return
 
     splitter = RecursiveCharacterTextSplitter(
@@ -424,58 +435,85 @@ def build_db(
         full_rebuild = chunk_changed or not db_file.exists()
         changed_files, removed_files = IndexingManager.diff_hashes(file_hashes, previous_state.file_hashes)
 
-        if full_rebuild:
-            if db_dir.exists():
-                shutil.rmtree(db_dir)
-            db_dir.mkdir(parents=True, exist_ok=True)
-            embed_start = time.perf_counter()
-            vectordb = backend.build_from_documents(
-                chunks,
-                embeddings,
-                db_dir,
-                ids=[doc.metadata.get("chunk_id", "") for doc in chunks],
-            )
-            backend.persist(vectordb)
-            log_performance(
-                "build_vectorstore",
-                embed_start,
-                bot_id=bot_id,
-                chunks=len(chunks),
-                embedding_model=embedding_model,
-            )
-        else:
-            vectordb = backend.load(db_dir, embeddings)
-            if removed_files or changed_files:
-                for source in sorted(removed_files | changed_files):
-                    backend.delete(vectordb, where={"source": source})
-            updated_chunks = [
-                doc for doc in chunks if doc.metadata.get("source") in changed_files
-            ]
-            if updated_chunks:
-                embed_start = time.perf_counter()
-                backend.add_documents(
-                    vectordb,
-                    updated_chunks,
-                    ids=[doc.metadata.get("chunk_id", "") for doc in updated_chunks],
-                )
-                log_performance(
-                    "update_vectorstore",
-                    embed_start,
-                    bot_id=bot_id,
-                    chunks=len(updated_chunks),
-                    embedding_model=embedding_model,
-                    removed=len(removed_files),
-                )
-            backend.persist(vectordb)
-
         manager.save(
             IndexState(
                 chunk_size=config.get("chunk_size", 800),
                 chunk_overlap=config.get("chunk_overlap", 100),
                 file_hashes=file_hashes,
+                status="indexing",
+                completed_at=None,
+                error=None,
             )
         )
-        save_embedding_model(bot_id, embedding_model)
+
+        try:
+            if full_rebuild:
+                if db_dir.exists():
+                    shutil.rmtree(db_dir)
+                db_dir.mkdir(parents=True, exist_ok=True)
+                embed_start = time.perf_counter()
+                vectordb = backend.build_from_documents(
+                    chunks,
+                    embeddings,
+                    db_dir,
+                    ids=[doc.metadata.get("chunk_id", "") for doc in chunks],
+                )
+                backend.persist(vectordb)
+                log_performance(
+                    "build_vectorstore",
+                    embed_start,
+                    bot_id=bot_id,
+                    chunks=len(chunks),
+                    embedding_model=embedding_model,
+                )
+            else:
+                vectordb = backend.load(db_dir, embeddings)
+                if removed_files or changed_files:
+                    for source in sorted(removed_files | changed_files):
+                        backend.delete(vectordb, where={"source": source})
+                updated_chunks = [
+                    doc for doc in chunks if doc.metadata.get("source") in changed_files
+                ]
+                if updated_chunks:
+                    embed_start = time.perf_counter()
+                    backend.add_documents(
+                        vectordb,
+                        updated_chunks,
+                        ids=[doc.metadata.get("chunk_id", "") for doc in updated_chunks],
+                    )
+                    log_performance(
+                        "update_vectorstore",
+                        embed_start,
+                        bot_id=bot_id,
+                        chunks=len(updated_chunks),
+                        embedding_model=embedding_model,
+                        removed=len(removed_files),
+                    )
+                backend.persist(vectordb)
+
+            manager.save(
+                IndexState(
+                    chunk_size=config.get("chunk_size", 800),
+                    chunk_overlap=config.get("chunk_overlap", 100),
+                    file_hashes=file_hashes,
+                    status="ready",
+                    completed_at=IndexingManager.now_iso(),
+                    error=None,
+                )
+            )
+            save_embedding_model(bot_id, embedding_model)
+        except Exception as exc:  # pragma: no cover - logging path
+            manager.save(
+                IndexState(
+                    chunk_size=config.get("chunk_size", 800),
+                    chunk_overlap=config.get("chunk_overlap", 100),
+                    file_hashes=file_hashes,
+                    status="failure",
+                    completed_at=IndexingManager.now_iso(),
+                    error=str(exc),
+                )
+            )
+            raise
     total_ms = duration_ms(start_time)
     logger.debug(
         "Finished database rebuild for bot %s with %d documents in %.2f ms",
@@ -530,6 +568,55 @@ async def ensure_db_embeddings(bot_id: str):
         )
 
 
+def prompt_token_breakdown(
+    system_prompt: str, history_text: str, context_text: str, question_text: str
+) -> Dict[str, Any]:
+    counts = {
+        "system_prompt_tokens": estimate_tokens(system_prompt),
+        "history_tokens": estimate_tokens(history_text),
+        "context_tokens": estimate_tokens(context_text),
+        "question_tokens": estimate_tokens(question_text),
+    }
+    total = sum(counts.values())
+    percentages = {
+        key.replace("_tokens", "_percentage"): (value / total * 100) if total else 0.0
+        for key, value in counts.items()
+    }
+    return {**counts, **percentages, "total_tokens": total}
+
+
+def get_index_state(bot_id: str, embedding_model: str) -> Dict[str, Any]:
+    db_dir = embedding_db_path(bot_id, embedding_model)
+    manager = IndexingManager(db_dir)
+    state = manager.load()
+    db_file = db_dir / "chroma.sqlite3"
+
+    status = state.status or "empty"
+    if status == "empty" and db_file.exists():
+        status = "ready"
+    if status == "ready" and not db_file.exists():
+        status = "empty"
+
+    return {
+        "status": status,
+        "completed_at": state.completed_at,
+        "error": state.error,
+    }
+
+
+def embedding_statuses(
+    bot_id: str, models: Optional[List[str]] = None
+) -> Dict[str, Dict[str, Any]]:
+    models = list(models or [])
+    for installed in fetch_installed_embedding_models():
+        if installed not in models:
+            models.append(installed)
+    statuses: Dict[str, Dict[str, Any]] = {}
+    for model in dict.fromkeys(models):
+        statuses[model] = get_index_state(bot_id, model)
+    return statuses
+
+
 def join_docs(docs):
     return "\n\n---\n\n".join(doc.page_content for doc in docs)
 
@@ -558,6 +645,7 @@ def build_rag_chain(
     backend: VectorStoreBackend = service_container.vectorstore_backend or DEFAULT_VECTORSTORE_BACKEND  # type: ignore[assignment]
 
     retrieval_time_ms = 0.0
+    context_text_value = ""
 
     def create_vectordb():
         return backend.load(
@@ -570,6 +658,7 @@ def build_rag_chain(
 
         def retrieve_with_logging(query: str):
             nonlocal retrieval_time_ms
+            nonlocal context_text_value
             search_start = time.perf_counter()
             try:
                 results = backend.similarity_search_with_score(vectordb, query, k=top_k)
@@ -604,7 +693,8 @@ def build_rag_chain(
             return docs
 
         docs = retrieve_with_logging(question)
-        context_text = join_docs(docs)
+        context_text_value = join_docs(docs)
+        context_text = context_text_value
         llm_params = {
             "base_url": ollama_url,
             "model": llm_model,
@@ -654,4 +744,6 @@ User: {question_text}
         "create_vectordb": create_vectordb,
         "build_chain": build_chain,
         "get_retrieval_time_ms": lambda: retrieval_time_ms,
+        "context_text": context_text_value,
+        "get_context_text": lambda: context_text_value,
     }

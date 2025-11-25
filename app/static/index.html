@@ -222,6 +222,45 @@ textarea#systemPrompt { width: 100%; min-height: 160px; resize: vertical; }
     color: var(--text-muted);
 }
 
+.model-info {
+    margin-top: 0.35rem;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #0f172a;
+    font-size: 0.95rem;
+}
+
+.model-info .title {
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+
+.model-info ul {
+    margin: 0.15rem 0 0;
+    padding-left: 1.1rem;
+    color: var(--text-muted);
+}
+
+.model-status {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    margin-top: 0.35rem;
+}
+
+.status-pill {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    background: #e2e8f0;
+    color: #0f172a;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
 @media (max-width: 980px) {
     .main { grid-template-columns: 1fr; }
 }
@@ -287,9 +326,15 @@ textarea#systemPrompt { width: 100%; min-height: 160px; resize: vertical; }
                 <div class="settings-grid">
                     <label>Embedding Model
                         <select id="embeddingModel"></select>
+                        <div id="embeddingModelInfo" class="model-info" style="display:none;"></div>
+                        <div class="model-status" id="embeddingStatusRow" style="display:none;">
+                            <span class="status-pill" id="embeddingStatus"></span>
+                            <button type="button" class="secondary" id="rebuildEmbeddingButton" onclick="rebuildSelectedEmbedding()">Rebuild Selected Index</button>
+                        </div>
                     </label>
                     <label>LLM Model
                         <select id="llmModel"></select>
+                        <div id="llmModelInfo" class="model-info" style="display:none;"></div>
                     </label>
                     <label>Chunk Size
                         <input id="chunkSize" type="number" min="1" />
@@ -386,6 +431,11 @@ const llmTemperatureInput = document.getElementById("llmTemperature");
 const llmTopPInput = document.getElementById("llmTopP");
 const llmMaxTokensInput = document.getElementById("llmMaxTokens");
 const llmRepeatPenaltyInput = document.getElementById("llmRepeatPenalty");
+const embeddingModelInfo = document.getElementById("embeddingModelInfo");
+const embeddingStatusRow = document.getElementById("embeddingStatusRow");
+const embeddingStatusText = document.getElementById("embeddingStatus");
+const rebuildEmbeddingButton = document.getElementById("rebuildEmbeddingButton");
+const llmModelInfo = document.getElementById("llmModelInfo");
 
 const BOT_STORAGE_KEY = "selectedBotId";
 const PASSWORD_KEY_PREFIX = "botPassword:";
@@ -416,6 +466,23 @@ let availableEmbeddingModels = [];
 let embeddingModelsError = "";
 let availableLLMModels = [];
 let llmModelsError = "";
+let embeddingStatuses = {};
+
+function normalizeModelEntries(models = []) {
+    return (models || [])
+        .map(entry => {
+            if (typeof entry === "string") {
+                return { name: entry, details: {} };
+            }
+            const name = entry?.name || entry?.model || "";
+            return { name, details: entry?.details || {} };
+        })
+        .filter(entry => entry.name);
+}
+
+function findModelEntry(list, name) {
+    return list.find(item => item.name === name);
+}
 
 function appendErrorMessage(message) {
     const el = document.createElement("div");
@@ -482,6 +549,10 @@ passwordInput.addEventListener("input", () => {
     passwordEdited = true;
 });
 
+embeddingModelSelect.addEventListener("change", () => {
+    renderEmbeddingInfoBox();
+});
+
 llmModelSelect.addEventListener("change", async () => {
     if (!currentBotId || llmModelSelect.disabled || llmModelsError) return;
     const selected = llmModelSelect.value;
@@ -496,6 +567,7 @@ llmModelSelect.addEventListener("change", async () => {
         alert(err.detail || "Unable to update model.");
         await loadBotModel();
     }
+    renderLLMInfoBox();
 });
 
 function renderEmbeddingOptions(selectedValue = DEFAULT_CONFIG.embedding_model) {
@@ -508,6 +580,7 @@ function renderEmbeddingOptions(selectedValue = DEFAULT_CONFIG.embedding_model) 
         option.value = "";
         embeddingModelSelect.appendChild(option);
         embeddingModelSelect.disabled = true;
+        renderEmbeddingInfoBox();
         return;
     }
 
@@ -518,19 +591,22 @@ function renderEmbeddingOptions(selectedValue = DEFAULT_CONFIG.embedding_model) 
         option.value = "";
         embeddingModelSelect.appendChild(option);
         embeddingModelSelect.disabled = true;
+        renderEmbeddingInfoBox();
         return;
     }
 
     availableEmbeddingModels.forEach(model => {
         const option = document.createElement("option");
-        option.value = model;
-        option.textContent = model;
+        option.value = model.name;
+        option.textContent = model.name;
         embeddingModelSelect.appendChild(option);
     });
 
-    const valueToUse = availableEmbeddingModels.includes(selectedValue) ? selectedValue : availableEmbeddingModels[0];
+    const modelNames = availableEmbeddingModels.map(m => m.name);
+    const valueToUse = modelNames.includes(selectedValue) ? selectedValue : modelNames[0];
     embeddingModelSelect.value = valueToUse || "";
     embeddingModelSelect.disabled = false;
+    renderEmbeddingInfoBox();
 }
 
 async function loadAvailableEmbeddingModels() {
@@ -542,7 +618,7 @@ async function loadAvailableEmbeddingModels() {
             const res = await fetch("/embedding-models");
             if (!res.ok) throw new Error("Failed to load embedding models");
             const data = await res.json();
-            availableEmbeddingModels = data.models || [];
+            availableEmbeddingModels = normalizeModelEntries(data.models);
             embeddingModelsError = availableEmbeddingModels.length ? "" : "No embedding models available";
         } catch (e) {
             availableEmbeddingModels = [];
@@ -564,6 +640,7 @@ function renderModelOptions(selectedValue = DEFAULT_LLM_MODEL) {
         option.value = "";
         llmModelSelect.appendChild(option);
         llmModelSelect.disabled = true;
+        renderLLMInfoBox();
         return;
     }
 
@@ -574,19 +651,22 @@ function renderModelOptions(selectedValue = DEFAULT_LLM_MODEL) {
         option.value = "";
         llmModelSelect.appendChild(option);
         llmModelSelect.disabled = true;
+        renderLLMInfoBox();
         return;
     }
 
     availableLLMModels.forEach(model => {
         const option = document.createElement("option");
-        option.value = model;
-        option.textContent = model;
+        option.value = model.name;
+        option.textContent = model.name;
         llmModelSelect.appendChild(option);
     });
 
-    const valueToUse = availableLLMModels.includes(selectedValue) ? selectedValue : availableLLMModels[0];
+    const modelNames = availableLLMModels.map(m => m.name);
+    const valueToUse = modelNames.includes(selectedValue) ? selectedValue : modelNames[0];
     llmModelSelect.value = valueToUse || "";
     llmModelSelect.disabled = !currentBotId;
+    renderLLMInfoBox();
 }
 
 async function loadAvailableLLMModels() {
@@ -598,7 +678,7 @@ async function loadAvailableLLMModels() {
             const res = await fetch("/models");
             if (!res.ok) throw new Error("Failed to load models");
             const data = await res.json();
-            availableLLMModels = data.models || [];
+            availableLLMModels = normalizeModelEntries(data.models);
             llmModelsError = availableLLMModels.length ? "" : "No models available";
         } catch (e) {
             availableLLMModels = [];
@@ -689,19 +769,42 @@ function applyConfigToForm(config = DEFAULT_CONFIG) {
     llmRepeatPenaltyInput.value = cfg.llm_repeat_penalty ?? DEFAULT_CONFIG.llm_repeat_penalty;
 }
 
+async function loadEmbeddingStatuses() {
+    if (!currentBotId) {
+        embeddingStatuses = {};
+        renderEmbeddingInfoBox();
+        return;
+    }
+
+    const modelQuery = embeddingModelSelect.value
+        ? `?models=${encodeURIComponent(embeddingModelSelect.value)}`
+        : "";
+    const res = await authedFetch(`/bots/${currentBotId}/embedding-status${modelQuery}`);
+    if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        embeddingStatuses = data.statuses || {};
+    } else {
+        embeddingStatuses = {};
+    }
+    renderEmbeddingInfoBox();
+}
+
 async function loadConfig() {
     await loadAvailableEmbeddingModels();
     if (!currentBotId) {
         applyConfigToForm();
+        await loadEmbeddingStatuses();
         return;
     }
     const res = await authedFetch(`/bots/${currentBotId}/config`);
     if (!res.ok) {
         applyConfigToForm();
+        await loadEmbeddingStatuses();
         return;
     }
     const data = await res.json();
     applyConfigToForm(data.config || DEFAULT_CONFIG);
+    await loadEmbeddingStatuses();
 }
 
 async function saveConfig() {
@@ -901,9 +1004,16 @@ function appendBotMessage(text) {
     chat.scrollTop = chat.scrollHeight;
 }
 
-function formatMs(value) {
+function formatSecondsFromMs(value) {
     if (value === null || value === undefined) return "n/a";
-    return `${value.toFixed(1)} ms`;
+    const seconds = value / 1000;
+    const precision = seconds >= 10 ? 1 : 2;
+    return `${seconds.toFixed(precision)} s`;
+}
+
+function formatPercentage(value) {
+    if (value === null || value === undefined) return "n/a";
+    return `${value.toFixed(1)}%`;
 }
 
 function renderBotMetrics(container, metrics) {
@@ -920,16 +1030,94 @@ function renderBotMetrics(container, metrics) {
     ];
 
     const performance = [
-        `Retrieval: ${formatMs(metrics.retrieval_ms)}`,
-        `First token: ${formatMs(metrics.prompt_to_first_token_ms)}`,
+        `Retrieval: ${formatSecondsFromMs(metrics.retrieval_ms)}`,
+        `First token: ${formatSecondsFromMs(metrics.prompt_to_first_token_ms)}`,
         `Tokens: ${metrics.tokens_emitted ?? 0}`,
         `Words: ${metrics.word_count ?? 0}`,
         `Speed: ${speed}`,
-        `Total: ${formatMs(metrics.total_time_ms)}`,
+        `Total: ${formatSecondsFromMs(metrics.total_time_ms)}`,
     ];
 
-    container.metaEl.innerHTML = `<div>${summary.join(" • ")}</div><div>${performance.join(" • ")}</div>`;
+    const promptTokens =
+        metrics.prompt_token_total !== undefined && metrics.prompt_token_total !== null
+            ? `Prompt tokens: ${metrics.prompt_token_total} (Context ${metrics.context_token_count ?? 0} / ${formatPercentage(metrics.context_token_percentage)} • Question ${metrics.question_token_count ?? 0} / ${formatPercentage(metrics.question_token_percentage)} • System ${metrics.system_prompt_token_count ?? 0} / ${formatPercentage(metrics.system_prompt_token_percentage)} • History ${metrics.history_token_count ?? 0} / ${formatPercentage(metrics.history_token_percentage)})`
+            : "";
+
+    const metaSections = [`<div>${summary.join(" • ")}</div>`, `<div>${performance.join(" • ")}</div>`];
+    if (promptTokens) {
+        metaSections.push(`<div>${promptTokens}</div>`);
+    }
+
+    container.metaEl.innerHTML = metaSections.join("");
     container.metaEl.style.display = "block";
+}
+
+function renderLLMInfoBox() {
+    if (!llmModelInfo) return;
+    const selected = llmModelSelect.value;
+    const entry = findModelEntry(availableLLMModels, selected);
+    const details = entry?.details || {};
+    const items = [];
+    if (details.parameter_size) items.push(`Parameters: ${details.parameter_size}`);
+    if (details.quantization_level) items.push(`Quantization: ${details.quantization_level}`);
+    if (details.context_length) items.push(`Context window: ${details.context_length}`);
+
+    if (!items.length) {
+        llmModelInfo.style.display = "none";
+        llmModelInfo.innerHTML = "";
+        return;
+    }
+
+    llmModelInfo.innerHTML = `<div class="title">${selected}</div><ul>${items
+        .map(item => `<li>${item}</li>`)
+        .join("")}</ul>`;
+    llmModelInfo.style.display = "block";
+}
+
+function describeIndexStatus(status) {
+    const state = (status?.status || "empty").toLowerCase();
+    if (state === "ready") {
+        return status?.completed_at ? `Ready ${status.completed_at}` : "Ready";
+    }
+    if (state === "indexing") return "Indexing…";
+    if (state === "failure") return status?.error ? `Failure (${status.error})` : "Failure";
+    return "Empty";
+}
+
+function renderEmbeddingInfoBox() {
+    if (!embeddingModelInfo) return;
+    const selected = embeddingModelSelect.value;
+    const entry = findModelEntry(availableEmbeddingModels, selected);
+    const details = entry?.details || {};
+    const items = [];
+    if (details.embedding_length) items.push(`Dimension: ${details.embedding_length}`);
+    if (details.parameter_size) items.push(`Parameters: ${details.parameter_size}`);
+    if (details.quantization_level) items.push(`Quantization: ${details.quantization_level}`);
+
+    if (!items.length) {
+        embeddingModelInfo.style.display = "none";
+        embeddingModelInfo.innerHTML = "";
+    } else {
+        embeddingModelInfo.innerHTML = `<div class="title">${selected}</div><ul>${items
+            .map(item => `<li>${item}</li>`)
+            .join("")}</ul>`;
+        embeddingModelInfo.style.display = "block";
+    }
+
+    const status = embeddingStatuses[selected];
+    if (status) {
+        embeddingStatusText.textContent = describeIndexStatus(status);
+        embeddingStatusText.title = status.error || "";
+        embeddingStatusRow.style.display = "flex";
+    } else {
+        embeddingStatusRow.style.display = "none";
+        embeddingStatusText.textContent = "";
+        embeddingStatusText.title = "";
+    }
+
+    if (rebuildEmbeddingButton) {
+        rebuildEmbeddingButton.disabled = !selected;
+    }
 }
 
 function appendTyping() {
@@ -1100,8 +1288,35 @@ document.getElementById("uploadForm").onsubmit = async e => {
 
 async function rebuild() {
     if (!ensureBotSelected()) return;
+    Object.keys(embeddingStatuses || {}).forEach(model => {
+        embeddingStatuses[model] = { status: "indexing" };
+    });
+    renderEmbeddingInfoBox();
     await authedFetch(`/bots/${currentBotId}/rebuild`, { method: "POST", headers: buildAuthHeaders() });
     alert("Reindexed!");
+    await loadEmbeddingStatuses();
+}
+
+async function rebuildSelectedEmbedding() {
+    if (!ensureBotSelected()) return;
+    const model = embeddingModelSelect.value;
+    if (!model) {
+        alert("Select an embedding model first.");
+        return;
+    }
+    embeddingStatuses[model] = { status: "indexing" };
+    renderEmbeddingInfoBox();
+    const res = await authedFetch(`/bots/${currentBotId}/rebuild?model=${encodeURIComponent(model)}`, {
+        method: "POST",
+        headers: buildAuthHeaders(),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Failed to start indexing.");
+    } else {
+        alert(`Rebuilding index for ${model}.`);
+    }
+    await loadEmbeddingStatuses();
 }
 
 function collectFolders(node, list = []) {

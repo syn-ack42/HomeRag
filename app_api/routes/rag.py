@@ -15,11 +15,13 @@ from app_core.rag_engine import (
     current_embedding_model,
     current_llm_model,
     duration_ms,
+    embedding_statuses,
     ensure_db_embeddings,
     load_bot_config,
     load_prompt_template,
     load_system_prompt,
     log_performance,
+    prompt_token_breakdown,
     save_system_prompt,
 )
 from app_services.container import get_service_container
@@ -38,15 +40,30 @@ def index():
         return HTMLResponse(f.read())
 
 
-@router.post("/bots/{bot_id}/rebuild")
-def rebuild(bot_id: str, request: Request):
+@router.get("/bots/{bot_id}/embedding-status")
+def get_embedding_status(bot_id: str, request: Request):
     require_bot_access(bot_id, password_from_request(request))
+    models_param = request.query_params.get("models")
+    models = [m for m in (models_param or "").split(",") if m] or None
+    return {"statuses": embedding_statuses(bot_id, models)}
+
+
+@router.post("/bots/{bot_id}/rebuild")
+async def rebuild(bot_id: str, request: Request):
     try:
-        build_db(bot_id)
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    require_bot_access(bot_id, password_from_request(request, body))
+    model = request.query_params.get("model") or (body.get("model") if isinstance(body, dict) else None)
+
+    try:
+        build_db(bot_id, embedding_models=[model] if model else None)
     except Exception as exc:
         logger.exception("Rebuild failed for bot %s", bot_id)
         raise HTTPException(status_code=500, detail=str(exc))
-    return {"status": "reindexed"}
+    return {"status": "reindexed", "model": model or "all"}
 
 
 @router.get("/bots/{bot_id}/prompt")
@@ -134,7 +151,6 @@ async def ask_stream(request: Request):
     llm_temperature = rag_context.get("llm_temperature")
     llm_top_p = rag_context.get("llm_top_p")
     rag_chain = rag_context["rag_chain"]
-
     async def event_stream():
         stream_start = time.perf_counter()
         tokens_emitted = 0
@@ -169,6 +185,14 @@ async def ask_stream(request: Request):
             total_time_ms = duration_ms(total_start)
             word_count = len(full_text.split()) if full_text else 0
             retrieval_time_ms = rag_context.get("get_retrieval_time_ms", lambda: 0.0)()
+            context_text_value = ""
+            if callable(rag_context.get("get_context_text")):
+                context_text_value = rag_context["get_context_text"]()
+            else:
+                context_text_value = rag_context.get("context_text", "")
+            token_breakdown = prompt_token_breakdown(
+                system_prompt, history_text, context_text_value, question or ""
+            )
 
             metrics_payload = {
                 "embedding_model": embedding_model,
@@ -181,6 +205,15 @@ async def ask_stream(request: Request):
                 "word_count": word_count,
                 "tokens_per_second": tokens_per_second,
                 "total_time_ms": total_time_ms,
+                "prompt_token_total": token_breakdown.get("total_tokens"),
+                "context_token_count": token_breakdown.get("context_tokens"),
+                "context_token_percentage": token_breakdown.get("context_percentage"),
+                "question_token_count": token_breakdown.get("question_tokens"),
+                "question_token_percentage": token_breakdown.get("question_percentage"),
+                "system_prompt_token_count": token_breakdown.get("system_prompt_tokens"),
+                "system_prompt_token_percentage": token_breakdown.get("system_prompt_percentage"),
+                "history_token_count": token_breakdown.get("history_tokens"),
+                "history_token_percentage": token_breakdown.get("history_percentage"),
             }
 
             log_performance(
