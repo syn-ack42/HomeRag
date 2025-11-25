@@ -654,6 +654,7 @@ def build_rag_chain(
         )
 
     def build_chain(vectordb):
+        nonlocal context_text_value
         top_k = retrieval_top_k
 
         def retrieve_with_logging(query: str):
