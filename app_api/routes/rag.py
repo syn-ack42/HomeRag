@@ -151,6 +151,9 @@ async def ask_stream(request: Request):
     llm_temperature = rag_context.get("llm_temperature")
     llm_top_p = rag_context.get("llm_top_p")
     rag_chain = rag_context["rag_chain"]
+    context_text = rag_context.get("context_text", "")
+    token_breakdown = prompt_token_breakdown(system_prompt, history_text, context_text, question or "")
+
     async def event_stream():
         stream_start = time.perf_counter()
         tokens_emitted = 0

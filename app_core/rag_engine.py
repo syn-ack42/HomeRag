@@ -745,5 +745,4 @@ User: {question_text}
         "build_chain": build_chain,
         "get_retrieval_time_ms": lambda: retrieval_time_ms,
         "context_text": context_text_value,
-        "get_context_text": lambda: context_text_value,
     }
