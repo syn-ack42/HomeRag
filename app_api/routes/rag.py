@@ -188,6 +188,14 @@ async def ask_stream(request: Request):
             total_time_ms = duration_ms(total_start)
             word_count = len(full_text.split()) if full_text else 0
             retrieval_time_ms = rag_context.get("get_retrieval_time_ms", lambda: 0.0)()
+            context_text_value = ""
+            if callable(rag_context.get("get_context_text")):
+                context_text_value = rag_context["get_context_text"]()
+            else:
+                context_text_value = rag_context.get("context_text", "")
+            token_breakdown = prompt_token_breakdown(
+                system_prompt, history_text, context_text_value, question or ""
+            )
 
             metrics_payload = {
                 "embedding_model": embedding_model,
