@@ -22,7 +22,7 @@ logger = logging.getLogger("homerag")
 bootstrap_services()
 
 
-app = FastAPI()
+app = FastAPI(root_path=settings.ROOT_PATH)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 register_middleware(app)
 

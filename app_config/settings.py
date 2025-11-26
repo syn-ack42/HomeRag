@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     EMBEDDING_MAX_WORKERS: int = Field(default=4, env="EMBEDDING_MAX_WORKERS")
     EMBEDDING_BATCH_SIZE: int = Field(default=8, env="EMBEDDING_BATCH_SIZE")
     EMBEDDING_CACHE_SIZE: int = Field(default=256, env="EMBEDDING_CACHE_SIZE")
+    ROOT_PATH: str = Field(default="", env="ROOT_PATH")
 
     class Config:
         env_file = ".env"
@@ -28,6 +29,14 @@ class Settings(BaseSettings):
         # Ensure BOT_CONFIG_ROOT follows CONFIG_PATH if not explicitly set
         if self.BOT_CONFIG_ROOT is None:
             object.__setattr__(self, "BOT_CONFIG_ROOT", Path(self.CONFIG_PATH) / "bots")
+        root_path = (self.ROOT_PATH or "").strip()
+        if root_path and not root_path.startswith("/"):
+            root_path = "/" + root_path
+        if root_path.endswith("/") and root_path != "/":
+            root_path = root_path.rstrip("/")
+        if root_path == "/":
+            root_path = ""
+        object.__setattr__(self, "ROOT_PATH", root_path)
 
 
 settings = Settings()

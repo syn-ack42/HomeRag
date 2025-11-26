@@ -456,6 +456,43 @@ const DEFAULT_CONFIG = {
     llm_repeat_penalty: 1.1,
 };
 
+function normalizeBasePath(path) {
+    if (!path) return "";
+    let normalized = path.trim();
+    normalized = normalized.replace(/\/+$/, "");
+    if (!normalized.startsWith("/")) {
+        normalized = "/" + normalized;
+    }
+    return normalized === "/" ? "" : normalized;
+}
+
+const BASE_PATH = (() => {
+    const manual = (window.HOME_RAG_BASE_PATH || "").trim();
+    if (manual) return normalizeBasePath(manual);
+    let path = window.location.pathname || "";
+    path = path.replace(/\/index\.html$/, "");
+    if (path.endsWith("/") && path !== "/") {
+        path = path.slice(0, -1);
+    }
+    return normalizeBasePath(path);
+})();
+
+function withBase(path = "") {
+    if (!path) return BASE_PATH || "";
+    if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(path)) {
+        return path;
+    }
+    const normalized = path.startsWith("/") ? path : `/${path}`;
+    if (BASE_PATH && (normalized === BASE_PATH || normalized.startsWith(`${BASE_PATH}/`))) {
+        return normalized;
+    }
+    return `${BASE_PATH}${normalized}` || normalized;
+}
+
+function apiFetch(path, options) {
+    return fetch(withBase(path), options);
+}
+
 const botConversations = {};
 let messages = [];
 const initialHashBotId = decodeURIComponent(window.location.hash.replace(/^#/, ""));
@@ -615,7 +652,7 @@ async function loadAvailableEmbeddingModels() {
     embeddingModelSelect.disabled = true;
     loadAvailableEmbeddingModels.loading = (async () => {
         try {
-            const res = await fetch("/embedding-models");
+            const res = await apiFetch("/embedding-models");
             if (!res.ok) throw new Error("Failed to load embedding models");
             const data = await res.json();
             availableEmbeddingModels = normalizeModelEntries(data.models);
@@ -675,7 +712,7 @@ async function loadAvailableLLMModels() {
     llmModelSelect.disabled = true;
     loadAvailableLLMModels.loading = (async () => {
         try {
-            const res = await fetch("/models");
+            const res = await apiFetch("/models");
             if (!res.ok) throw new Error("Failed to load models");
             const data = await res.json();
             availableLLMModels = normalizeModelEntries(data.models);
@@ -737,7 +774,8 @@ function buildAuthHeaders() {
 
 async function authedFetch(url, options = {}, retry = true) {
     const headers = { ...(options.headers || {}), ...buildAuthHeaders() };
-    const res = await fetch(url, { ...options, headers });
+    const targetUrl = withBase(url);
+    const res = await fetch(targetUrl, { ...options, headers });
     if (res.status === 403 && retry && await requestPasswordForCurrentBot()) {
         return authedFetch(url, options, false);
     }
@@ -947,7 +985,7 @@ function findBotMeta(id) {
 }
 
 async function verifyBotPassword(botId, password) {
-    const res = await fetch(`/bots/${botId}/access`, {
+    const res = await apiFetch(`/bots/${botId}/access`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(password ? { [PASSWORD_HEADER]: password } : {}) },
         body: JSON.stringify({ password })
@@ -1572,7 +1610,7 @@ async function updatePassword() {
 
 async function loadBots() {
     const hashBotId = decodeURIComponent(window.location.hash.replace(/^#/, ""));
-    const r = await fetch("/bots");
+    const r = await apiFetch("/bots");
     const data = await r.json();
     botsMeta = data.bots || [];
 
@@ -1682,7 +1720,7 @@ async function createBot() {
     }
     payload.hidden = hiddenCheckbox.checked;
 
-    const res = await fetch("/bots", {
+    const res = await apiFetch("/bots", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify(payload)
