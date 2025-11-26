@@ -56,8 +56,8 @@ HomeRag is a lightweight retrieval-augmented generation (RAG) service built on F
 
 **Behind a reverse proxy with a path prefix**
 - Set `ROOT_PATH` to the path segment you want to serve under (e.g., `ROOT_PATH=/HomeRag`) and pass the same value to uvicorn’s `--root-path` if you override the launch command.
-- Configure your proxy to forward the prefixed location to the app root (e.g., `location /HomeRag/ { proxy_pass http://hephaistos:8090/; proxy_set_header X-Forwarded-Prefix /HomeRag; }`).
-- The web UI now autodetects the path prefix and sends API requests relative to it, so the interface works at URLs like `https://docker.franz-renger.de/HomeRag/`.
+- Configure your proxy to forward the prefixed location to the app root (e.g., `location /HomeRag/ { proxy_pass http://host:8090/; proxy_set_header X-Forwarded-Prefix /HomeRag; }`).
+- The web UI now autodetects the path prefix and sends API requests relative to it, so the interface works at URLs like `https://your.domain/HomeRag/`.
 
 ### Using the web GUI
 Open `http://localhost:8090/static/index.html` (or the root if you routed static files there). The right-hand panel manages bots, credentials, and knowledge bases; the left-hand panel is the chat window.
