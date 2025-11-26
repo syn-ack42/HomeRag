@@ -343,7 +343,11 @@ def build_db(
     config = config or load_bot_config(bot_id)
     installed_embeddings = fetch_installed_embedding_models()
     if embedding_models is None:
-        embedding_models = [current_embedding_model(bot_id=bot_id, config=config)]
+        embedding_models = list(installed_embeddings or [])
+        if not embedding_models:
+            current_model = current_embedding_model(bot_id=bot_id, config=config)
+            if current_model:
+                embedding_models = [current_model]
     embedding_models = list(dict.fromkeys(str(m) for m in embedding_models if m))
     resolved_embeddings: List[str] = []
     for embedding_model in embedding_models:
@@ -356,6 +360,9 @@ def build_db(
         if resolved and resolved not in resolved_embeddings:
             resolved_embeddings.append(resolved)
     embedding_models = resolved_embeddings
+    if not embedding_models:
+        logger.warning("No embedding models available to rebuild for bot %s", bot_id)
+        return
     start_time = time.perf_counter()
     load_start = time.perf_counter()
     docs = load_documents(bot_id)
